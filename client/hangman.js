@@ -10,7 +10,7 @@ let hangmanLastState = null;
 
 function hangmanWsUrl() {
   const host = window.location.hostname;
-  const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '';
+  const isLocal = host === 'localhost' || host === '127.0.0.1';
 
   // În producție folosim același server WebSocket de pe Render
   if (!isLocal) {

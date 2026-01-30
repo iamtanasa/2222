@@ -10,10 +10,19 @@ let lastGameState = null; // ultimul state primit, folosit la ecranul de final
 let guessActive = false; // controlează dacă keypad-ul pentru ghicit este activ
 
 function wsUrl() {
+  const host = window.location.hostname;
+  const isLocal = host === 'localhost' || host === '127.0.0.1';
+
+  // În producție folosim serverul de pe Render
+  if (!isLocal) {
+    return 'wss://two222-h9x4.onrender.com';
+  }
+
+  // Local: ne conectăm la serverul pornit manual pe 8080
   const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-  const host = window.location.hostname || 'localhost';
+  const localHost = host || 'localhost';
   const port = 8080; // trebuie să corespundă cu server/server.js
-  return `${protocol}://${host}:${port}`;
+  return `${protocol}://${localHost}:${port}`;
 }
 
 function connectWebSocket() {
