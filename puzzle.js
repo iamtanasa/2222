@@ -256,20 +256,43 @@ function drawTargetGrid() {
     board.innerHTML = '';
 
     const cols = gameState.difficulty;
-    const boardSize = 250;
-    const pieceSize = boardSize / cols;
+
+    // Dimensiunea maximă a tablei (pe cea mai mare latură)
+    const maxBoardSize = 250;
+
+    // Adaptăm dimensiunea tablei la raportul imaginii, ca să nu fie tăiată
+    let boardWidth = maxBoardSize;
+    let boardHeight = maxBoardSize;
+
+    if (gameState.image) {
+        const imgW = gameState.image.width;
+        const imgH = gameState.image.height;
+
+        if (imgW >= imgH) {
+            // imagine mai lată decât înaltă: lățime maximă, înălțimea în funcție de raport
+            boardWidth = maxBoardSize;
+            boardHeight = maxBoardSize * (imgH / imgW);
+        } else {
+            // imagine mai înaltă: înălțime maximă, lățimea în funcție de raport
+            boardHeight = maxBoardSize;
+            boardWidth = maxBoardSize * (imgW / imgH);
+        }
+    }
+
+    const pieceWidth = boardWidth / cols;
+    const pieceHeight = boardHeight / cols;
 
     for (let i = 0; i < cols * cols; i++) {
         const slot = document.createElement('div');
         slot.className = 'puzzle-slot';
-        slot.style.width = pieceSize + 'px';
-        slot.style.height = pieceSize + 'px';
+        slot.style.width = pieceWidth + 'px';
+        slot.style.height = pieceHeight + 'px';
         board.appendChild(slot);
     }
 
     board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-    board.style.width = boardSize + 'px';
-    board.style.height = boardSize + 'px';
+    board.style.width = boardWidth + 'px';
+    board.style.height = boardHeight + 'px';
 }
 
 // ==========================================
