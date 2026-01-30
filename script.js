@@ -104,13 +104,30 @@ if (photoInput) {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Comprimăm imaginea înainte de upload (pentru spațiu și viteză)
+        let uploadBlob = file;
+        let uploadName = file.name;
+
+        try {
+            const maxSize = 1000; // latura maximă în pixeli (mai mică pentru economie de spațiu)
+            const quality = 0.5;  // calitate JPEG mai mică pentru fișiere mai mici
+            const compressed = await compressImage(file, maxSize, quality);
+            if (compressed) {
+                uploadBlob = compressed;
+                const baseName = file.name.replace(/\.[^.]+$/, '');
+                uploadName = baseName + '-compressed.jpg';
+            }
+        } catch (err) {
+            console.error('Nu am reușit să comprim poza, încarc originalul.', err);
+        }
+
         // Creează un nume unic pentru fișier
-        const fileName = `${Date.now()}-${file.name}`;
+        const fileName = `${Date.now()}-${uploadName}`;
 
         // 1. Încarcă fișierul în Storage Bucket 'amintiri'
         const { data: storageData, error: storageError } = await _supabase.storage
             .from('amintiri')
-            .upload(fileName, file);
+            .upload(fileName, uploadBlob, { contentType: 'image/jpeg' });
 
         if (storageError) {
             alert("Eroare la încărcare fișier: " + storageError.message);
@@ -136,6 +153,54 @@ if (photoInput) {
             alert("Eroare bază de date: " + dbError.message);
         }
     };
+}
+
+// Funcție helper pentru comprimarea imaginilor în browser folosind canvas
+async function compressImage(file, maxSize, quality) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = (event) => {
+            const img = new Image();
+
+            img.onload = () => {
+                let { width, height } = img;
+
+                // Dacă imaginea este deja mică, nu o mai modificăm
+                const longestSide = Math.max(width, height);
+                if (longestSide <= maxSize) {
+                    resolve(null);
+                    return;
+                }
+
+                const scale = maxSize / longestSide;
+                width = Math.round(width * scale);
+                height = Math.round(height * scale);
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob(
+                    (blob) => {
+                        if (blob) resolve(blob);
+                        else resolve(null);
+                    },
+                    'image/jpeg',
+                    quality
+                );
+            };
+
+            img.onerror = (err) => reject(err);
+            img.src = event.target.result;
+        };
+
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(file);
+    });
 }
 
 // Afișează o poză random din Cloud la intrarea pe site
