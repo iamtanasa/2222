@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mesaje - Universul Nostru</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="page-entry">
+
+    <div class="main-container">
+        <div class="back-button" onclick="goBack()">← Înapoi</div>
+        <div class="main-icon">💌</div>
+        <h1>Mesajele Iubirii</h1>
+        
+        <div class="glass-card">
+            <div id="messages-container" class="messages-container">
+                <div class="message-card from-andrei">
+                    <div class="message-author">Andrei</div>
+                    <div class="message-text">Mesajul tău aici... 💕</div>
+                </div>
+                <div class="message-card from-georgiana">
+                    <div class="message-author">Georgiana</div>
+                    <div class="message-text">Mesajul tău aici... 💕</div>
+                </div>
+            </div>
+            <button onclick="sendMessage()" class="btn-add-memory">📝 Scrie un Mesaj</button>
+        </div>
+
+        <button onclick="goBack()" class="btn-back">Înapoi la Univers</button>
+    </div>
+
+    <script>
+        function goBack() {
+            document.body.classList.add('page-fade-out');
+            setTimeout(() => { window.location.href = "2222.html"; }, 600);
+        }
+        
+        function sendMessage() {
+            alert('📝 Funcție de mesaje - coming soon!');
+        }
+    </script>
+</body>
+</html>

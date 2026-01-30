@@ -1,0 +1,1227 @@
+/* Resetare generală pentru un aspect curat pe mobil */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Quicksand', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    min-height: 100vh;              /* înălțime minimă, dar permite mai mult conținut */
+    width: 100%;                    /* fără 100vw ca să evităm scroll orizontal fals */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;        /* conținutul începe de sus pe telefon */
+    overflow-x: hidden;             /* nu vrem scroll pe orizontală */
+    overflow-y: auto;               /* permitem scroll vertical pe paginile lungi */
+    position: relative;
+    padding: 20px 0;                /* puțin spațiu sus/jos pe mobil */
+    
+    /* Fundal cu gradient animat în culori calde */
+    background: linear-gradient(-45deg, #ff7e5f, #feb47b, #ff6b81, #ffb703);
+    background-size: 400% 400%;
+    animation: warmGradientBg 15s ease infinite;
+}
+
+@keyframes warmGradientBg {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Elementele care cad (Inimi, Beri, Căpșuni) */
+.falling-element {
+    position: fixed;
+    top: -50px;
+    z-index: 1;
+    pointer-events: none;
+    animation: fall linear forwards;
+}
+
+@keyframes fall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+}
+
+/* Containerul de Login */
+.login-container {
+    position: relative;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.15); /* Efect de sticlă mată */
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    padding: 40px 30px;
+    border-radius: 35px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    text-align: center;
+    width: 380px;
+    max-width: 90%; /* Se adaptează pe lățimea telefonului */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.main-icon {
+    font-size: 100px;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1));
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+h1 {
+    font-family: 'Dancing Script', cursive;
+    color: white;
+    font-size: 2.8rem;
+    margin-bottom: 5px;
+    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 300;
+    font-size: 1rem;
+    letter-spacing: 1.2px;
+    margin-bottom: 30px;
+    font-style: italic;
+}
+
+/* Input-uri elegante */
+input {
+    width: 100%;
+    padding: 16px;
+    border-radius: 20px;
+    /* Păstrăm bordura fină și fundalul transparent */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    outline: none;
+    background: rgba(255, 255, 255, 0.15); 
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 16px;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+/* Când dai click să scrii, bordura devine puțin mai vizibilă, NU alb solid */
+input:focus {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+/* REZOLVARE PENTRU ALBUL NEDORIT (Autofill & Focus Chrome) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus {
+    -webkit-text-fill-color: white;
+    /* Această linie "păcălește" browserul să nu pună fundal alb/albastru */
+    -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.1) inset;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+button {
+    width: 100%;
+    padding: 16px;
+    border-radius: 20px;
+    border: none;
+    /* Un gradient care îmbină culorile căpșunii și ale berii */
+    background: linear-gradient(45deg, #ff4d6d, #ffb703);
+    color: white; /* Textul alb arată mult mai elegant pe fundal colorat */
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase; /* Litere mari pentru un aspect mai profi */
+    letter-spacing: 1px;
+    cursor: pointer;
+    /* Adăugăm o umbră colorată care dă senzația că butonul strălucește */
+    box-shadow: 0 8px 20px rgba(255, 77, 109, 0.4);
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    transform: translateY(-3px); /* Se ridică puțin la atingere */
+    box-shadow: 0 12px 25px rgba(255, 77, 109, 0.5);
+    filter: brightness(1.1);
+}
+
+button:active {
+    transform: scale(0.96); /* Efect de apăsare */
+}
+
+#error-message {
+    color: #ffffff;
+    margin-top: 15px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    /* Efect de sticlă cu o tentă discretă de roșu */
+    background: rgba(255, 59, 48, 0.2); 
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 12px;
+    border-radius: 15px;
+    /* Bordură fină pentru a evidenția cardul de eroare */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: none; /* Rămâne ascuns până la eroare */
+    
+    /* O mică animație de apariție */
+    animation: fadeInError 0.4s ease;
+}
+
+@keyframes fadeInError {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Definim mișcarea de tremurat stânga-dreapta */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-10px); }
+    40%, 80% { transform: translateX(10px); }
+}
+
+/* Clasa care va fi aplicată containerului în caz de eroare */
+.shake-effect {
+    animation: shake 0.4s ease-in-out;
+}
+
+/* Definim animația de dispariție lină */
+.page-fade-out {
+    opacity: 0;
+    transition: opacity 0.8s ease-in-out;
+    pointer-events: none; /* Împiedică orice click în timpul tranziției */
+}
+
+/* Opțional: Putem face și containerul să se micșoreze ușor în timp ce dispare */
+.container-exit {
+    transform: scale(0.9) translateY(20px);
+    opacity: 0;
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ajustări pentru ecrane foarte mici */
+@media (max-width: 370px) {
+    h1 { font-size: 2.2rem; }
+    .main-icon { font-size: 80px; }
+}
+
+
+/* pagina 2 */
+
+/* Animație pentru intrarea în pagină */
+.page-entry {
+    animation: fadeInPage 1.2s ease-out;
+}
+
+@keyframes fadeInPage {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.main-container {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    width: 90%;
+    max-width: 500px;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 30px;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    margin: 20px 0;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.message {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.6rem;
+    color: white;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.divider {
+    height: 1px;
+    width: 60%;
+    background: rgba(255, 255, 255, 0.3);
+    margin: 20px auto;
+}
+
+.counter-text {
+    font-weight: 600;
+    color: white;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 0.8rem;
+}
+
+#counter {
+    font-size: 1.2rem;
+    color: white;
+    font-weight: 300;
+}
+
+.pulse {
+    animation: pulseIcon 2s infinite;
+}
+
+@keyframes pulseIcon {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.5)); }
+    100% { transform: scale(1); }
+}
+
+.btn-back {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    font-size: 0.9rem !important;
+    margin-top: 20px;
+    width: auto !important;
+    padding: 10px 25px !important;
+}
+
+/* --- RAMA FOTO PREMIUM --- */
+.photo-frame {
+    width: 280px;
+    height: 280px;
+    margin: 0 auto 25px;
+    position: relative;
+    padding: 10px; /* Grosimea ramei */
+    background: linear-gradient(45deg, #ff4d6d, #ffb703, #ff4d6d);
+    background-size: 200% 200%;
+    animation: borderAnimation 4s linear infinite; /* Rama se mișcă discret */
+    border-radius: 30px;
+    box-shadow: 0 0 20px rgba(255, 77, 109, 0.4);
+    transition: box-shadow 0.5s ease;
+}
+
+/* Efectul de Glow (strălucire) */
+.photo-frame.glow {
+    box-shadow: 0 0 40px rgba(255, 183, 3, 0.8), 0 0 60px rgba(255, 77, 109, 0.6);
+}
+
+@keyframes borderAnimation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Interiorul ramei */
+.photo-inner {
+    width: 100%;
+    height: 100%;
+    background: #222; /* Fundal negru sub poză */
+    border-radius: 22px; /* Puțin mai mic decât rama */
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.photo-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+    animation: photoAppear 0.8s ease-out;
+}
+
+@keyframes photoAppear {
+    from { opacity: 0; transform: scale(1.1); filter: brightness(2); }
+    to { opacity: 1; transform: scale(1); filter: brightness(1); }
+}
+
+#no-photo-msg {
+    color: white;
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.2rem;
+    padding: 20px;
+    text-align: center;
+}
+
+/* Secțiunea de butoane sub ramă */
+.upload-section {
+    margin-top: -10px;
+    margin-bottom: 20px;
+}
+
+/* Containerul care ține butoanele aliniate */
+/* Containerul care forțează butoanele pe același rând */
+.upload-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px; /* Spațiul dintre butoane */
+    margin: 20px auto;
+    width: 100%;
+    max-width: 400px; /* Lățimea maximă a grupului de butoane */
+}
+
+/* Stilul UNIFICAT pentru ambele butoane */
+.btn-upload, .btn-gallery {
+    flex: 1; /* Forțează ambele butoane să ocupe spațiu egal */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 45px; /* Înălțime fixă pentru ambele */
+    
+    padding: 0 5px; /* Padding mic pentru a lăsa textul să încapă */
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 15px !important;
+    
+    color: white !important;
+    font-size: 0.65rem !important; /* Font puțin mai mic pentru a încape textul lung */
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap; /* Previne ruperea textului pe două rânduri */
+    box-shadow: none !important;
+}
+
+.btn-upload:hover, .btn-gallery:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-2px);
+}
+
+/* Ajustare pentru ecrane foarte mici (telefoane înguste) */
+@media (max-width: 360px) {
+    .btn-upload, .btn-gallery {
+        font-size: 0.6rem !important;
+        padding: 0 2px;
+    }
+}
+
+/* --- STILURI MODAL (FERESTRE) --- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+}
+
+.modal-content {
+    margin: 5% auto;
+    padding: 20px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    border-radius: 30px;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.close-modal, .close-fullscreen {
+    position: absolute;
+    right: 20px; top: 10px;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 101;
+}
+
+/* --- GRID GALERIE --- */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.gallery-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.gallery-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+.btn-delete {
+    position: absolute;
+    top: 5px; right: 5px;
+    background: rgba(255, 0, 0, 0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 25px; height: 25px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* --- FULLSCREEN VIEWER --- */
+.fullscreen-viewer {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: black;
+}
+
+.fullscreen-viewer img {
+    max-width: 95%;
+    max-height: 80%;
+    border-radius: 10px;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+/* --- REPARARE BUTOANE NAVIGARE FULLSCREEN --- */
+.nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.15); /* Fundal discret */
+    backdrop-filter: blur(5px); /* Efect de sticlă pe butoane */
+    -webkit-backdrop-filter: blur(5px);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 24px;
+    /* Dimensiuni fixe pentru a evita "liniile" lungi */
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 50%; /* Buton perfect rotund */
+    z-index: 110; /* Deasupra imaginii */
+    transition: all 0.3s ease;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.prev { 
+    left: 15px; /* Poziție fixă la stânga */
+}
+
+.next { 
+    right: 15px; /* Poziție fixă la dreapta */
+}
+
+/* Ascundem butoanele de navigare dacă există o singură poză (opțional) */
+.nav-btn:disabled {
+    display: none;
+}
+
+.prev { left: 10px; }
+.next { right: 10px; }
+
+/* Stil pentru poza interactivă */
+#random-photo {
+    cursor: pointer;
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+#random-photo:hover {
+    transform: scale(1.02); /* Se mărește ușor */
+    filter: brightness(1.1); /* Devine puțin mai luminoasă */
+}
+
+#random-photo:active {
+    transform: scale(0.98); /* Efect de apăsare (se micșorează un pic) */
+}
+
+/* ============================================ */
+/* SECȚIUNEA PORTALE - NAVIGARE INTERESANTĂ */
+/* ============================================ */
+
+.portals-title {
+    color: white;
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.4rem;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+}
+
+.portals-container {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.portals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin: 0 auto;
+    max-width: 550px;
+    padding: 0 10px;
+}
+
+.portal-card {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 20px;
+    padding: 20px 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efect de glow la hover */
+.portal-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+}
+
+.portal-card:hover {
+    transform: translateY(-8px) scale(1.05);
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 15px 35px rgba(255, 77, 109, 0.3), 
+                0 0 25px rgba(255, 183, 3, 0.2);
+}
+
+.portal-card:hover::before {
+    opacity: 1;
+}
+
+.portal-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    animation: portalBounce 0.6s ease forwards;
+}
+
+.portal-card:hover .portal-icon {
+    animation: portalPulse 0.6s ease infinite;
+}
+
+@keyframes portalBounce {
+    0% { transform: scale(0) rotate(-180deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes portalPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+.portal-name {
+    color: white;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.portal-desc {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+    font-weight: 300;
+    font-style: italic;
+}
+
+.portal-card:active {
+    transform: translateY(-5px) scale(1.02);
+}
+
+/* Responsive pentru mobile */
+@media (max-width: 400px) {
+    .portals-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .portal-card {
+        padding: 15px 10px;
+    }
+    
+    .portal-icon {
+        font-size: 2rem;
+    }
+}
+
+/* ============================================ */
+/* PAGINI PORTALE - AMINTIRI, TIMELINE, etc */
+/* ============================================ */
+
+.back-button {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    padding: 6px 12px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    z-index: 20;
+}
+
+@media (min-width: 768px) {
+    /* pe ecrane mai mari îl putem face un pic mai puternic */
+    .back-button {
+        top: 20px;
+        left: 20px;
+        font-size: 1rem;
+        padding: 8px 14px;
+    }
+}
+
+.back-button:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateX(-3px);
+}
+
+/* LISTA DE AMINTIRI */
+.memories-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.memory-item {
+    background: rgba(255, 255, 255, 0.1);
+    border-left: 4px solid #ffb703;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.memory-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(5px);
+    box-shadow: 0 10px 25px rgba(255, 183, 3, 0.2);
+}
+
+.memory-date {
+    color: #ffb703;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.memory-title {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.memory-text {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* TIMELINE */
+.timeline-container {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline-item {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    position: relative;
+    padding-left: 40px;
+}
+
+.timeline-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 18px;
+    top: 60px;
+    width: 2px;
+    height: 30px;
+    background: rgba(255, 183, 3, 0.4);
+}
+
+.timeline-dot {
+    position: absolute;
+    left: 0;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(45deg, #ff4d6d, #ffb703);
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    top: 0;
+    box-shadow: 0 0 15px rgba(255, 183, 3, 0.5);
+    animation: timelinePulse 2s infinite;
+}
+
+@keyframes timelinePulse {
+    0%, 100% { box-shadow: 0 0 15px rgba(255, 183, 3, 0.5); }
+    50% { box-shadow: 0 0 25px rgba(255, 183, 3, 0.8); }
+}
+
+.timeline-content {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.timeline-item:hover .timeline-content {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 183, 3, 0.4);
+}
+
+.timeline-date {
+    color: #ffb703;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.timeline-title {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 5px 0;
+}
+
+.timeline-desc {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+/* MESAJE */
+.messages-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.message-card {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 15px;
+    border-radius: 15px;
+    animation: messageSlide 0.5s ease forwards;
+}
+
+@keyframes messageSlide {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message-card.from-andrei {
+    margin-left: 0;
+    background: rgba(255, 109, 61, 0.15);
+    border-left: 4px solid #ff4d6d;
+}
+
+.message-card.from-georgiana {
+    margin-right: 0;
+    background: rgba(255, 183, 3, 0.15);
+    border-right: 4px solid #ffb703;
+    text-align: right;
+}
+
+.message-author {
+    color: white;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.message-text {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* PLAYLIST */
+.playlist-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.playlist-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.playlist-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(5px);
+    box-shadow: 0 8px 20px rgba(255, 183, 3, 0.2);
+}
+
+.playlist-number {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(45deg, #ff4d6d, #ffb703);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.playlist-info {
+    flex: 1;
+}
+
+.playlist-title {
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.playlist-artist {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+}
+
+/* BUTOANE DE ACȚIUNE */
+.btn-add-memory {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(45deg, #ff4d6d, #ffb703) !important;
+    border: none !important;
+    color: white;
+    border-radius: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(255, 77, 109, 0.3);
+}
+
+.btn-add-memory:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(255, 77, 109, 0.4);
+}
+
+.btn-add-memory:active {
+    transform: scale(0.96);
+}
+
+/* ============================================ */
+/* PUZZLE GAME STYLES */
+/* ============================================ */
+
+.puzzle-screen {
+    width: 100%;
+    animation: fadeInPage 0.5s ease-out;
+}
+
+.menu-subtitle {
+    color: white;
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* GRID MODURI DE DIFICULTATE */
+.difficulty-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.difficulty-card {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+}
+
+.difficulty-card:hover {
+    transform: translateY(-8px) scale(1.05);
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 15px 35px rgba(255, 77, 109, 0.25);
+}
+
+.difficulty-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.difficulty-name {
+    color: white;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 3px;
+}
+
+.difficulty-desc {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+}
+
+.puzzle-upload {
+    display: flex;
+    justify-content: center;
+}
+
+.puzzle-upload .btn-upload {
+    flex: 1;
+    max-width: 300px;
+}
+
+/* HEADER JOCULUI */
+.puzzle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+    padding: 15px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.puzzle-stats {
+    display: flex;
+    gap: 20px;
+    flex: 1;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    color: #ffb703;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-top: 3px;
+}
+
+.btn-reset {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: none !important;
+}
+
+.btn-reset:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    transform: translateY(-2px);
+}
+
+/* CONTAINER JOC */
+.puzzle-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.puzzle-board {
+    display: grid;
+    gap: 0; /* fără spațiu între celule pentru aliniere perfectă */
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0; /* piesele vor ocupa exact zona umbrită */
+    border-radius: 15px;
+    border: 2px solid rgba(255, 183, 3, 0.4);
+    box-shadow: 0 0 30px rgba(255, 183, 3, 0.3), inset 0 0 10px rgba(0, 0, 0, 0.4);
+    position: relative;
+    z-index: 5;
+    overflow: hidden; /* taie orice depășire de la piese */
+}
+
+.puzzle-slot {
+    background: rgba(255, 255, 255, 0.04); /* ușor evidențiat slotul liber */
+    border: 1px dashed rgba(255, 255, 255, 0.18); /* liniile unde pui piesa */
+    border-radius: 0; /* muchii drepte ca să se unească perfect */
+}
+
+.puzzle-pieces {
+    position: relative;
+    width: 100%;
+    min-height: 280px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 15px;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    padding: 15px;
+    overflow: visible;
+    display: block;
+}
+
+/* PIESE DE PUZZLE */
+.puzzle-piece {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background-size: cover !important;
+    background-position: center !important;
+    border-radius: 8px;
+    cursor: grab !important;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2);
+    user-select: none;
+    z-index: 10;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    transition: all 0.15s ease;
+}
+
+.puzzle-piece:active,
+.puzzle-piece:focus {
+    outline: none;
+}
+
+.puzzle-piece:hover:not(.attached) {
+    transform: scale(1.08) translateY(-3px);
+    box-shadow: 0 12px 35px rgba(255, 183, 3, 0.5), 0 0 15px rgba(255, 183, 3, 0.3);
+    border-color: rgba(255, 183, 3, 0.7);
+}
+
+.puzzle-piece.dragging {
+    cursor: grabbing !important;
+    opacity: 0.98;
+    transform: scale(1.15) rotate(3deg);
+    z-index: 2000;
+    box-shadow: 0 15px 50px rgba(255, 183, 3, 0.8), 0 0 25px rgba(255, 77, 109, 0.5);
+    border-color: rgba(255, 183, 3, 0.9);
+}
+
+.puzzle-piece.attached {
+    cursor: default !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1);
+    opacity: 1;
+}
+
+/* ECRAN VICTORIE */
+.win-animation {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    animation: celebrationBounce 1s ease-out;
+}
+
+@keyframes celebrationBounce {
+    0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.final-image-container {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.final-image-container img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* RESPONSIVE */
+@media (max-width: 500px) {
+    .difficulty-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    
+    .difficulty-card {
+        padding: 12px;
+    }
+    
+    .difficulty-icon {
+        font-size: 1.5rem;
+    }
+    
+    .difficulty-name {
+        font-size: 0.85rem;
+    }
+    
+    .puzzle-piece {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .puzzle-stats {
+        gap: 10px;
+        font-size: 0.85rem;
+    }
+    
+    .puzzle-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+}

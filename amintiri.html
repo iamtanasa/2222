@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Puzzle Game - Universul Nostru</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="page-entry">
+
+    <div class="main-container">
+        <div class="back-button" onclick="goBack()">← Înapoi</div>
+        <div class="main-icon">🧩</div>
+        <h1>Puzzle Game</h1>
+        
+        <!-- ECRANUL DE SELECȚIE -->
+        <div id="screen-menu" class="puzzle-screen">
+            <div class="glass-card">
+                <p class="menu-subtitle">Alege un mod de joc:</p>
+                
+                <div class="difficulty-grid">
+                    <div class="difficulty-card" onclick="startGame(3)">
+                        <div class="difficulty-icon">🟢</div>
+                        <div class="difficulty-name">Ușor</div>
+                        <div class="difficulty-desc">9 Piese (3x3)</div>
+                    </div>
+                    <div class="difficulty-card" onclick="startGame(4)">
+                        <div class="difficulty-icon">🟡</div>
+                        <div class="difficulty-name">Mediu</div>
+                        <div class="difficulty-desc">16 Piese (4x4)</div>
+                    </div>
+                    <div class="difficulty-card" onclick="startGame(5)">
+                        <div class="difficulty-icon">🔴</div>
+                        <div class="difficulty-name">Greu</div>
+                        <div class="difficulty-desc">25 Piese (5x5)</div>
+                    </div>
+                </div>
+
+                <div class="upload-section puzzle-upload" style="margin-top: 25px;">
+                    <label for="puzzle-image-input" class="btn-upload">📸 Alege o Fotografie</label>
+                    <input type="file" id="puzzle-image-input" accept="image/*" style="display: none;">
+                    <button type="button" class="btn-gallery" onclick="openPuzzleGallery()">Din galerie 📸</button>
+                </div>
+
+                <p id="file-selected" style="color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-top: 10px; text-align: center;"></p>
+            </div>
+        </div>
+
+        <!-- ECRANUL DE JOC -->
+        <div id="screen-game" class="puzzle-screen" style="display: none;">
+            <div class="puzzle-header">
+                <div class="puzzle-stats">
+                    <div class="stat">
+                        <span class="stat-label">Dificultate:</span>
+                        <span id="stat-difficulty" class="stat-value">-</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Piese Conectate:</span>
+                        <span id="stat-connected" class="stat-value">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Timp:</span>
+                        <span id="stat-time" class="stat-value">00:00</span>
+                    </div>
+                </div>
+                <button onclick="resetGame()" class="btn-reset">↻ Restart</button>
+            </div>
+
+            <div class="puzzle-container">
+                <div id="puzzle-board" class="puzzle-board"></div>
+                <div id="puzzle-pieces" class="puzzle-pieces"></div>
+            </div>
+        </div>
+
+        <!-- ECRANUL DE VICTORIE -->
+        <div id="screen-win" class="puzzle-screen" style="display: none;">
+            <div class="glass-card">
+                <div class="win-animation">🎉</div>
+                <h2 style="color: white; font-family: 'Dancing Script'; font-size: 2.5rem; margin-bottom: 10px;">Felicitări!</h2>
+                <p style="color: rgba(255,255,255,0.8); font-size: 1.1rem; margin-bottom: 20px;">Ai completat puzzle-ul!</p>
+                
+                <div id="final-image" class="final-image-container"></div>
+                
+                <p id="win-message" style="color: rgba(255,255,255,0.7); margin-top: 20px;"></p>
+                
+                <div style="display: flex; gap: 10px; margin-top: 25px;">
+                    <button onclick="backToMenu()" class="btn-add-memory" style="flex: 1;">← Meniu</button>
+                    <button onclick="playAgain()" class="btn-add-memory" style="flex: 1;">🔄 Iar</button>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="goBack()" class="btn-back" style="margin-top: 20px;">Înapoi la Univers</button>
+    </div>
+
+    <div id="puzzle-gallery-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closePuzzleGallery()">&times;</span>
+            <h2 style="color: white; font-family: 'Dancing Script'; font-size: 2rem; margin-bottom: 15px;">Alege o fotografie din amintirile noastre</h2>
+            <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-bottom: 10px;">Apasă pe o poză ca să o folosești pentru puzzle.</p>
+            <div id="puzzle-gallery-grid" class="gallery-grid"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+    <script src="puzzle.js"></script>
+</body>
+</html>

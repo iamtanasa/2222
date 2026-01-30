@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Spânzurătoarea - Joc</title>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="hangman.css" />
+</head>
+<body class="page-entry" data-page="hangman-game">
+  <div class="bulls-container">
+    <div class="back-button">&larr; Înapoi</div>
+
+    <div class="bulls-icon">🪢</div>
+    <h1>Spânzurătoarea</h1>
+    <p class="subtitle">Unul alege cuvântul, celălalt luptă să-l ghicească.</p>
+
+    <div class="glass-card bulls-card" id="hangman-root">
+      <div class="section">
+        <h2 class="section-title">Camera</h2>
+        <p class="status-text" id="hangman-status-text">Conectare la server...</p>
+        <p class="room-label">Room: <span id="hangman-room-code-display">-</span></p>
+        <p class="player-labels">
+          Tu: <span id="hangman-you-name">-</span><br/>
+          Adversar: <span id="hangman-opponent-name">-</span>
+        </p>
+        <p id="hangman-role-info" class="helper-text"></p>
+      </div>
+
+      <div id="hangman-word-section" class="section">
+        <h2 class="section-title">Cuvântul secret</h2>
+        <p class="helper-text" id="hangman-word-helper">
+          Dacă ești tu cel care a creat camera, tu alegi cuvântul (doar litere, fără diacritice).
+        </p>
+        <div class="word-input-row">
+          <input id="hangman-secret-word" type="text" maxlength="16" placeholder="Ex: CAPSUNI" autocomplete="off" />
+        </div>
+        <button id="hangman-set-word" class="btn-secondary">Confirmă cuvântul</button>
+      </div>
+
+      <div id="hangman-game-section" class="section" style="display: none;">
+        <h2 class="section-title">Joc</h2>
+        <p id="hangman-turn-info" class="turn-info"></p>
+
+        <div class="hangman-layout">
+          <div class="hangman-figure" id="hangman-figure">
+            <div class="gallow-base"></div>
+            <div class="gallow-pole"></div>
+            <div class="gallow-beam"></div>
+            <div class="rope-group">
+              <div class="gallow-rope"></div>
+              <div class="man-group">
+                <div class="man-head body-part" data-part="1">
+                  <img src="hangman-head.png" alt="Cap" class="hangman-head-img" />
+                </div>
+                <div class="man-body body-part" data-part="2"></div>
+                <div class="man-arm left body-part" data-part="3"></div>
+                <div class="man-arm right body-part" data-part="4"></div>
+                <div class="man-leg left body-part" data-part="5"></div>
+                <div class="man-leg right body-part" data-part="6"></div>
+              </div>
+            </div>
+
+            <!-- Personajul care vine sa "salveze" la final de joc -->
+            <div class="rescue-walker" id="hangman-rescue-walker">
+              <div class="man-head">
+                <img src="hangman-head2.png" alt="Cap salvator" class="hangman-head-img rescue-head-img" />
+              </div>
+              <div class="man-body"></div>
+              <div class="man-arm left"></div>
+              <div class="man-arm right"></div>
+              <div class="man-leg left"></div>
+              <div class="man-leg right"></div>
+            </div>
+          </div>
+
+          <div class="hangman-info">
+            <div id="hangman-word-display" class="word-display"></div>
+            <div id="hangman-used-letters" class="used-letters"></div>
+          </div>
+        </div>
+
+        <p class="helper-text" style="margin-top: 10px;">Alege litere pentru a ghici cuvântul. Ai un număr limitat de greșeli.</p>
+        <div id="hangman-letter-grid" class="letter-grid"></div>
+      </div>
+
+      <div id="hangman-over-section" class="section" style="display: none; text-align: center;">
+        <div class="win-card">
+          <div class="win-icon">🎉</div>
+          <h2 class="section-title" style="text-align: center;">Joc terminat</h2>
+          <p id="hangman-over-text" class="turn-info"></p>
+          <p id="hangman-reveal-word" class="helper-text" style="margin-top: 8px;"></p>
+          <div class="win-buttons">
+            <button id="hangman-play-again" class="btn-secondary">Joacă din nou</button>
+            <button id="hangman-home" class="btn-primary">Acasă</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="hangman.js"></script>
+</body>
+</html>

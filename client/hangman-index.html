@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Spânzurătoarea - Lobby</title>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="hangman.css" />
+</head>
+<body class="page-entry" data-page="hangman-lobby">
+  <div class="bulls-container">
+    <div class="back-button">&larr; Înapoi</div>
+    <div class="bulls-icon">🪢</div>
+    <h1>Spânzurătoarea</h1>
+    <p class="subtitle">Alege un nume, apoi intră într-o cameră doar a voastră.</p>
+
+    <div class="glass-card bulls-card">
+      <div class="section">
+        <h2 class="section-title">Pasul 1: Numele tău</h2>
+        <input id="hangman-player-name" type="text" maxlength="20" placeholder="Numele tău" />
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Creează o cameră nouă</h2>
+        <p class="helper-text">Primești un cod pe care îl trimiți partenerului tău.</p>
+        <button id="hangman-create-room" class="btn-primary">Creează cameră</button>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Intră într-o cameră</h2>
+        <p class="helper-text">Introdu codul primit de la partenerul tău.</p>
+        <div class="join-room">
+          <input id="hangman-room-code" type="text" maxlength="4" placeholder="Cod (ex: ABCD)" />
+          <button id="hangman-join-room" class="btn-secondary">Intră</button>
+        </div>
+      </div>
+
+      <p id="hangman-lobby-status" class="lobby-status">Conectează doi jucători: unul alege cuvântul, celălalt ghicește.</p>
+    </div>
+  </div>
+
+  <script src="hangman.js"></script>
+</body>
+</html>

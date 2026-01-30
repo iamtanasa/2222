@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Timeline - Universul Nostru</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="page-entry">
+
+    <div class="main-container">
+        <div class="back-button" onclick="goBack()">← Înapoi</div>
+        <div class="main-icon">⏰</div>
+        <h1>Timeline</h1>
+        
+        <div class="glass-card">
+            <div class="timeline-container">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">11 Iulie 2025</div>
+                        <div class="timeline-title">Ziua de Începere 🌟</div>
+                        <div class="timeline-desc">Suntem împreună de peste 6 luni</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">Viitor</div>
+                        <div class="timeline-title">Momentele Voastre ✨</div>
+                        <div class="timeline-desc">Adaugă și tu momente importante</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="goBack()" class="btn-back">Înapoi la Univers</button>
+    </div>
+
+    <script>
+        function goBack() {
+            document.body.classList.add('page-fade-out');
+            setTimeout(() => { window.location.href = "2222.html"; }, 600);
+        }
+    </script>
+</body>
+</html>

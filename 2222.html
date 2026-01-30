@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2222 - Universul Nostru</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="page-entry">
+
+    <div class="main-container">
+        <div class="main-icon pulse">🍺🍓</div>
+        <h1>Universul 2222</h1>
+        
+        <div class="glass-card">
+            <div class="photo-frame" id="frame-container">
+                <div class="photo-inner">
+                    <img id="random-photo" src="" alt="Amintirea noastră" onclick="loadRandomPhoto()" style="cursor: pointer;">
+                    <div id="no-photo-msg">Aici va apărea o amintire... ❤️</div>
+                </div>
+            </div>
+
+            <div class="upload-section">
+                <label for="photo-input" class="btn-upload">✨ Încarcă o poză ✨</label>
+                <input type="file" id="photo-input" accept="image/*" style="display: none;">
+                
+                <button onclick="openGallery()" class="btn-gallery">Vezi Galeria 📸</button>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <p class="counter-label">Suntem împreună de:</p>
+            <div id="counter">Calculăm...</div>
+        </div>
+        
+        <!-- SECȚIUNEA PORTALE -->
+        <div class="portals-container">
+            <p class="portals-title">Explorează Universul:</p>
+            <div class="portals-grid">
+                <div class="portal-card" onclick="navigateTo('amintiri.html')">
+                    <div class="portal-icon">🧩</div>
+                    <div class="portal-name">Puzzle</div>
+                    <div class="portal-desc">Joacă puzzle-ul nostru</div>
+                </div>
+                <div class="portal-card" onclick="navigateTo('timeline.html')">
+                    <div class="portal-icon">⏰</div>
+                    <div class="portal-name">Timeline</div>
+                    <div class="portal-desc">Momente speciale</div>
+                </div>
+                <div class="portal-card" onclick="navigateTo('mesaje.html')">
+                    <div class="portal-icon">💌</div>
+                    <div class="portal-name">Mesaje</div>
+                    <div class="portal-desc">Cuvinte de iubire</div>
+                </div>
+                <div class="portal-card" onclick="navigateTo('client/index.html')">
+                    <div class="portal-icon">🎯</div>
+                    <div class="portal-name">Bulls &amp; Cows</div>
+                    <div class="portal-desc">Duel 1v1 cu numere</div>
+                </div>
+                <div class="portal-card" onclick="navigateTo('client/hangman-index.html')">
+                    <div class="portal-icon">🪢</div>
+                    <div class="portal-name">Spânzurătoarea</div>
+                    <div class="portal-desc">Ghicește cuvântul în doi</div>
+                </div>
+                <div class="portal-card" onclick="navigateTo('planner.html')">
+                    <div class="portal-icon">📅</div>
+                    <div class="portal-name">Planificator</div>
+                    <div class="portal-desc">Stabilește și urmărește întâlniri</div>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="logout()" class="btn-back">Înapoi la poartă</button>
+    </div>
+
+    <div id="gallery-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeGallery()">&times;</span>
+            <h2 style="color: white; font-family: 'Dancing Script'; font-size: 2rem; margin-bottom: 20px;">Amintirile Noastre</h2>
+            <div id="gallery-grid" class="gallery-grid">
+                </div>
+        </div>
+    </div>
+
+    <div id="fullscreen-modal" class="modal fullscreen-viewer">
+        <span class="close-fullscreen" onclick="closeFullscreen()">&times;</span>
+        
+        <button class="nav-btn prev" onclick="changeFullscreenPhoto(-1)">&#10094;</button>
+        <img id="img-viewer" src="" alt="Fullsize amintire">
+        <button class="nav-btn next" onclick="changeFullscreenPhoto(1)">&#10095;</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

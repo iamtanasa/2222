@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Bulls &amp; Cows - Lobby</title>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-entry" data-page="lobby">
+  <div class="bulls-container">
+    <div class="back-button" onclick="goBack()">&larr; Înapoi</div>
+    <div class="bulls-icon">&#128002;</div>
+    <h1>Bulls &amp; Cows</h1>
+    <p class="subtitle">Alege un nume și intră în universul duelurilor.</p>
+
+    <div class="glass-card bulls-card">
+      <div class="section">
+        <h2 class="section-title">Pasul 1: Numele tău</h2>
+        <input id="player-name" type="text" maxlength="20" placeholder="Numele tău" />
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Crează o cameră nouă</h2>
+        <p class="helper-text">Primești un cod pe care îl trimiți partenerului tău.</p>
+        <button id="create-room-btn-lobby" class="btn-primary">Creează cameră</button>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Intră într-o cameră</h2>
+        <p class="helper-text">Introdu codul primit de la partenerul tău.</p>
+        <div class="join-room">
+          <input id="room-code-input" type="text" maxlength="4" placeholder="Cod (ex: ABCD)" />
+          <button id="join-room-btn-lobby" class="btn-secondary">Intră</button>
+        </div>
+      </div>
+
+      <p id="lobby-status" class="lobby-status">Conectează doi jucători și începe jocul.</p>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

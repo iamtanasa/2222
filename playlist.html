@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Playlist - Universul Nostru</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="page-entry">
+
+    <div class="main-container">
+        <div class="back-button" onclick="goBack()">← Înapoi</div>
+        <div class="main-icon">🎵</div>
+        <h1>Melodiile Noastre</h1>
+        
+        <div class="glass-card">
+            <div class="playlist-container">
+                <div class="playlist-item">
+                    <div class="playlist-number">1</div>
+                    <div class="playlist-info">
+                        <div class="playlist-title">Cântecul Vostru 🎶</div>
+                        <div class="playlist-artist">Artist - Melodia</div>
+                    </div>
+                </div>
+                <div class="playlist-item">
+                    <div class="playlist-number">2</div>
+                    <div class="playlist-info">
+                        <div class="playlist-title">Adaugă o cântare 🎤</div>
+                        <div class="playlist-artist">Albume speciale</div>
+                    </div>
+                </div>
+            </div>
+            <button onclick="addSong()" class="btn-add-memory">🎧 Adaugă o Cântare</button>
+        </div>
+
+        <button onclick="goBack()" class="btn-back">Înapoi la Univers</button>
+    </div>
+
+    <script>
+        function goBack() {
+            document.body.classList.add('page-fade-out');
+            setTimeout(() => { window.location.href = "2222.html"; }, 600);
+        }
+        
+        function addSong() {
+            alert('🎵 Funcție de playlist - coming soon!');
+        }
+    </script>
+</body>
+</html>

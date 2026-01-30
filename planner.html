@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Planificator Întâlniri</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="planner.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
+</head>
+<body class="page-entry" data-page="planner">
+  <div class="main-container">
+    <div class="back-button" onclick="goBack()">← Înapoi</div>
+    <div class="main-icon">📅</div>
+    <h1>Planificator de Întâlniri</h1>
+    <p class="subtitle">Stabilim momentele noastre speciale și vedem cât a mai rămas până ne revedem.</p>
+
+    <div class="glass-card planner-card">
+      <h2 class="section-title">Adaugă o nouă întâlnire</h2>
+      <p class="helper-text">Alege un nume drăguț și data la care vă veți vedea.</p>
+      <div class="planner-form">
+        <input id="planner-title" type="text" maxlength="40" placeholder="Ex: Seară de film" autocomplete="off" />
+        <div class="planner-row">
+          <input id="planner-date" type="date" />
+          <input id="planner-time" type="time" />
+        </div>
+        <button id="planner-add" class="btn-secondary">Adaugă întâlnirea</button>
+      </div>
+    </div>
+
+    <div class="glass-card planner-card">
+      <h2 class="section-title">Întâlniri prestabilite</h2>
+      <p class="helper-text">Apasă pe un loc, îți completăm automat numele întâlnirii. Tu alegi doar data și ora.</p>
+      <div class="portals-grid planner-presets-grid">
+        <div class="portal-card planner-preset" data-title="Faleză">
+          <div class="portal-icon">🌊</div>
+          <div class="portal-name">Faleză</div>
+          <div class="portal-desc">Plimbare pe malul Dunării</div>
+        </div>
+        <div class="portal-card planner-preset" data-title="Tacos King">
+          <div class="portal-icon">🌮</div>
+          <div class="portal-name">Tacos King</div>
+          <div class="portal-desc">Tacos & povești</div>
+        </div>
+        <div class="portal-card planner-preset" data-title="Parcul Carol">
+          <div class="portal-icon">🌳</div>
+          <div class="portal-name">Parcul Carol</div>
+          <div class="portal-desc">Plimbare prin parc</div>
+        </div>
+        <div class="portal-card planner-preset" data-title="București">
+          <div class="portal-icon">🏙️</div>
+          <div class="portal-name">București</div>
+          <div class="portal-desc">Aventură în capitală</div>
+        </div>
+        <div class="portal-card planner-preset" data-title="Gară Galați">
+          <div class="portal-icon">🚆</div>
+          <div class="portal-name">Gară Galați</div>
+          <div class="portal-desc">Revedere în gară</div>
+        </div>
+        <div class="portal-card planner-preset" data-title="Film">
+          <div class="portal-icon">🎬</div>
+          <div class="portal-name">Film</div>
+          <div class="portal-desc">Seară de cinema</div>
+        </div>
+        <div class="portal-card planner-preset" data-title="Mall">
+          <div class="portal-icon">🛍️</div>
+          <div class="portal-name">Mall</div>
+          <div class="portal-desc">Shopping & înghețată</div>
+        </div>
+        <div class="portal-card planner-preset" data-title="Pe deal">
+          <div class="portal-icon">⛰️</div>
+          <div class="portal-name">Pe deal</div>
+          <div class="portal-desc">Priveliște și apus</div>
+        </div>
+        <div class="portal-card planner-preset" data-title="La pescuit">
+          <div class="portal-icon">🎣</div>
+          <div class="portal-name">La pescuit</div>
+          <div class="portal-desc">Relaxare la apă</div>
+        </div>
+        <div class="portal-card planner-preset" data-title="La mine acasă">
+          <div class="portal-icon">🏡</div>
+          <div class="portal-name">La mine acasă</div>
+          <div class="portal-desc">Seară cozy la mine</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card planner-card">
+      <h2 class="section-title">Următoarea noastră întâlnire</h2>
+      <p id="planner-next-title" class="planner-next-title">Încă nu am planificat nimic...</p>
+      <div id="planner-countdown" class="planner-countdown hidden">
+        <div class="cd-item">
+          <span id="cd-days">0</span>
+          <label>zile</label>
+        </div>
+        <div class="cd-item">
+          <span id="cd-hours">0</span>
+          <label>ore</label>
+        </div>
+        <div class="cd-item">
+          <span id="cd-mins">0</span>
+          <label>minute</label>
+        </div>
+        <div class="cd-item">
+          <span id="cd-secs">0</span>
+          <label>secunde</label>
+        </div>
+      </div>
+      <p id="planner-next-date" class="planner-next-date"></p>
+    </div>
+
+    <div class="glass-card planner-card">
+      <h2 class="section-title">Toate întâlnirile planificate</h2>
+      <p class="helper-text">Cele mai apropiate întâlniri apar primele.</p>
+      <div id="planner-list" class="planner-list"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="script.js"></script>
+  <script src="planner.js"></script>
+  <script>
+    function goBack() {
+      document.body.classList.add('page-fade-out');
+      setTimeout(() => { window.location.href = '2222.html'; }, 600);
+    }
+  </script>
+</body>
+</html>

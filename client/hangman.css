@@ -1,0 +1,368 @@
+/* Stiluri pentru Spanzuratoarea, peste tema existenta */
+
+.hangman-layout {
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.hangman-figure {
+  position: relative;
+  height: 150px;
+}
+
+.rope-group {
+  position: absolute;
+  inset: 0;
+  /* Punctul de prindere al atei de grinda */
+  transform-origin: 84px 20px;
+  animation: headShake 1.8s ease-in-out infinite;
+}
+
+.man-group {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 18%;
+}
+
+.gallow-base,
+.gallow-pole,
+.gallow-beam,
+.gallow-rope,
+.man-head,
+.man-body,
+.man-arm,
+.man-leg {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.gallow-base {
+  bottom: 8px;
+  left: 8px;
+  right: 24px;
+  height: 4px;
+  border-radius: 4px;
+}
+
+.gallow-pole {
+  bottom: 12px;
+  left: 18px;
+  width: 4px;
+  top: 16px;
+  border-radius: 4px;
+}
+
+.gallow-beam {
+  top: 16px;
+  left: 18px;
+  height: 4px;
+  width: 70px;
+  border-radius: 4px;
+}
+
+.gallow-rope {
+  top: 20px;
+  left: 84px;
+  width: 2px;
+  height: 18px;
+  border-radius: 2px;
+}
+
+.man-head {
+  top: 36px;
+  left: 74px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: transparent;
+  overflow: hidden;
+}
+
+.hangman-head-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  transform-origin: 50% 15%;
+}
+
+.man-body {
+  top: 58px;
+  left: 83px;
+  width: 4px;
+  height: 27px;
+  border-radius: 4px;
+}
+
+.man-arm.left {
+  top: 67px;
+  left: 67px;
+  width: 16px;
+  height: 4px;
+  border-radius: 4px;
+}
+
+.man-arm.right {
+  top: 67px;
+  left: 87px;
+  width: 16px;
+  height: 4px;
+  border-radius: 4px;
+}
+
+.man-leg.left {
+  top: 84px;
+  left: 80px;
+  width: 4px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+.man-leg.right {
+  top: 84px;
+  left: 86px;
+  width: 4px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+/* Personajul "salvator" care apare la finalul jocului */
+.rescue-walker {
+  position: absolute;
+  inset: 0;
+  display: none;
+  transform: translateX(90px);
+  pointer-events: none;
+}
+
+.rescue-walker.rescue-walk-in {
+  display: block;
+  animation: hangman-rescue-in 1.8s ease-out forwards;
+}
+
+.rescue-walker.rescue-walk-away {
+  display: block;
+  animation: hangman-rescue-out 1.8s ease-in forwards;
+}
+
+.body-part {
+  opacity: 0;
+  transition: opacity 0.25s ease-out;
+}
+
+.hangman-figure[data-wrong="0"] .body-part { opacity: 0; }
+.hangman-figure[data-wrong="1"] [data-part="1"] { opacity: 1; }
+.hangman-figure[data-wrong="2"] [data-part="1"],
+.hangman-figure[data-wrong="2"] [data-part="2"] { opacity: 1; }
+.hangman-figure[data-wrong="3"] [data-part="1"],
+.hangman-figure[data-wrong="3"] [data-part="2"],
+.hangman-figure[data-wrong="3"] [data-part="3"] { opacity: 1; }
+.hangman-figure[data-wrong="4"] [data-part="1"],
+.hangman-figure[data-wrong="4"] [data-part="2"],
+.hangman-figure[data-wrong="4"] [data-part="3"],
+.hangman-figure[data-wrong="4"] [data-part="4"] { opacity: 1; }
+.hangman-figure[data-wrong="5"] [data-part="1"],
+.hangman-figure[data-wrong="5"] [data-part="2"],
+.hangman-figure[data-wrong="5"] [data-part="3"],
+.hangman-figure[data-wrong="5"] [data-part="4"],
+.hangman-figure[data-wrong="5"] [data-part="5"] { opacity: 1; }
+.hangman-figure[data-wrong="6"] [data-part="1"],
+.hangman-figure[data-wrong="6"] [data-part="2"],
+.hangman-figure[data-wrong="6"] [data-part="3"],
+.hangman-figure[data-wrong="6"] [data-part="4"],
+.hangman-figure[data-wrong="6"] [data-part="5"],
+.hangman-figure[data-wrong="6"] [data-part="6"] { opacity: 1; }
+
+@keyframes headShake {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(4deg); }
+  50% { transform: rotate(0deg); }
+  80% { transform: rotate(-4deg); }
+}
+
+@keyframes hangman-rescue-in {
+  0% {
+    transform: translateX(90px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes hangman-rescue-out {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(220px);
+    opacity: 0;
+  }
+}
+
+.gallow-rope.rope-hidden {
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+}
+
+.man-group.man-hidden {
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+}
+
+.hangman-info {
+  text-align: left;
+}
+
+.word-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.word-display .letter-box {
+  min-width: 24px;
+  padding: 5px 4px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+/* Cuvinte mai lungi: strangem usor casetele */
+.word-display.word-long {
+  gap: 4px;
+}
+
+.word-display.word-long .letter-box {
+  min-width: 20px;
+  padding: 4px 3px;
+  font-size: 0.85rem;
+}
+
+/* Cuvinte foarte lungi: casete si mai compacte */
+.word-display.word-very-long {
+  gap: 3px;
+}
+
+.word-display.word-very-long .letter-box {
+  min-width: 18px;
+  padding: 3px 2px;
+  font-size: 0.8rem;
+}
+
+.word-display .letter-box.empty {
+  opacity: 0.7;
+}
+
+.used-letters {
+  margin-top: 4px;
+  min-height: 24px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.letter-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.letter-key {
+  padding: 6px 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.letter-key.used {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.letter-key.correct {
+  background: rgba(156, 255, 156, 0.3);
+}
+
+.letter-key.wrong {
+  background: rgba(255, 144, 144, 0.35);
+}
+
+.word-input-row {
+  display: flex;
+  justify-content: center;
+}
+
+#hangman-secret-word {
+  width: 100%;
+  max-width: 260px;
+  text-align: center;
+}
+
+#hangman-over-section .win-card {
+  margin-top: 4px;
+}
+
+/* Mai mult spatiu jos pentru butoanele A-Z in jocul de spanzuratoare */
+.page-entry[data-page="hangman-game"] .glass-card {
+  padding-bottom: 40px;
+}
+
+@media (max-width: 480px) {
+  .hangman-layout {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .hangman-figure {
+    height: 120px;
+  }
+
+  .word-display {
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .word-display .letter-box {
+    min-width: 20px;
+    padding: 4px 3px;
+    font-size: 0.85rem;
+  }
+
+  .word-display.word-long .letter-box {
+    min-width: 18px;
+    padding: 3px 2px;
+    font-size: 0.8rem;
+  }
+
+  .word-display.word-very-long .letter-box {
+    min-width: 16px;
+    padding: 2px 1px;
+    font-size: 0.75rem;
+  }
+
+  .letter-grid {
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .letter-key {
+    padding: 5px 0;
+    font-size: 0.8rem;
+  }
+
+  .page-entry[data-page="hangman-game"] .glass-card {
+    padding-bottom: 46px;
+  }
+}

@@ -1,0 +1,374 @@
+/* Stiluri pentru Bulls & Cows, peste tema globală */
+
+body {
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px 0;
+}
+
+.bulls-container {
+  position: relative;
+  width: 90%;
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
+  z-index: 10;
+}
+
+.bulls-icon {
+  font-size: 60px;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.25));
+}
+
+.bulls-card {
+  margin-top: 10px;
+}
+
+.section {
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.status-text,
+.lobby-status {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 10px;
+}
+
+.room-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.join-room {
+  display: flex;
+  flex-direction: column; /* pe mobil: input deasupra, buton dedesubt, ambele pe toată lățimea */
+  gap: 8px;
+}
+
+.join-room input {
+  flex: 1;
+}
+
+.room-label {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.helper-text {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 8px;
+}
+
+.digit-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 0 14px;
+}
+
+.digit-input {
+  width: 52px;
+  height: 56px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  text-align: center;
+  font-size: 1.5rem;
+  color: #fff;
+}
+
+.digit-input:disabled {
+  opacity: 0.5;
+}
+
+.btn-primary,
+.btn-secondary {
+  border-radius: 16px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  border: none;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, #ff4d6d, #ffb703);
+  color: #fff;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.board {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.board h3 {
+  font-size: 0.8rem;
+  margin-bottom: 6px;
+  color: #fff;
+}
+
+.moves-list {
+  list-style: none;
+  max-height: 180px;
+  overflow-y: auto;
+  font-size: 0.8rem;
+}
+
+.moves-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  margin-bottom: 4px;
+}
+
+.moves-guess {
+  font-weight: 700;
+}
+
+.moves-result {
+  opacity: 0.9;
+}
+
+.move-turn {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-right: 6px;
+}
+
+.turn-info {
+  font-size: 0.95rem;
+  color: #fff;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.bulls-back {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  font-size: 0.85rem;
+  color: #fff;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.18);
+  z-index: 30;
+}
+
+.player-labels {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 4px;
+}
+
+.secret-display {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.digit-boxes {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.digit-box {
+  width: 26px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+.digit-box-small {
+  width: 22px;
+  height: 26px;
+  font-size: 0.8rem;
+}
+
+/* casetele mari pentru ghicit */
+.guess-boxes {
+  margin-bottom: 8px;
+}
+
+.guess-box {
+  width: 40px;
+  height: 44px;
+  font-size: 1.2rem;
+}
+
+/* keypad numeric 0-9 + stergere */
+.keypad-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  margin: 6px 0 14px;
+}
+
+.keypad-key {
+  flex: 1 1 0;
+  max-width: 44px;
+  padding: 7px 0;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.keypad-key:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.keypad-key:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.keypad-key-del {
+  max-width: 52px;
+}
+
+.last-result {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.last-result .bulls-count,
+.moves-result .bulls-count {
+  color: #9cff9c;
+  font-weight: 700;
+}
+
+.last-result .cows-count,
+.moves-result .cows-count {
+  color: #ffe28a;
+  font-weight: 700;
+}
+
+.win-card {
+  position: relative;
+  overflow: hidden;
+  padding: 24px 16px 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  text-align: center;
+}
+
+.win-icon {
+  font-size: 2.6rem;
+  margin-bottom: 8px;
+}
+
+.winner-name {
+  margin-top: 6px;
+  font-family: 'Dancing Script', cursive;
+  font-size: 2rem;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+  animation: winnerFloat 3s ease-in-out infinite;
+}
+
+.win-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.confetti-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 8px;
+  height: 14px;
+  background: #fffb;
+  opacity: 0.9;
+  border-radius: 2px;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translate3d(0, -20%, 0) rotateZ(0deg);
+  }
+  100% {
+    transform: translate3d(0, 120%, 0) rotateZ(360deg);
+  }
+}
+
+@keyframes winnerFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  25% {
+    transform: translateY(-4px) rotate(3deg);
+  }
+  50% {
+    transform: translateY(2px) rotate(-2deg);
+  }
+  75% {
+    transform: translateY(-3px) rotate(2deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .boards {
+    grid-template-columns: 1fr;
+  }
+
+  .bulls-container {
+    max-width: 360px;
+  }
+}

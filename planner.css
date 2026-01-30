@@ -1,0 +1,169 @@
+/* Stiluri specifice pentru Planificatorul de Întâlniri */
+
+.page-entry[data-page="planner"] .main-icon {
+  font-size: 72px;
+}
+
+.section-title {
+  color: #fff;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.helper-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+.planner-card {
+  text-align: left;
+}
+
+.planner-presets-grid {
+  margin-top: 10px;
+}
+
+.planner-form input[type="text"] {
+  margin-bottom: 10px;
+}
+
+.planner-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.planner-row input[type="date"],
+.planner-row input[type="time"] {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+}
+
+.btn-secondary {
+  width: 100%;
+}
+
+.planner-countdown {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.planner-countdown.hidden {
+  display: none;
+}
+
+.cd-item {
+  flex: 1;
+  text-align: center;
+}
+
+.cd-item span {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.cd-item label {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.planner-next-title {
+  margin-top: 4px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.planner-next-date {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.planner-list {
+  margin-top: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.planner-item {
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.planner-item-title {
+  font-weight: 600;
+}
+
+.planner-item-date {
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.planner-item-remaining {
+  font-size: 0.8rem;
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.planner-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.planner-delete {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 0.7rem;
+  text-transform: none;
+  letter-spacing: 0;
+  width: auto;
+  box-shadow: none;
+}
+
+.planner-delete:hover {
+  filter: brightness(1.1);
+}
+
+@media (max-width: 480px) {
+  .planner-row input[type="date"],
+  .planner-row input[type="time"] {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+
+  .planner-countdown {
+    padding: 8px 10px;
+  }
+
+  .cd-item span {
+    font-size: 1.2rem;
+  }
+
+  .planner-list {
+    max-height: 180px;
+  }
+}

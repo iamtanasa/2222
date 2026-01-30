@@ -1,0 +1,12 @@
+{
+  "name": "bulls-cows-multiplayer",
+  "version": "1.0.0",
+  "description": "Multiplayer Bulls and Cows 1v1 with Node.js and WebSocket",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.17.0"
+  }
+}
