@@ -9,10 +9,19 @@ let hangmanRole = null; // 'setter' sau 'guesser'
 let hangmanLastState = null;
 
 function hangmanWsUrl() {
+  const host = window.location.hostname;
+  const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '';
+
+  // În producție folosim același server WebSocket de pe Render
+  if (!isLocal) {
+    return 'wss://two222-h9x4.onrender.com';
+  }
+
+  // Local: ne conectăm la serverul pornit manual pe 8080
   const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-  const host = window.location.hostname || 'localhost';
+  const localHost = host || 'localhost';
   const port = 8080;
-  return `${protocol}://${host}:${port}`;
+  return `${protocol}://${localHost}:${port}`;
 }
 
 function hangmanConnect() {
