@@ -109,8 +109,8 @@ if (photoInput) {
         let uploadName = file.name;
 
         try {
-            const maxSize = 800; // latura maximă în pixeli (și mai mică)
-            const quality = 0.35;  // calitate JPEG mai agresivă pentru fișiere foarte mici
+            const maxSize = 1000; // latura maximă în pixeli (mai mică pentru economie de spațiu)
+            const quality = 0.5;  // calitate JPEG mai mică pentru fișiere mai mici
             const compressed = await compressImage(file, maxSize, quality);
             if (compressed) {
                 uploadBlob = compressed;
