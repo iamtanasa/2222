@@ -8,6 +8,25 @@ let hangmanPlayerName = null;
 let hangmanRole = null; // 'setter' sau 'guesser'
 let hangmanLastState = null;
 
+// Helper: detalii utilizator logat (refolosim dacă există getLoggedInUser)
+function hgGetLoggedInUser() {
+  if (typeof getLoggedInUser === 'function') {
+    return getLoggedInUser();
+  }
+  const idStr = localStorage.getItem('berea_user_id');
+  const name = localStorage.getItem('berea_username');
+  if (!idStr || !name) return null;
+  const id = parseInt(idStr, 10);
+  if (!id || Number.isNaN(id)) return null;
+  return { id, name };
+}
+
+function hgFormatPlayerName(name) {
+  if (!name) return '';
+  const lower = name.toLowerCase();
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+}
+
 function hangmanWsUrl() {
   const host = window.location.hostname;
   const isLocal = host === 'localhost' || host === '127.0.0.1';
@@ -122,6 +141,12 @@ function initHangmanLobby() {
   const createBtn = document.getElementById('hangman-create-room');
   const joinBtn = document.getElementById('hangman-join-room');
   const roomInput = document.getElementById('hangman-room-code');
+
+  // Completăm automat numele dacă utilizatorul este logat
+  const user = hgGetLoggedInUser();
+  if (user && nameInput) {
+    nameInput.value = hgFormatPlayerName(user.name);
+  }
 
   createBtn.addEventListener('click', async () => {
     const name = (nameInput.value || '').trim();
@@ -427,10 +452,30 @@ function handleHangmanGameOver(msg) {
   const reveal = document.getElementById('hangman-reveal-word');
 
   let text = '';
+  let winnerDisplayName = '';
+
+  const loggedUser = hgGetLoggedInUser();
+  const youNameRaw = hangmanPlayerName || (loggedUser && loggedUser.name) || 'Tu';
+  const oppNameRaw =
+    (hangmanLastState && hangmanLastState.opponentName) ||
+    (loggedUser && loggedUser.name === 'andrei' ? 'Georgiana' : 'Andrei');
+
   if (msg.winner === 'guesser') {
-    text = 'Felicitari! Cuvantul a fost ghicit la timp.';
+    // Daca castigatoare este persoana care ghiceste
+    const isYouWinner = hangmanRole === 'guesser';
+    winnerDisplayName = isYouWinner ? hgFormatPlayerName(youNameRaw) : hgFormatPlayerName(oppNameRaw);
+    text = `A castigat ${winnerDisplayName}! Cuvantul a fost ghicit la timp.`;
+    if (hangmanRole === 'guesser' && typeof recordWin === 'function') {
+      recordWin('hangman');
+    }
   } else if (msg.winner === 'setter') {
-    text = 'Ati ajuns in spanzuratoare. Gazda a castigat acest joc.';
+    // Daca castigatoare este persoana care a ales cuvantul
+    const isYouWinner = hangmanRole === 'setter';
+    winnerDisplayName = isYouWinner ? hgFormatPlayerName(youNameRaw) : hgFormatPlayerName(oppNameRaw);
+    text = `A castigat ${winnerDisplayName}. Ati ajuns in spanzuratoare.`;
+    if (hangmanRole === 'setter' && typeof recordWin === 'function') {
+      recordWin('hangman');
+    }
   } else {
     text = 'Joc terminat.';
   }

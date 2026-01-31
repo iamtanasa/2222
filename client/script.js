@@ -1,6 +1,25 @@
 // client/script.js
 // Logica de UI + WebSocket pentru Bulls & Cows (lobby + joc)
 
+// Folosim același helper ca în pagina principală, dacă există
+function bcGetLoggedInUser() {
+  if (typeof getLoggedInUser === 'function') {
+    return getLoggedInUser();
+  }
+  const idStr = localStorage.getItem('berea_user_id');
+  const name = localStorage.getItem('berea_username');
+  if (!idStr || !name) return null;
+  const id = parseInt(idStr, 10);
+  if (!id || Number.isNaN(id)) return null;
+  return { id, name };
+}
+
+function formatPlayerName(name) {
+  if (!name) return '';
+  const lower = name.toLowerCase();
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+}
+
 let socket = null;
 let currentRoomCode = null;
 let currentPlayerName = null;
@@ -124,6 +143,12 @@ function initLobby() {
   const createBtn = document.getElementById('create-room-btn-lobby');
   const joinBtn = document.getElementById('join-room-btn-lobby');
   const roomInput = document.getElementById('room-code-input');
+
+   // Dacă suntem logați, completăm automat numele
+  const user = bcGetLoggedInUser();
+  if (user && nameInput) {
+    nameInput.value = formatPlayerName(user.name);
+  }
 
   createBtn.addEventListener('click', async () => {
     const name = (nameInput.value || '').trim();
@@ -414,6 +439,11 @@ function handleGameOver(message) {
   if (message.winner === 'you') {
     text = 'Ai câștigat acest duel!';
     winnerName = currentPlayerName || 'Tu';
+
+    // Înregistrăm victoria pentru Bulls & Cows, dacă există login real
+    if (typeof recordWin === 'function') {
+      recordWin('bulls');
+    }
   } else {
     text = 'Ai pierdut acest joc. Adversarul a ghicit primul numărul tău secret.';
     winnerName = (lastGameState && lastGameState.opponentName) || 'Adversarul';

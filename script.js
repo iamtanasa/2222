@@ -16,13 +16,59 @@ let currentPhotoIndex = 0;
 // 1. LOGICA PENTRU LOGIN & LOGOUT
 // ==========================================
 
-function valideazaLogin() {
+async function valideazaLogin() {
     const user = document.getElementById('username').value.trim();
     const pass = document.getElementById('password').value;
     const error = document.getElementById('error-message');
     const container = document.querySelector('.login-container');
 
-    if ((user.toLowerCase() === "andrei" || user.toLowerCase() === "georgiana") && pass === "2222") {
+    if (!user || !pass) {
+        if (error) {
+            error.textContent = "Completează numele și codul secret.";
+            error.style.display = 'block';
+        }
+        container.classList.add('shake-effect');
+        setTimeout(() => { container.classList.remove('shake-effect'); }, 400);
+        return;
+    }
+
+    try {
+        // Verificăm în Supabase dacă există un utilizator cu acest nume și cod
+        const { data, error: dbError } = await _supabase
+            .from('LoginUsers')
+            .select('id, name')
+            .eq('name', user.toLowerCase())
+            .eq('passcode', pass)
+            .maybeSingle();
+
+        if (dbError) {
+            console.error('Eroare la verificarea login-ului:', dbError.message);
+            if (error) {
+                error.textContent = "Nu mă pot conecta la server acum. Încearcă mai târziu.";
+                error.style.display = 'block';
+            }
+            return;
+        }
+
+        if (!data) {
+            if (error) {
+                error.textContent = "Ceva nu e bine... mai încearcă.";
+                error.style.display = 'block';
+            }
+            container.classList.add('shake-effect');
+            setTimeout(() => { container.classList.remove('shake-effect'); }, 400);
+            return;
+        }
+
+        // Login valid -> marcăm sesiunea local (id + nume) și intrăm în univers
+        localStorage.setItem('berea_auth_ok', '1');
+        if (data.id) {
+            localStorage.setItem('berea_user_id', String(data.id));
+        }
+        if (data.name) {
+            localStorage.setItem('berea_username', data.name);
+        }
+
         if (error) error.style.display = 'none';
         container.classList.add('container-exit');
         
@@ -33,17 +79,19 @@ function valideazaLogin() {
         setTimeout(() => {
             window.location.href = "2222.html";
         }, 1000);
-    } else {
+    } catch (err) {
+        console.error('Eroare neașteptată la login:', err);
         if (error) {
-            error.textContent = "Ceva nu e bine... mai încearcă.";
+            error.textContent = "A apărut o eroare neașteptată. Mai încearcă o dată.";
             error.style.display = 'block';
         }
-        container.classList.add('shake-effect');
-        setTimeout(() => { container.classList.remove('shake-effect'); }, 400);
     }
 }
 
 function logout() {
+    localStorage.removeItem('berea_auth_ok');
+    localStorage.removeItem('berea_user_id');
+    localStorage.removeItem('berea_username');
     document.body.classList.add('page-fade-out');
     setTimeout(() => { window.location.href = "index.html"; }, 800);
 }
@@ -52,6 +100,70 @@ function navigateTo(page) {
     document.body.classList.add('page-fade-out');
     setTimeout(() => { window.location.href = page; }, 600);
 }
+
+// Helper: detalii utilizator logat (dacă există)
+function getLoggedInUser() {
+    const idStr = localStorage.getItem('berea_user_id');
+    const name = localStorage.getItem('berea_username');
+    if (!idStr || !name) return null;
+    const id = parseInt(idStr, 10);
+    if (!id || Number.isNaN(id)) return null;
+    return { id, name };
+}
+
+// Helper: înregistrează o victorie în LoginUsers (bulls sau hangman)
+async function recordWin(game) {
+    const user = getLoggedInUser();
+    if (!user) return; // dacă nu e login real, nu facem nimic
+
+    let column = null;
+    if (game === 'bulls') column = 'wins_bulls_cows';
+    else if (game === 'hangman') column = 'wins_hangman';
+    if (!column) return;
+
+    try {
+        const { data, error } = await _supabase
+            .from('LoginUsers')
+            .select(column)
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (error) {
+            console.error('Eroare la citirea victoriilor:', error.message || error);
+            return;
+        }
+
+        if (!data) return;
+
+        const current = Number.isFinite(data[column]) ? data[column] : 0;
+        const nextValue = current + 1;
+
+        const { error: updateError } = await _supabase
+            .from('LoginUsers')
+            .update({ [column]: nextValue })
+            .eq('id', user.id);
+
+        if (updateError) {
+            console.error('Eroare la actualizarea victoriilor:', updateError.message || updateError);
+        }
+    } catch (e) {
+        console.error('Nu am putut actualiza victoriile:', e);
+    }
+}
+
+// Protejăm pagina principală (2222.html) astfel încât să fie accesibilă doar după login reușit
+document.addEventListener('DOMContentLoaded', () => {
+    const body = document.body;
+    if (!body) return;
+
+    const page = body.dataset.page;
+    if (page === 'universe') {
+        const isLoggedIn = localStorage.getItem('berea_auth_ok') === '1';
+        if (!isLoggedIn) {
+            window.location.href = 'index.html';
+        }
+    }
+});
 
 // ==========================================
 // 2. ANIMAȚIA CU ELEMENTE CARE CAD
