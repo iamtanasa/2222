@@ -262,29 +262,92 @@ async function renderGallery() {
     // Preluăm pozele din tabelul 'Poze' (atenție la P mare)
     const { data, error } = await _supabase
         .from('Poze') 
-        .select('*')
+        .select('id, url, created_at, photo_date')
         .order('created_at', { ascending: false });
 
-    if (data) {
-        allPhotosData = data; 
-        grid.innerHTML = '';
-        
-        if (data.length === 0) {
-            grid.innerHTML = '<p style="color:white; grid-column: 1/-1;">Nicio amintire încă. ❤️</p>';
-            return;
+    if (error) {
+        console.error('Eroare la încărcarea galeriei:', error.message);
+        grid.innerHTML = '<p style="color:white; grid-column: 1/-1;">Nu am putut încărca amintirile. 😔</p>';
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        grid.innerHTML = '<p style="color:white; grid-column: 1/-1;">Nicio amintire încă. ❤️</p>';
+        allPhotosData = [];
+        return;
+    }
+
+    // Sortăm pozele cronologic descendent în funcție de data reală (photo_date sau created_at)
+    const itemsWithDate = data
+        .map((item) => {
+            const rawDate = item.photo_date || item.created_at;
+            const d = rawDate ? new Date(rawDate) : null;
+            const time = d && !isNaN(d.getTime()) ? d.getTime() : 0; // 0 => cele fără dată ajung la final
+            return { item, time };
+        })
+        .sort((a, b) => b.time - a.time);
+
+    // Salvăm toate pozele pentru fullscreen, în aceeași ordine cronologică
+    allPhotosData = itemsWithDate.map((wrap) => wrap.item);
+    grid.innerHTML = '';
+
+    const monthNames = [
+        'Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie',
+        'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'
+    ];
+
+    // Grupăm pozele pe lună/an (folosind photo_date dacă există, altfel created_at)
+    const groupsMap = new Map(); // cheie: "YYYY-MM", valoare: { label, items: [] }
+
+    itemsWithDate.forEach((wrap, index) => {
+        const item = wrap.item;
+        const rawDate = item.photo_date || item.created_at;
+        let key = 'unknown';
+        let label = 'Fără dată';
+
+        if (rawDate) {
+            const d = new Date(rawDate);
+            if (!isNaN(d.getTime())) {
+                const year = d.getFullYear();
+                const month = d.getMonth(); // 0-11
+                key = `${year}-${String(month + 1).padStart(2, '0')}`;
+                label = `${monthNames[month]} ${year}`;
+            }
         }
 
-        data.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.className = 'gallery-item';
-            // IMPORTANT: Folosim item.id pentru ștergere și item.url pentru storage
-            div.innerHTML = `
-                <img src="${item.url}" onclick="openFullscreen(${index})">
-                <button class="btn-delete" onclick="deletePhoto(${item.id}, '${item.url}')">&times;</button>
-            `;
-            grid.appendChild(div);
-        });
-    }
+        if (!groupsMap.has(key)) {
+            groupsMap.set(key, { label, items: [] });
+        }
+
+        const group = groupsMap.get(key);
+
+        const div = document.createElement('div');
+        div.className = 'gallery-item';
+        div.innerHTML = `
+            <img src="${item.url}" onclick="openFullscreen(${index})">
+            <button class="btn-delete" onclick="deletePhoto(${item.id}, '${item.url}')">🗑️</button>
+        `;
+
+        group.items.push(div);
+    });
+
+    // Redăm grupurile în ordinea în care apar (deja sortate descendent după data efectivă)
+    groupsMap.forEach((group) => {
+        const section = document.createElement('div');
+        section.className = 'gallery-month-block';
+
+        const header = document.createElement('div');
+        header.className = 'gallery-month-header';
+        header.textContent = group.label;
+
+        const monthGrid = document.createElement('div');
+        monthGrid.className = 'gallery-month-grid';
+        group.items.forEach((elem) => monthGrid.appendChild(elem));
+
+        section.appendChild(header);
+        section.appendChild(monthGrid);
+        grid.appendChild(section);
+    });
 }
 
 async function deletePhoto(id, url) {
@@ -333,12 +396,15 @@ function openFullscreen(index) {
     currentPhotoIndex = index;
     if (allPhotosData.length > 0) {
         document.getElementById('img-viewer').src = allPhotosData[index].url;
+        updateFullscreenMeta();
         document.getElementById('fullscreen-modal').style.display = 'flex';
     }
 }
 
 function closeFullscreen() {
     document.getElementById('fullscreen-modal').style.display = 'none';
+    const meta = document.querySelector('.fullscreen-meta');
+    if (meta) meta.classList.remove('visible');
 }
 
 function changeFullscreenPhoto(direction) {
@@ -350,4 +416,130 @@ function changeFullscreenPhoto(direction) {
     if (currentPhotoIndex < 0) currentPhotoIndex = allPhotosData.length - 1;
 
     document.getElementById('img-viewer').src = allPhotosData[currentPhotoIndex].url;
+    updateFullscreenMeta();
+}
+
+function togglePhotoMeta() {
+    const meta = document.querySelector('.fullscreen-meta');
+    if (!meta) return;
+    meta.classList.toggle('visible');
+}
+
+function updateFullscreenMeta() {
+    const label = document.getElementById('photo-date-label');
+    const daySelect = document.getElementById('photo-day-select');
+    const monthSelect = document.getElementById('photo-month-select');
+    const yearSelect = document.getElementById('photo-year-select');
+    if (!label || !daySelect || !monthSelect || !yearSelect) return;
+
+    const item = allPhotosData[currentPhotoIndex];
+    if (!item) {
+        label.textContent = '';
+        return;
+    }
+
+    const monthNames = [
+        'Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie',
+        'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'
+    ];
+
+    const rawDate = item.photo_date || item.created_at;
+    let d = rawDate ? new Date(rawDate) : null;
+    if (!d || isNaN(d.getTime())) {
+        d = new Date();
+    }
+
+    const year = d.getFullYear();
+    const month = d.getMonth();
+    const day = d.getDate();
+
+    label.textContent = `${day} ${monthNames[month]} ${year}`;
+
+    // Populăm opțiunile pentru zi (1-31)
+    if (!daySelect.dataset.initialized) {
+        daySelect.innerHTML = '';
+        for (let dDay = 1; dDay <= 31; dDay++) {
+            const opt = document.createElement('option');
+            opt.value = String(dDay).padStart(2, '0');
+            opt.textContent = String(dDay);
+            daySelect.appendChild(opt);
+        }
+        daySelect.dataset.initialized = 'true';
+    }
+
+    // Populăm opțiunile pentru lună (1-12)
+    if (!monthSelect.dataset.initialized) {
+        monthSelect.innerHTML = '';
+        monthNames.forEach((name, idx) => {
+            const opt = document.createElement('option');
+            opt.value = String(idx + 1).padStart(2, '0');
+            opt.textContent = name;
+            monthSelect.appendChild(opt);
+        });
+        monthSelect.dataset.initialized = 'true';
+    }
+
+    // Populăm opțiunile pentru ani (de ex. 2015 - anul curent+1)
+    if (!yearSelect.dataset.initialized) {
+        yearSelect.innerHTML = '';
+        const currentYear = new Date().getFullYear();
+        for (let y = currentYear + 1; y >= 2015; y--) {
+            const opt = document.createElement('option');
+            opt.value = String(y);
+            opt.textContent = String(y);
+            yearSelect.appendChild(opt);
+        }
+        yearSelect.dataset.initialized = 'true';
+    }
+
+    daySelect.value = String(day).padStart(2, '0');
+    monthSelect.value = String(month + 1).padStart(2, '0');
+    yearSelect.value = String(year);
+}
+
+async function savePhotoDate() {
+    if (!allPhotosData || allPhotosData.length === 0) return;
+
+    const item = allPhotosData[currentPhotoIndex];
+    if (!item || !item.id) return;
+
+    const daySelect = document.getElementById('photo-day-select');
+    const monthSelect = document.getElementById('photo-month-select');
+    const yearSelect = document.getElementById('photo-year-select');
+    if (!daySelect || !monthSelect || !yearSelect) return;
+
+    const day = parseInt(daySelect.value, 10);
+    const month = parseInt(monthSelect.value, 10);
+    const year = parseInt(yearSelect.value, 10);
+    if (!day || !month || !year) return;
+
+    // Construim o dată validă folosind obiectul Date (evită date invalide, ex: 31 februarie)
+    const tmpDate = new Date(year, month - 1, day);
+    const dateStr = tmpDate.toISOString().slice(0, 10); // YYYY-MM-DD
+
+    const { data, error } = await _supabase
+        .from('Poze')
+        .update({ photo_date: dateStr })
+        .eq('id', item.id)
+        .select('id, url, created_at, photo_date')
+        .single();
+
+    if (error) {
+        console.error('Eroare la salvarea datei pozei:', error.message);
+        alert('Nu am putut salva data pentru această poză.\nDetalii: ' + error.message);
+        return;
+    }
+
+    // Reîncarcăm galeria pentru a regenera gruparea pe luni
+    await renderGallery();
+
+    // Găsim noul index al pozei în allPhotosData (după reîncărcare)
+    const newIndex = allPhotosData.findIndex((p) => p.id === data.id);
+    if (newIndex !== -1) {
+        currentPhotoIndex = newIndex;
+        document.getElementById('img-viewer').src = data.url;
+        updateFullscreenMeta();
+    }
+
+    alert('Data pozei a fost salvată. 💾');
 }

@@ -86,9 +86,19 @@
 
     <div id="fullscreen-modal" class="modal fullscreen-viewer">
         <span class="close-fullscreen" onclick="closeFullscreen()">&times;</span>
+        <button class="meta-toggle" onclick="togglePhotoMeta()">⋯</button>
         
         <button class="nav-btn prev" onclick="changeFullscreenPhoto(-1)">&#10094;</button>
         <img id="img-viewer" src="" alt="Fullsize amintire">
+        <div class="fullscreen-meta">
+            <div id="photo-date-label" class="photo-date-label">&nbsp;</div>
+            <div class="photo-date-controls">
+                <select id="photo-day-select"></select>
+                <select id="photo-month-select"></select>
+                <select id="photo-year-select"></select>
+                <button class="btn-small" onclick="savePhotoDate()">Save</button>
+            </div>
+        </div>
         <button class="nav-btn next" onclick="changeFullscreenPhoto(1)">&#10095;</button>
     </div>
 
