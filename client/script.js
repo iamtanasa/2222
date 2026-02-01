@@ -437,16 +437,16 @@ function handleGameOver(message) {
   let text = '';
   let winnerName = '';
   if (message.winner === 'you') {
-    text = 'Ai câștigat acest duel!';
     winnerName = currentPlayerName || 'Tu';
+    text = `A câștigat ${winnerName}! Ai câștigat acest duel!`;
 
     // Înregistrăm victoria pentru Bulls & Cows, dacă există login real
     if (typeof recordWin === 'function') {
       recordWin('bulls');
     }
   } else {
-    text = 'Ai pierdut acest joc. Adversarul a ghicit primul numărul tău secret.';
     winnerName = (lastGameState && lastGameState.opponentName) || 'Adversarul';
+    text = `A câștigat ${winnerName}. Adversarul a ghicit primul numărul tău secret.`;
   }
 
   if (statusEl) statusEl.textContent = 'Joc terminat.';

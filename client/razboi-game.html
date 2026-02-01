@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Razboi - Joc</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-entry" data-page="razboi-game">
+  <div class="bulls-container">
+    <div class="back-button" id="razboi-back-top">&larr; Înapoi</div>
+
+    <div class="bulls-icon">⚔️</div>
+    <h1>Război</h1>
+    <p class="subtitle" id="razboi-status-text"></p>
+    <p class="room-label">Camera: <span id="razboi-room-code-display">-</span></p>
+
+    <div class="glass-card bulls-card">
+      <main class="game-main razboi-layout">
+        <section class="razboi-opponent">
+          <div class="player-label">
+            <span id="razboi-opponent-name">Adversar...</span>
+          </div>
+          <div class="razboi-row">
+            <div class="card-slot card-back" id="razboi-opponent-deck"></div>
+            <div class="card-slot" id="razboi-opponent-last"></div>
+          </div>
+          <div class="razboi-deck-info">
+              <span id="razboi-opponent-count">0</span>
+          </div>
+        </section>
+
+        <section class="razboi-center-info">
+          <p id="razboi-message">Așteptăm să intrați amândoi în cameră.</p>
+          <p class="razboi-battle-size">Cărți în joc: <span id="razboi-battle-size">0</span></p>
+        </section>
+
+        <section class="razboi-player">
+          <div class="player-label">
+            <span id="razboi-you-name">Tu</span>
+          </div>
+          <div class="razboi-row">
+            <div class="card-slot card-back" id="razboi-you-deck"></div>
+            <div class="card-slot" id="razboi-you-last"></div>
+          </div>
+          <div class="razboi-deck-info">
+           <span id="razboi-you-count">0</span>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="razboi-over-section" class="section" style="display: none; text-align: center; margin-top: 16px;">
+      <div class="win-card">
+        <div class="win-icon">🎉</div>
+        <h2 class="section-title" style="text-align: center;">Joc terminat</h2>
+        <p id="razboi-over-text" class="turn-info"></p>
+        <p id="razboi-over-room" class="helper-text" style="margin-top: 6px;"></p>
+        <div class="win-buttons">
+          <button id="razboi-play-again-overlay" class="btn-secondary">Joacă din nou</button>
+          <button id="razboi-home-overlay" class="btn-primary">Acasă</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../script.js"></script>
+  <script src="razboi.js"></script>
+</body>
+</html>

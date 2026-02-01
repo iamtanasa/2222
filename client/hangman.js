@@ -291,7 +291,10 @@ function applyHangmanState(state) {
     const rope = figure.querySelector('.gallow-rope');
     const manGroup = figure.querySelector('.man-group');
     if (rope) rope.classList.remove('rope-hidden');
-    if (manGroup) manGroup.classList.remove('man-hidden');
+    if (manGroup) {
+      manGroup.classList.remove('man-hidden');
+      manGroup.classList.remove('man-walk-away');
+    }
     if (rescueWalker) {
       rescueWalker.classList.remove('rescue-walk-in', 'rescue-walk-away');
       // revenim la pozitia de start in stanga
@@ -460,24 +463,40 @@ function handleHangmanGameOver(msg) {
     (hangmanLastState && hangmanLastState.opponentName) ||
     (loggedUser && loggedUser.name === 'andrei' ? 'Georgiana' : 'Andrei');
 
-  if (msg.winner === 'guesser') {
-    // Daca castigatoare este persoana care ghiceste
-    const isYouWinner = hangmanRole === 'guesser';
-    winnerDisplayName = isYouWinner ? hgFormatPlayerName(youNameRaw) : hgFormatPlayerName(oppNameRaw);
-    text = `A castigat ${winnerDisplayName}! Cuvantul a fost ghicit la timp.`;
-    if (hangmanRole === 'guesser' && typeof recordWin === 'function') {
-      recordWin('hangman');
+  const youName = hgFormatPlayerName(youNameRaw);
+  const oppName = hgFormatPlayerName(oppNameRaw);
+
+  let youWon = false;
+
+  // Serverul trimite winner: 'you' sau 'opponent' din perspectiva fiecarui jucator
+  if (msg.winner === 'you') {
+    youWon = true;
+    winnerDisplayName = youName;
+
+    if (hangmanRole === 'guesser') {
+      text = `A castigat ${winnerDisplayName}! Cuvantul a fost ghicit la timp.`;
+    } else if (hangmanRole === 'setter') {
+      text = `A castigat ${winnerDisplayName}! Adversarul a ajuns in spanzuratoare.`;
+    } else {
+      text = `A castigat ${winnerDisplayName}!`;
     }
-  } else if (msg.winner === 'setter') {
-    // Daca castigatoare este persoana care a ales cuvantul
-    const isYouWinner = hangmanRole === 'setter';
-    winnerDisplayName = isYouWinner ? hgFormatPlayerName(youNameRaw) : hgFormatPlayerName(oppNameRaw);
-    text = `A castigat ${winnerDisplayName}. Ati ajuns in spanzuratoare.`;
-    if (hangmanRole === 'setter' && typeof recordWin === 'function') {
-      recordWin('hangman');
+  } else if (msg.winner === 'opponent') {
+    winnerDisplayName = oppName;
+
+    if (hangmanRole === 'guesser') {
+      text = `A castigat ${winnerDisplayName}. Ai ajuns in spanzuratoare.`;
+    } else if (hangmanRole === 'setter') {
+      text = `A castigat ${winnerDisplayName}. Adversarul a ghicit cuvantul tau.`;
+    } else {
+      text = `A castigat ${winnerDisplayName}.`;
     }
   } else {
     text = 'Joc terminat.';
+  }
+
+  // Inregistram victoria doar cand noi suntem castigatorii
+  if (youWon && typeof recordWin === 'function') {
+    recordWin('hangman');
   }
 
   if (overText) overText.textContent = text;
@@ -519,9 +538,10 @@ function startHangmanRescueAnimation() {
     if (e.animationName !== 'hangman-rescue-in') return;
     walker.removeEventListener('animationend', onAnimEnd);
 
-    // cand a ajuns la spanzuratoare, ascundem funia si omul agatat
+    // cand a ajuns la spanzuratoare, ascundem funia,
+    // dar il luam si pe omul agatat cu salvatorul
     rope.classList.add('rope-hidden');
-    manGroup.classList.add('man-hidden');
+    manGroup.classList.add('man-walk-away');
 
     // il facem pe salvator sa plece cu el spre stanga ecranului
     walker.classList.remove('rescue-walk-in');

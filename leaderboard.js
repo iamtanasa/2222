@@ -27,6 +27,9 @@ function renderLeaderboard(users) {
       const name = formatName(u.name || '');
       const bulls = Number.isFinite(u.wins_bulls_cows) ? u.wins_bulls_cows : 0;
       const hangman = Number.isFinite(u.wins_hangman) ? u.wins_hangman : 0;
+      const memory = Number.isFinite(u.wins_memory) ? u.wins_memory : 0;
+      const macao = Number.isFinite(u.wins_macao) ? u.wins_macao : 0;
+      const razboi = Number.isFinite(u.wins_razboi) ? u.wins_razboi : 0;
       return `
         <div class="leaderboard-row">
           <div class="leaderboard-name">${name}</div>
@@ -37,6 +40,18 @@ function renderLeaderboard(users) {
           <div class="leaderboard-stat">
             <span class="lb-label">Spânzurătoarea</span>
             <span class="lb-value">${hangman}</span>
+          </div>
+          <div class="leaderboard-stat">
+            <span class="lb-label">Memory Game</span>
+            <span class="lb-value">${memory}</span>
+          </div>
+          <div class="leaderboard-stat">
+            <span class="lb-label">Macao</span>
+            <span class="lb-value">${macao}</span>
+          </div>
+          <div class="leaderboard-stat">
+            <span class="lb-label">Război</span>
+            <span class="lb-value">${razboi}</span>
           </div>
         </div>
       `;
@@ -55,7 +70,7 @@ async function loadLeaderboard() {
   try {
     const { data, error } = await lbClient
       .from('LoginUsers')
-      .select('name, wins_bulls_cows, wins_hangman')
+      .select('name, wins_bulls_cows, wins_hangman, wins_memory, wins_macao, wins_razboi')
       .order('name', { ascending: true });
 
     if (error) {
@@ -74,5 +89,69 @@ async function loadLeaderboard() {
     }
   }
 }
+async function resetScores() {
+  const container = document.getElementById('leaderboard-content');
 
-window.addEventListener('DOMContentLoaded', loadLeaderboard);
+  const ok = window.confirm('Sigur vrei să resetezi scorurile? Toate victoriile vor deveni 0.');
+  if (!ok) return;
+
+  if (container) {
+    container.innerHTML = '<p style="color:white; text-align:center;">Resetez scorurile...</p>';
+  }
+
+  try {
+    // Luăm întâi lista de utilizatori (cu id) ca să facem update filtrat,
+    // nu un update "pe tot tabelul" – asta e mai prietenos cu politicile RLS.
+    const { data, error: loadError } = await lbClient
+      .from('LoginUsers')
+      .select('id');
+
+    if (loadError) {
+      console.error('Eroare la citirea utilizatorilor pentru reset:', loadError.message || loadError);
+      if (container) {
+        container.innerHTML = '<p style="color:white; text-align:center;">Nu am putut reseta scorurile.</p>';
+      }
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      await loadLeaderboard();
+      return;
+    }
+
+    const ids = data.map((u) => u.id).filter((id) => typeof id === 'number');
+    if (!ids.length) {
+      await loadLeaderboard();
+      return;
+    }
+
+    const { error: updateError } = await lbClient
+      .from('LoginUsers')
+      .update({ wins_bulls_cows: 0, wins_hangman: 0, wins_memory: 0, wins_macao: 0, wins_razboi: 0 })
+      .in('id', ids);
+
+    if (updateError) {
+      console.error('Eroare la resetarea scorurilor:', updateError.message || updateError);
+      if (container) {
+        container.innerHTML = '<p style="color:white; text-align:center;">Nu am putut reseta scorurile.</p>';
+      }
+      return;
+    }
+
+    await loadLeaderboard();
+  } catch (e) {
+    console.error('Eroare la resetarea scorurilor:', e);
+    if (container) {
+      container.innerHTML = '<p style="color:white; text-align:center;">Nu am putut reseta scorurile.</p>';
+    }
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadLeaderboard();
+
+  const resetBtn = document.getElementById('reset-scores-btn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', resetScores);
+  }
+});

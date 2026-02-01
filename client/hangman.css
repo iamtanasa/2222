@@ -147,6 +147,11 @@
   animation: hangman-rescue-out 1.8s ease-in forwards;
 }
 
+/* facem si omul din funie sa plece impreuna cu salvatorul */
+.man-group.man-walk-away {
+  animation: hangman-man-out 1.8s ease-in forwards;
+}
+
 .body-part {
   opacity: 0;
   transition: opacity 0.25s ease-out;
@@ -198,6 +203,19 @@
   }
   100% {
     transform: translateX(220px);
+    opacity: 0;
+  }
+}
+
+/* omul salvat pleaca putin mai in urma fata de salvator,
+   ca sa existe o mica distanta intre ei */
+@keyframes hangman-man-out {
+  0% {
+    transform: translateX(-16px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(204px);
     opacity: 0;
   }
 }

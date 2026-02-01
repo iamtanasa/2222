@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Macao - Lobby</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="macao-lobby">
+  <div class="game-shell">
+    <header class="game-header">
+      <h1>Macao a5f Lobby</h1>
+      <button class="btn-small" onclick="goBackToUniverse()">1</button>
+    </header>
+    <main class="game-main">
+      <div class="glass-card game-card">
+        <div class="field-group">
+          <label for="macao-player-name">Numele t03u</label>
+          <input id="macao-player-name" type="text" placeholder="Andrei" maxlength="20" />
+        </div>
+        <div class="field-group">
+          <label for="macao-room-code">Cod camer03 (4 litere)</label>
+          <input id="macao-room-code" type="text" maxlength="4" placeholder="ABCD" />
+        </div>
+        <div class="buttons-row">
+          <button id="macao-create-room" class="btn-primary">Creeaz03 camer03</button>
+          <button id="macao-join-room" class="btn-secondary">Intr03 0n camer03</button>
+        </div>
+        <p id="macao-lobby-status" class="status-text"></p>
+      </div>
+    </main>
+  </div>
+
+  <script src="../script.js"></script>
+  <script src="macao.js"></script>
+</body>
+</html>

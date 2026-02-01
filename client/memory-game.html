@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Memory Game - Joc</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-entry" data-page="memory-game">
+  <div class="bulls-container">
+    <div class="back-button" onclick="window.location.href='../2222.html'">&larr; Înapoi</div>
+
+    <div class="bulls-icon">🧠</div>
+    <h1>Memory Game</h1>
+    <p class="subtitle">Întoarceți pozele din memorie și găsiți perechile corecte.</p>
+
+    <div class="glass-card bulls-card" id="memory-root">
+      <div class="section">
+        <h2 class="section-title">Camera</h2>
+        <p class="status-text" id="memory-status-text">Conectare la server...</p>
+        <p class="room-label">Room: <span id="memory-room-code-display">-</span></p>
+        <p class="player-labels">
+          Tu: <span id="memory-you-name">-</span><br />
+          Adversar: <span id="memory-opponent-name">-</span>
+        </p>
+        <p id="memory-mode-label" class="helper-text"></p>
+      </div>
+
+      <div class="section" id="memory-game-section" style="display:none;">
+        <h2 class="section-title">Tabla de joc</h2>
+        <p id="memory-turn-info" class="turn-info"></p>
+        <div id="memory-board" class="memory-board"></div>
+
+        <div class="scores-row">
+          <div class="score-box">
+            <span class="score-label">Perechile tale</span>
+            <span id="memory-score-you" class="score-value">0</span>
+          </div>
+          <div class="score-box">
+            <span class="score-label">Perechile adversarului</span>
+            <span id="memory-score-opponent" class="score-value">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="memory-over-section" class="section" style="display:none; text-align:center;">
+        <div class="win-card">
+          <div class="win-icon">🎉</div>
+          <h2 class="section-title" style="text-align:center;">Joc terminat</h2>
+          <p id="memory-over-text" class="turn-info"></p>
+          <p id="memory-over-detail" class="helper-text" style="margin-top:8px;"></p>
+          <div class="win-buttons">
+            <button id="memory-play-again" class="btn-secondary">Joacă din nou</button>
+            <button id="memory-home" class="btn-primary">Acasă</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../script.js"></script>
+  <script src="memory.js"></script>
+</body>
+</html>

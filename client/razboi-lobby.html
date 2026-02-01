@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Razboi - Lobby</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-entry" data-page="razboi-lobby">
+  <div class="bulls-container">
+    <div class="back-button" onclick="navigateTo('../2222.html')">&larr; Înapoi</div>
+
+    <div class="bulls-icon">⚔️</div>
+    <h1>Război</h1>
+    <p class="subtitle">Joc de cărți 1v1, varianta cu număr.</p>
+
+    <div class="glass-card bulls-card">
+      <div class="section">
+        <h2 class="section-title">Numele tău</h2>
+        <input id="razboi-player-name" type="text" placeholder="Ex: Andrei" maxlength="20" />
+        <p class="helper-text">Numele va fi afișat în joc la ambii jucători.</p>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Creează o cameră</h2>
+        <button id="razboi-create-room" class="btn-primary">Generează cameră nouă</button>
+        <p class="helper-text">Vei primi un cod de 4 litere pe care îl poți trimite partenerului.</p>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Alătură-te unei camere</h2>
+        <div class="join-room">
+          <input id="razboi-room-code" type="text" maxlength="4" placeholder="Cod cameră (4 litere)" />
+          <button id="razboi-join-room" class="btn-secondary">Intră în cameră</button>
+        </div>
+        <p class="helper-text">Introduceți același cod amândoi pentru a juca împreună.</p>
+      </div>
+
+      <p id="razboi-lobby-status" class="lobby-status"></p>
+    </div>
+  </div>
+
+  <script src="../script.js"></script>
+  <script src="razboi.js"></script>
+</body>
+</html>

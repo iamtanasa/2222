@@ -1,6 +1,6 @@
 // server/server.js
 // Server WebSocket pentru jocul Bulls & Cows 1v1
-// Extins si pentru Spanzuratoarea 2-jucatori
+// Extins pentru Spanzuratoarea 2-jucatori si Memory Game 2-jucatori
 
 const WebSocket = require('ws');
 
@@ -21,6 +21,9 @@ const wss = new WebSocket.Server({ port: PORT });
 
 const rooms = new Map(); // pentru Bulls & Cows
 const hangmanRooms = new Map(); // pentru Spanzuratoarea
+const memoryRooms = new Map(); // pentru Memory Game
+const macaoRooms = new Map(); // pentru jocul Macao 2-jucatori
+const razboiRooms = new Map(); // pentru jocul Razboi 2-jucatori
 
 function log(...args) {
   console.log('[SERVER]', ...args);
@@ -34,6 +37,9 @@ function generateRoomCode() {
   }
   if (rooms.has(code)) return generateRoomCode();
   if (hangmanRooms.has(code)) return generateRoomCode();
+  if (memoryRooms.has(code)) return generateRoomCode();
+  if (macaoRooms.has(code)) return generateRoomCode();
+  if (razboiRooms.has(code)) return generateRoomCode();
   return code;
 }
 
@@ -69,6 +75,661 @@ function findPlayer(ws) {
     }
   }
   return null;
+}
+
+// ----------------------- MEMORY HELPERS -----------------------
+
+function findMemoryPlayer(ws) {
+  for (const room of memoryRooms.values()) {
+    if (room.players.a && room.players.a.ws === ws) {
+      return { room, sideKey: 'a' };
+    }
+    if (room.players.b && room.players.b.ws === ws) {
+      return { room, sideKey: 'b' };
+    }
+  }
+  return null;
+}
+
+function buildMemoryState(room, sideKey) {
+  const you = room.players[sideKey];
+  const otherKey = sideKey === 'a' ? 'b' : 'a';
+  const opponent = room.players[otherKey];
+
+  const yourScore = room.scores ? room.scores[sideKey] || 0 : 0;
+  const opponentScore = room.scores ? room.scores[otherKey] || 0 : 0;
+
+  const currentTurnForClient =
+    room.currentTurn && room.currentTurn === sideKey
+      ? 'you'
+      : room.currentTurn && room.currentTurn === otherKey
+      ? 'opponent'
+      : null;
+
+  const board = (room.board || []).map((card) => ({
+    pairId: card.pairId,
+    revealed: !!card.revealed,
+    matched: !!card.matchedBy,
+    imageUrl: null, // clientul va alege pozele din galerie in functie de pairId
+  }));
+
+  return {
+    roomCode: room.roomCode,
+    status: room.status,
+    mode: room.mode,
+    youName: you ? you.name : null,
+    opponentName: opponent ? opponent.name : null,
+    currentTurn: currentTurnForClient,
+    yourScore,
+    opponentScore,
+    totalPairs: room.totalPairs || 0,
+    board,
+  };
+}
+
+function broadcastMemoryState(room) {
+  ['a', 'b'].forEach((key) => {
+    const player = room.players[key];
+    if (player && player.ws && player.ws.readyState === WebSocket.OPEN) {
+      send(player.ws, {
+        type: 'memory_state',
+        state: buildMemoryState(room, key),
+      });
+    }
+  });
+}
+
+// ----------------------- MACAO HELPERS -----------------------
+
+function findMacaoPlayer(ws) {
+  for (const room of macaoRooms.values()) {
+    if (room.players.p1 && room.players.p1.ws === ws) {
+      return { room, seat: 'p1' };
+    }
+    if (room.players.p2 && room.players.p2.ws === ws) {
+      return { room, seat: 'p2' };
+    }
+  }
+  return null;
+}
+
+function buildMacaoState(room, seat) {
+  const you = room.players[seat];
+  const otherSeat = seat === 'p1' ? 'p2' : 'p1';
+  const opponent = room.players[otherSeat];
+
+  const youHand = (room.hands[seat] || []).map((card) => ({
+    id: card.id,
+    rank: card.rank,
+    suit: card.suit,
+  }));
+
+  const topDiscard = room.discardPile.length
+    ? room.discardPile[room.discardPile.length - 1]
+    : null;
+
+  return {
+    roomCode: room.roomCode,
+    status: room.status,
+    youName: you ? you.name : null,
+    opponentName: opponent ? opponent.name : null,
+    yourTurn: room.currentTurn === seat,
+    pendingDraw: room.pendingDraw || 0,
+    attackActive: room.attackActive || false,
+    yourHand: youHand,
+    opponentCardCount: (room.hands[otherSeat] || []).length,
+    drawPileCount: room.drawPile.length,
+    topDiscard: topDiscard
+      ? { id: topDiscard.id, rank: topDiscard.rank, suit: topDiscard.suit }
+      : null,
+  };
+}
+
+function broadcastMacaoState(room) {
+  ['p1', 'p2'].forEach((seat) => {
+    const player = room.players[seat];
+    if (player && player.ws && player.ws.readyState === WebSocket.OPEN) {
+      send(player.ws, {
+        type: 'macao_state',
+        state: buildMacaoState(room, seat),
+      });
+    }
+  });
+}
+
+function createMacaoDeck() {
+  const suits = ['heart', 'diamond', 'club', 'spade'];
+  const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+  const deck = [];
+  let idCounter = 0;
+  for (const suit of suits) {
+    for (const rank of ranks) {
+      deck.push({ id: `c${idCounter++}`, rank, suit });
+    }
+  }
+  // doi jokers
+  deck.push({ id: `c${idCounter++}`, rank: 'JOKER_BLACK', suit: 'joker' });
+  deck.push({ id: `c${idCounter++}`, rank: 'JOKER_RED', suit: 'joker' });
+
+  // shuffle
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+
+  return deck;
+}
+
+// ----------------------- RAZBOI HELPERS -----------------------
+
+function findRazboiPlayer(ws) {
+  for (const room of razboiRooms.values()) {
+    if (room.players.p1 && room.players.p1.ws === ws) {
+      return { room, seat: 'p1' };
+    }
+    if (room.players.p2 && room.players.p2.ws === ws) {
+      return { room, seat: 'p2' };
+    }
+  }
+  return null;
+}
+
+function createRazboiDeck() {
+  const suits = ['heart', 'diamond', 'club', 'spade'];
+  const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+  const deck = [];
+  let idCounter = 0;
+  for (const suit of suits) {
+    for (const rank of ranks) {
+      deck.push({ id: `r${idCounter++}`, rank, suit });
+    }
+  }
+
+  // shuffle
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+
+  return deck;
+}
+
+function razboiRankValue(rank) {
+  if (rank === 'J') return 11;
+  if (rank === 'Q') return 12;
+  if (rank === 'K') return 13;
+  if (rank === 'A') return 14;
+  const n = parseInt(rank, 10);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function dealRazboiInitial(room) {
+  const deck = createRazboiDeck();
+  room.decks = { p1: [], p2: [] };
+  room.battlePile = [];
+  room.lastCards = { p1: null, p2: null };
+  room.lastMessage = 'Jocul a inceput. Apasati pe pachetele voastre pentru a scoate carti.';
+  room.roundLock = false;
+  room.phase = 'normal'; // 'normal' sau 'war'
+  room.inWar = false;
+  room.warValue = 0; // valoarea razboiului curent (2..14)
+  room.drawCount = { p1: 0, p2: 0 }; // cate carti au scos in runda/razboiul curent
+
+  deck.forEach((card, index) => {
+    const seat = index % 2 === 0 ? 'p1' : 'p2';
+    room.decks[seat].push(card);
+  });
+
+  room.status = 'active';
+}
+
+function buildRazboiState(room, seat) {
+  const you = room.players[seat];
+  const otherSeat = seat === 'p1' ? 'p2' : 'p1';
+  const opponent = room.players[otherSeat];
+
+  const lastYou = room.lastCards ? room.lastCards[seat] : null;
+  const lastOpp = room.lastCards ? room.lastCards[otherSeat] : null;
+
+   let requiredPresses = 0;
+   if (room.inWar && typeof room.warValue === 'number' && room.warValue > 0 && room.drawCount) {
+     const done = Math.min(room.drawCount.p1 || 0, room.drawCount.p2 || 0);
+     requiredPresses = Math.max(room.warValue - done, 0);
+   }
+
+  return {
+    roomCode: room.roomCode,
+    status: room.status,
+    youName: you ? you.name : null,
+    opponentName: opponent ? opponent.name : null,
+    yourDeckCount: room.decks && room.decks[seat] ? room.decks[seat].length : 0,
+    opponentDeckCount: room.decks && room.decks[otherSeat] ? room.decks[otherSeat].length : 0,
+    lastYouCard: lastYou ? { id: lastYou.id, rank: lastYou.rank, suit: lastYou.suit } : null,
+    lastOpponentCard: lastOpp ? { id: lastOpp.id, rank: lastOpp.rank, suit: lastOpp.suit } : null,
+    battleSize: room.battlePile ? room.battlePile.length : 0,
+    message: room.lastMessage || null,
+    inWar: !!room.inWar,
+    requiredPresses,
+  };
+}
+
+function broadcastRazboiState(room) {
+  ['p1', 'p2'].forEach((seat) => {
+    const player = room.players[seat];
+    if (player && player.ws && player.ws.readyState === WebSocket.OPEN) {
+      send(player.ws, {
+        type: 'razboi_state',
+        state: buildRazboiState(room, seat),
+      });
+    }
+  });
+}
+
+function checkRazboiGameOver(room, winnerSeat) {
+  const p1Count = room.decks.p1.length;
+  const p2Count = room.decks.p2.length;
+
+  if (p1Count > 0 && p2Count > 0) {
+    return false;
+  }
+
+  room.status = 'finished';
+
+  ['p1', 'p2'].forEach((seat) => {
+    const player = room.players[seat];
+    if (!player || !player.ws) return;
+    const result = seat === winnerSeat ? 'you' : 'opponent';
+    const otherSeat = seat === 'p1' ? 'p2' : 'p1';
+    const opponent = room.players[otherSeat];
+    send(player.ws, {
+      type: 'razboi_game_over',
+      winner: result,
+      opponentName: opponent ? opponent.name : null,
+    });
+  });
+
+  return true;
+}
+function applyRazboiStep(room, seat) {
+  if (!room.decks || !room.decks.p1 || !room.decks.p2) return;
+
+  const p1 = room.decks.p1;
+  const p2 = room.decks.p2;
+  const otherSeat = seat === 'p1' ? 'p2' : 'p1';
+
+  if (!room.phase) {
+    room.phase = 'normal';
+  }
+  if (!room.drawCount) {
+    room.drawCount = { p1: 0, p2: 0 };
+  }
+  const deck = room.decks[seat];
+  // daca acest jucator nu mai are carti, nu mai poate trage, dar jocul se va decide
+  // doar cand se rezolva runda/razboiul si unul ramane permanent fara carti
+  if (!deck.length) {
+    return;
+  }
+
+  if (!room.lastCards) {
+    room.lastCards = { p1: null, p2: null };
+  }
+
+  // ---------------- Faza normala: o singura carte de fiecare ----------------
+  if (room.phase === 'normal') {
+    // daca este inceputul unei runde noi (nimeni nu a scos carte), resetam ultimele carti
+    if ((room.drawCount.p1 || 0) === 0 && (room.drawCount.p2 || 0) === 0) {
+      room.lastCards = { p1: null, p2: null };
+      room.battlePile = room.battlePile || [];
+    }
+
+    // in runda normala, fiecare jucator scoate o singura carte
+    if ((room.drawCount[seat] || 0) >= 1) {
+      return;
+    }
+
+    const card = deck.shift();
+    const pile = room.battlePile || [];
+    pile.push(card);
+    room.battlePile = pile;
+    room.lastCards[seat] = card;
+    room.drawCount[seat] = (room.drawCount[seat] || 0) + 1;
+
+    // daca celalalt jucator nu a scos inca, asteptam
+    if ((room.drawCount[otherSeat] || 0) === 0) {
+      const otherPlayer = room.players[otherSeat];
+      room.lastMessage = otherPlayer
+        ? `Asteptam ca ${otherPlayer.name} sa scoata cartea.`
+        : 'Asteptam si cartea adversarului.';
+      return;
+    }
+
+    // acum ambele carti sunt scoase pentru runda normala -> decidem runda sau intram in razboi
+    const c1 = room.lastCards.p1;
+    const c2 = room.lastCards.p2;
+    if (!c1 || !c2) {
+      return;
+    }
+
+    const v1 = razboiRankValue(c1.rank);
+    const v2 = razboiRankValue(c2.rank);
+
+    if (v1 === v2) {
+      // egalitate -> intra in razboi, pastram cartile de egalitate pe masa
+      const warValue = v1;
+      room.phase = 'war';
+      room.inWar = true;
+      room.warValue = warValue;
+      room.drawCount = { p1: 0, p2: 0 };
+      room.lastMessage = `Razboi! Valoare ${warValue}. Scoateti ${warValue} carti (apasand pe pachete).`;
+      return;
+    }
+
+    // avem castigator de runda normala
+    const winnerSeat = v1 > v2 ? 'p1' : 'p2';
+    const winnerDeck = room.decks[winnerSeat];
+    room.battlePile.forEach((c) => winnerDeck.push(c));
+    room.battlePile = [];
+
+    room.lastMessage = `Runda castigata de ${
+      winnerSeat === 'p1' ? room.players.p1.name : room.players.p2.name
+    }.`;
+
+    room.inWar = false;
+    room.warValue = 0;
+    room.drawCount = { p1: 0, p2: 0 };
+
+    checkRazboiGameOver(room, winnerSeat);
+    return;
+  }
+
+  // ---------------- Faza de razboi: fiecare scoate warValue carti ----------------
+  if (room.phase === 'war') {
+    const needed = room.warValue || 0;
+    if (needed <= 0) {
+      // ceva nu e in regula, revenim la normal
+      room.phase = 'normal';
+      room.inWar = false;
+      room.drawCount = { p1: 0, p2: 0 };
+      return;
+    }
+
+    // fiecare jucator poate scoate pana la needed carti, nu trebuie sa astepte adversarul la fiecare
+    if ((room.drawCount[seat] || 0) >= needed) {
+      return;
+    }
+
+    const card = deck.shift();
+    const pile = room.battlePile || [];
+    pile.push(card);
+    room.battlePile = pile;
+    room.lastCards[seat] = card;
+    room.drawCount[seat] = (room.drawCount[seat] || 0) + 1;
+
+    const doneP1 = room.drawCount.p1 || 0;
+    const doneP2 = room.drawCount.p2 || 0;
+
+    // un jucator termina razboiul cand a scos needed carti SAU cand nu mai are carti deloc
+    const p1Done = doneP1 >= needed || p1.length === 0;
+    const p2Done = doneP2 >= needed || p2.length === 0;
+
+    if (!p1Done || !p2Done) {
+      const minDone = Math.min(doneP1, doneP2);
+      const remaining = Math.max(needed - minDone, 0);
+      room.lastMessage = `Razboi in curs... Mai scoateti ${remaining} carti.`;
+      return;
+    }
+
+    // ambele parti au scos toate cartile pentru acest razboi -> decidem
+    const c1 = room.lastCards.p1;
+    const c2 = room.lastCards.p2;
+    if (!c1 || !c2) {
+      return;
+    }
+
+    const v1 = razboiRankValue(c1.rank);
+    const v2 = razboiRankValue(c2.rank);
+
+    if (v1 === v2) {
+      // razboi continuat cu noua valoare, lasam ultimele carti vizibile pana se scot altele
+      const warValue = v1;
+      room.warValue = warValue;
+      room.drawCount = { p1: 0, p2: 0 };
+      room.lastMessage = `Razboi continuat! Valoare ${warValue}. Scoateti ${warValue} carti.`;
+      return;
+    }
+
+    const winnerSeat = v1 > v2 ? 'p1' : 'p2';
+    const winnerDeck = room.decks[winnerSeat];
+    room.battlePile.forEach((c) => winnerDeck.push(c));
+    room.battlePile = [];
+
+    room.lastMessage = `Razboiul a fost castigat de ${
+      winnerSeat === 'p1' ? room.players.p1.name : room.players.p2.name
+    }.`;
+
+    room.phase = 'normal';
+    room.inWar = false;
+    room.warValue = 0;
+    room.drawCount = { p1: 0, p2: 0 };
+
+    checkRazboiGameOver(room, winnerSeat);
+  }
+}
+
+function dealMacaoInitial(room) {
+  room.drawPile = createMacaoDeck();
+  room.discardPile = [];
+  room.hands = { p1: [], p2: [] };
+  room.currentTurn = Math.random() < 0.5 ? 'p1' : 'p2';
+  room.pendingDraw = 0;
+  room.attackActive = false;
+
+  // fiecare jucator primeste 5 carti
+  const initialCards = 5;
+  for (let i = 0; i < initialCards; i++) {
+    ['p1', 'p2'].forEach((seat) => {
+      if (!room.drawPile.length) {
+        refillMacaoDrawPileIfNeeded(room);
+        if (!room.drawPile.length) return;
+      }
+      const card = room.drawPile.pop();
+      if (card) room.hands[seat].push(card);
+    });
+  }
+
+  // intoarcem prima carte pe talon (nu o carte speciala puternica daca se poate)
+  while (room.drawPile.length) {
+    const card = room.drawPile.pop();
+    if (!card) break;
+    room.discardPile.push(card);
+    break;
+  }
+
+  room.status = 'active';
+}
+
+// determinam culoarea logica a unei carti (rosu / negru) pentru reguli cu jokeri
+function macaoCardColor(card) {
+  if (!card) return null;
+  if (card.rank === 'JOKER_RED') return 'red';
+  if (card.rank === 'JOKER_BLACK') return 'black';
+  if (card.suit === 'heart' || card.suit === 'diamond') return 'red';
+  if (card.suit === 'club' || card.suit === 'spade') return 'black';
+  return null;
+}
+
+// daca pachetul s-a golit, refacem din talon (ramane doar ultima carte pe talon)
+function refillMacaoDrawPileIfNeeded(room) {
+  if (!room || room.drawPile.length > 0) return;
+  if (!room.discardPile || room.discardPile.length <= 1) return;
+
+  const top = room.discardPile[room.discardPile.length - 1];
+  const rest = room.discardPile.slice(0, -1);
+
+  // amestecam restul cartilor si le facem noul pachet de tras
+  for (let i = rest.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [rest[i], rest[j]] = [rest[j], rest[i]];
+  }
+
+  room.drawPile = rest;
+  room.discardPile = [top];
+}
+
+function canPlayOnTop(card, topCard, attackActive) {
+  if (!topCard) return true;
+
+  const topIsRedJoker = topCard.rank === 'JOKER_RED';
+  const topIsBlackJoker = topCard.rank === 'JOKER_BLACK';
+
+  // reguli speciale: peste jokerul rosu doar carti rosii, peste negru doar carti negre
+  if (topIsRedJoker || topIsBlackJoker) {
+    const allowedColor = topIsRedJoker ? 'red' : 'black';
+    const cColor = macaoCardColor(card);
+
+    // EXCEPTII:
+    // - peste jokerul rosu poti pune 2/3/4 negre (umflaturi + 4 negru pentru stop)
+    // - peste jokerul negru poti pune 2/3/4 rosii (umflaturi + 4 rosu pentru stop)
+    if (
+      ((topIsRedJoker && cColor === 'black') || (topIsBlackJoker && cColor === 'red')) &&
+      (card.rank === '2' || card.rank === '3' || card.rank === '4')
+    ) {
+      return true;
+    }
+
+    // poti juca intotdeauna alt joker peste joker
+    if (card.rank === 'JOKER_RED' || card.rank === 'JOKER_BLACK') {
+      // dar daca suntem in atac, doar cartile de atac sunt permise
+      if (attackActive) {
+        return true;
+      }
+      return true;
+    }
+
+    // in rest trebuie sa respecte culoarea jokerului
+    if (cColor !== allowedColor) return false;
+
+    // daca suntem in atac, tot trebuie sa fie si carte de atac
+    if (attackActive) {
+      return (
+        card.rank === '2' ||
+        card.rank === '3' ||
+        card.rank === '4' ||
+        card.rank === 'JOKER_RED' ||
+        card.rank === 'JOKER_BLACK'
+      );
+    }
+
+    // in mod normal, orice carte cu culoarea potrivita e ok
+    return true;
+  }
+
+  // in timpul atacului (cand exista carti de tras si sus nu este joker), poti juca doar carti de atac (2,3,4,joker)
+  if (attackActive) {
+    if (card.rank === '2' || card.rank === '3' || card.rank === '4') return true;
+    if (card.rank === 'JOKER_BLACK' || card.rank === 'JOKER_RED') return true;
+    return false;
+  }
+
+  // normal: potrivim dupa culoare sau rang, As-ul poate fi pus oricand, jokerii oricand
+  if (card.rank === 'A') return true;
+  if (card.suit === topCard.suit) return true;
+  if (card.rank === topCard.rank) return true;
+  if (card.rank === 'JOKER_BLACK' || card.rank === 'JOKER_RED') return true;
+  return false;
+}
+
+function macaoAttackValue(card) {
+  if (card.rank === '2') return 2;
+  if (card.rank === '3') return 3;
+  if (card.rank === 'JOKER_BLACK') return 5; // joker negru: +5 carti
+  if (card.rank === 'JOKER_RED') return 10; // joker rosu: +10 carti
+  return 0;
+}
+
+function applyMacaoPlay(room, seat, cardId) {
+  if (room.currentTurn !== seat || room.status !== 'active') {
+    return { error: 'Nu este randul tau sau jocul nu este activ.' };
+  }
+
+  const hand = room.hands[seat] || [];
+  const idx = hand.findIndex((c) => c.id === cardId);
+  if (idx === -1) {
+    return { error: 'Nu ai aceasta carte in mana.' };
+  }
+
+  const card = hand[idx];
+  const top = room.discardPile.length ? room.discardPile[room.discardPile.length - 1] : null;
+
+  if (!canPlayOnTop(card, top, room.attackActive)) {
+    return { error: 'Nu poti juca aceasta carte acum.' };
+  }
+
+  // scoatem cartea din mana si o punem pe talon
+  hand.splice(idx, 1);
+  room.discardPile.push(card);
+
+  // efectele cartilor speciale
+  const attackVal = macaoAttackValue(card);
+  if (attackVal > 0) {
+    room.pendingDraw = (room.pendingDraw || 0) + attackVal;
+    room.attackActive = true;
+  } else if (card.rank === 'A') {
+    // As: adversarul sare o tura, iar jucatorul care a pus Asul pastreaza randul.
+    // Nu modificam culori, doar efectul de "stai o tura".
+  }
+
+  // daca s-a jucat un 4 in timpul unui atac, acesta opreste obligatia de a trage carti
+  if (card.rank === '4' && room.attackActive && room.pendingDraw > 0) {
+    room.pendingDraw = 0;
+    room.attackActive = false;
+  }
+
+  // verificam daca jucatorul a ramas fara carti
+  if (hand.length === 0) {
+    room.status = 'finished';
+    ['p1', 'p2'].forEach((s) => {
+      const p = room.players[s];
+      if (!p || !p.ws) return;
+      const winner = s === seat ? 'you' : 'opponent';
+      send(p.ws, { type: 'macao_game_over', winner });
+    });
+    return { ok: true, finished: true };
+  }
+
+  // schimbam tura in mod normal, DAR daca s-a pus As, jucatorul isi pastreaza randul
+  if (card.rank !== 'A') {
+    room.currentTurn = room.currentTurn === 'p1' ? 'p2' : 'p1';
+  }
+  return { ok: true, finished: false };
+}
+
+function applyMacaoDraw(room, seat) {
+  if (room.currentTurn !== seat || room.status !== 'active') {
+    return { error: 'Nu este randul tau sau jocul nu este activ.' };
+  }
+
+  const hand = room.hands[seat] || [];
+  let cardsToDraw = 1;
+  if (room.attackActive && room.pendingDraw > 0) {
+    cardsToDraw = room.pendingDraw;
+  }
+
+  for (let i = 0; i < cardsToDraw; i++) {
+    if (!room.drawPile.length) {
+      refillMacaoDrawPileIfNeeded(room);
+      if (!room.drawPile.length) break;
+    }
+    const card = room.drawPile.pop();
+    if (card) hand.push(card);
+  }
+
+  // dupa ce ai tras penalizarea, atacul se opreste si tura trece la adversar
+  room.pendingDraw = 0;
+  room.attackActive = false;
+  room.currentTurn = room.currentTurn === 'p1' ? 'p2' : 'p1';
+
+  return { ok: true };
 }
 
 // ----------------------- HANGMAN HELPERS -----------------------
@@ -172,6 +833,423 @@ function handleCreateRoom(ws) {
   const roomCode = generateRoomCode();
   // DOAR generăm codul; room-ul efectiv e creat la primul join_room
   send(ws, { type: 'room_created', roomCode });
+}
+
+// ----------------------- MEMORY MESAJE -----------------------
+
+function handleMemoryCreateRoom(ws) {
+  const roomCode = generateRoomCode();
+  send(ws, { type: 'memory_room_created', roomCode });
+}
+
+const MEMORY_PAIRS = {
+  easy: 6,
+  medium: 10,
+  hard: 16,
+};
+
+function setupMemoryBoard(room) {
+  const mode = room.mode && MEMORY_PAIRS[room.mode] ? room.mode : 'easy';
+  const pairs = MEMORY_PAIRS[mode];
+  room.totalPairs = pairs;
+
+  const ids = [];
+  for (let i = 0; i < pairs; i++) {
+    ids.push(i);
+    ids.push(i);
+  }
+
+  // amestecam cartile
+  for (let i = ids.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+  }
+
+  room.board = ids.map((pairId) => ({ pairId, revealed: false, matchedBy: null }));
+  room.scores = { a: 0, b: 0 };
+  room.currentTurn = Math.random() < 0.5 ? 'a' : 'b';
+  room.tempFlips = [];
+  room.status = 'active';
+}
+
+function handleMemoryJoinRoom(ws, roomCode, playerName, mode) {
+  if (!roomCode || typeof roomCode !== 'string') {
+    send(ws, { type: 'memory_error', message: 'Cod de camera invalid.' });
+    return;
+  }
+  roomCode = roomCode.toUpperCase();
+  playerName = (playerName || 'Anonim').slice(0, 20);
+  const normalizedMode = mode === 'medium' || mode === 'hard' ? mode : 'easy';
+
+  let room = memoryRooms.get(roomCode);
+  if (!room) {
+    room = {
+      roomCode,
+      players: { a: null, b: null },
+      mode: normalizedMode,
+      status: 'waiting',
+      board: [],
+      scores: { a: 0, b: 0 },
+      currentTurn: null,
+      tempFlips: [],
+      totalPairs: 0,
+    };
+    memoryRooms.set(roomCode, room);
+  }
+
+  const existing = findMemoryPlayer(ws);
+  if (existing && existing.room.roomCode !== roomCode) {
+    handleMemoryDisconnect(ws);
+  }
+
+  let sideKey = null;
+  if (!room.players.a) {
+    sideKey = 'a';
+    room.players.a = { name: playerName, ws };
+    room.mode = normalizedMode;
+  } else if (!room.players.b) {
+    sideKey = 'b';
+    room.players.b = { name: playerName, ws };
+  } else {
+    send(ws, { type: 'memory_error', message: 'Camera este deja plina.' });
+    return;
+  }
+
+  if (room.players.a && room.players.b && room.status !== 'active') {
+    setupMemoryBoard(room);
+  }
+
+  broadcastMemoryState(room);
+}
+
+function handleMemoryFlip(ws, index) {
+  const found = findMemoryPlayer(ws);
+  if (!found) {
+    send(ws, { type: 'memory_error', message: 'Nu esti intr-o camera.' });
+    return;
+  }
+
+  const { room, sideKey } = found;
+
+  if (room.status !== 'active') {
+    send(ws, { type: 'memory_error', message: 'Jocul nu este activ.' });
+    return;
+  }
+
+  if (room.currentTurn !== sideKey) {
+    send(ws, { type: 'memory_error', message: 'Nu este randul tau.' });
+    return;
+  }
+
+  if (!Array.isArray(room.board) || index < 0 || index >= room.board.length) {
+    return;
+  }
+
+  const card = room.board[index];
+  if (!card || card.matchedBy || card.revealed) {
+    return;
+  }
+
+  if (!Array.isArray(room.tempFlips)) {
+    room.tempFlips = [];
+  }
+
+  if (room.tempFlips.length >= 2) {
+    return;
+  }
+
+  card.revealed = true;
+  room.tempFlips.push(index);
+
+  broadcastMemoryState(room);
+
+  if (room.tempFlips.length === 2) {
+    const [i1, i2] = room.tempFlips;
+    const c1 = room.board[i1];
+    const c2 = room.board[i2];
+
+    if (c1 && c2 && c1.pairId === c2.pairId) {
+      c1.matchedBy = sideKey;
+      c2.matchedBy = sideKey;
+      room.scores[sideKey] = (room.scores[sideKey] || 0) + 1;
+      room.tempFlips = [];
+
+      const totalFound = (room.scores.a || 0) + (room.scores.b || 0);
+      if (totalFound >= room.totalPairs) {
+        room.status = 'finished';
+
+        ['a', 'b'].forEach((key) => {
+          const player = room.players[key];
+          if (!player || !player.ws) return;
+          const otherKey = key === 'a' ? 'b' : 'a';
+          const yourScore = room.scores[key] || 0;
+          const opponentScore = room.scores[otherKey] || 0;
+          let winner;
+          if (yourScore > opponentScore) winner = 'you';
+          else if (yourScore < opponentScore) winner = 'opponent';
+          else winner = 'tie';
+
+          const opponent = room.players[otherKey];
+
+          send(player.ws, {
+            type: 'memory_game_over',
+            winner,
+            yourScore,
+            opponentScore,
+            opponentName: opponent ? opponent.name : null,
+          });
+        });
+
+        broadcastMemoryState(room);
+      } else {
+        // acelasi jucator continua cand gaseste o pereche
+        broadcastMemoryState(room);
+      }
+    } else {
+      // nu este pereche – dupa o mica intarziere, intoarcem cartile la loc si schimbam tura
+      const prevTurn = sideKey;
+      const otherKey = sideKey === 'a' ? 'b' : 'a';
+
+      setTimeout(() => {
+        const [ii1, ii2] = room.tempFlips || [];
+        if (
+          Array.isArray(room.board) &&
+          typeof ii1 === 'number' &&
+          typeof ii2 === 'number' &&
+          room.board[ii1] &&
+          room.board[ii2]
+        ) {
+          room.board[ii1].revealed = false;
+          room.board[ii2].revealed = false;
+        }
+        room.tempFlips = [];
+        if (room.currentTurn === prevTurn) {
+          room.currentTurn = otherKey;
+        }
+        broadcastMemoryState(room);
+      }, 900);
+    }
+  }
+}
+
+function handleMemoryPlayAgain(ws) {
+  const found = findMemoryPlayer(ws);
+  if (!found) {
+    send(ws, { type: 'memory_error', message: 'Nu esti intr-o camera.' });
+    return;
+  }
+
+  const { room } = found;
+
+  if (!room.players.a || !room.players.b) {
+    send(ws, { type: 'memory_error', message: 'Avem nevoie de doi jucatori pentru rematch.' });
+    return;
+  }
+
+  setupMemoryBoard(room);
+  broadcastMemoryState(room);
+}
+
+// ----------------------- MACAO MESAJE -----------------------
+
+function handleMacaoCreateRoom(ws) {
+  const roomCode = generateRoomCode();
+  send(ws, { type: 'macao_room_created', roomCode });
+}
+
+function handleMacaoJoinRoom(ws, roomCode, playerName) {
+  if (!roomCode || typeof roomCode !== 'string') {
+    send(ws, { type: 'macao_error', message: 'Cod de camera invalid.' });
+    return;
+  }
+  roomCode = roomCode.toUpperCase();
+  playerName = (playerName || 'Anonim').slice(0, 20);
+
+  let room = macaoRooms.get(roomCode);
+  if (!room) {
+    room = {
+      roomCode,
+      players: { p1: null, p2: null },
+      hands: { p1: [], p2: [] },
+      drawPile: [],
+      discardPile: [],
+      currentTurn: null,
+      status: 'waiting',
+      pendingDraw: 0,
+      attackActive: false,
+    };
+    macaoRooms.set(roomCode, room);
+  }
+
+  const existing = findMacaoPlayer(ws);
+  if (existing && existing.room.roomCode !== roomCode) {
+    handleMacaoDisconnect(ws);
+  }
+
+  let seat = null;
+  if (!room.players.p1) {
+    seat = 'p1';
+    room.players.p1 = { name: playerName, ws };
+  } else if (!room.players.p2) {
+    seat = 'p2';
+    room.players.p2 = { name: playerName, ws };
+  } else {
+    send(ws, { type: 'macao_error', message: 'Camera este deja plina.' });
+    return;
+  }
+
+  if (room.players.p1 && room.players.p2 && room.status !== 'active' && room.status !== 'finished') {
+    dealMacaoInitial(room);
+  }
+
+  broadcastMacaoState(room);
+}
+
+function handleMacaoPlay(ws, cardId) {
+  const found = findMacaoPlayer(ws);
+  if (!found) {
+    send(ws, { type: 'macao_error', message: 'Nu esti intr-o camera.' });
+    return;
+  }
+
+  const { room, seat } = found;
+  const result = applyMacaoPlay(room, seat, cardId);
+  if (result.error) {
+    send(ws, { type: 'macao_error', message: result.error });
+    return;
+  }
+
+  broadcastMacaoState(room);
+}
+
+function handleMacaoDraw(ws) {
+  const found = findMacaoPlayer(ws);
+  if (!found) {
+    send(ws, { type: 'macao_error', message: 'Nu esti intr-o camera.' });
+    return;
+  }
+
+  const { room, seat } = found;
+  const result = applyMacaoDraw(room, seat);
+  if (result.error) {
+    send(ws, { type: 'macao_error', message: result.error });
+    return;
+  }
+
+  broadcastMacaoState(room);
+}
+
+function handleMacaoPlayAgain(ws) {
+  const found = findMacaoPlayer(ws);
+  if (!found) {
+    send(ws, { type: 'macao_error', message: 'Nu esti intr-o camera.' });
+    return;
+  }
+
+  const { room } = found;
+
+  if (!room.players.p1 || !room.players.p2) {
+    send(ws, { type: 'macao_error', message: 'Avem nevoie de doi jucatori pentru rematch.' });
+    return;
+  }
+
+  dealMacaoInitial(room);
+  broadcastMacaoState(room);
+}
+
+// ----------------------- RAZBOI MESAJE -----------------------
+
+function handleRazboiCreateRoom(ws) {
+  const roomCode = generateRoomCode();
+  send(ws, { type: 'razboi_room_created', roomCode });
+}
+
+function handleRazboiJoinRoom(ws, roomCode, playerName) {
+  if (!roomCode || typeof roomCode !== 'string') {
+    send(ws, { type: 'razboi_error', message: 'Cod de camera invalid.' });
+    return;
+  }
+  roomCode = roomCode.toUpperCase();
+  playerName = (playerName || 'Anonim').slice(0, 20);
+
+  let room = razboiRooms.get(roomCode);
+  if (!room) {
+    room = {
+      roomCode,
+      players: { p1: null, p2: null },
+      decks: { p1: [], p2: [] },
+      battlePile: [],
+      lastCards: { p1: null, p2: null },
+      lastMessage: null,
+      status: 'waiting',
+    };
+    razboiRooms.set(roomCode, room);
+  }
+
+  const existing = findRazboiPlayer(ws);
+  if (existing && existing.room.roomCode !== roomCode) {
+    handleRazboiDisconnect(ws);
+  }
+
+  let seat = null;
+  if (!room.players.p1) {
+    seat = 'p1';
+    room.players.p1 = { name: playerName, ws };
+  } else if (!room.players.p2) {
+    seat = 'p2';
+    room.players.p2 = { name: playerName, ws };
+  } else {
+    send(ws, { type: 'razboi_error', message: 'Camera este deja plina.' });
+    return;
+  }
+
+  if (room.players.p1 && room.players.p2 && room.status !== 'active' && room.status !== 'finished') {
+    dealRazboiInitial(room);
+  }
+
+  broadcastRazboiState(room);
+}
+
+function handleRazboiPlayRound(ws) {
+  const found = findRazboiPlayer(ws);
+  if (!found) {
+    send(ws, { type: 'razboi_error', message: 'Nu esti intr-o camera.' });
+    return;
+  }
+
+  const { room } = found;
+  if (room.status !== 'active') {
+    send(ws, { type: 'razboi_error', message: 'Jocul nu este activ.' });
+    return;
+  }
+  if (room.roundLock) {
+    return;
+  }
+
+  room.roundLock = true;
+  const { seat } = found;
+  applyRazboiStep(room, seat);
+  broadcastRazboiState(room);
+
+  room.roundLock = false;
+}
+
+function handleRazboiPlayAgain(ws) {
+  const found = findRazboiPlayer(ws);
+  if (!found) {
+    send(ws, { type: 'razboi_error', message: 'Nu esti intr-o camera.' });
+    return;
+  }
+
+  const { room } = found;
+
+  if (!room.players.p1 || !room.players.p2) {
+    send(ws, { type: 'razboi_error', message: 'Avem nevoie de doi jucatori pentru rematch.' });
+    return;
+  }
+
+  dealRazboiInitial(room);
+  broadcastRazboiState(room);
 }
 
 // ----------------------- HANGMAN MESAJE -----------------------
@@ -557,8 +1635,10 @@ function handleDisconnect(ws) {
       broadcastState(room);
     }
   }
-
   handleHangmanDisconnect(ws);
+  handleMemoryDisconnect(ws);
+  handleMacaoDisconnect(ws);
+  handleRazboiDisconnect(ws);
 }
 
 function handleHangmanDisconnect(ws) {
@@ -583,6 +1663,78 @@ function handleHangmanDisconnect(ws) {
     message: 'Adversarul a iesit din joc. Poti crea o camera noua.',
   });
   broadcastHangmanState(room);
+}
+
+function handleMemoryDisconnect(ws) {
+  const found = findMemoryPlayer(ws);
+  if (!found) return;
+
+  const { room, sideKey } = found;
+  room.players[sideKey] = null;
+
+  const otherKey = sideKey === 'a' ? 'b' : 'a';
+  const opponent = room.players[otherKey];
+
+  if (!opponent) {
+    memoryRooms.delete(room.roomCode);
+    return;
+  }
+
+  room.status = 'finished';
+
+  send(opponent.ws, {
+    type: 'memory_error',
+    message: 'Adversarul a iesit din joc. Poti crea o camera noua.',
+  });
+  broadcastMemoryState(room);
+}
+
+function handleMacaoDisconnect(ws) {
+  const found = findMacaoPlayer(ws);
+  if (!found) return;
+
+  const { room, seat } = found;
+  room.players[seat] = null;
+
+  const otherSeat = seat === 'p1' ? 'p2' : 'p1';
+  const opponent = room.players[otherSeat];
+
+  if (!opponent) {
+    macaoRooms.delete(room.roomCode);
+    return;
+  }
+
+  room.status = 'finished';
+
+  send(opponent.ws, {
+    type: 'macao_error',
+    message: 'Adversarul a iesit din joc. Poti crea o camera noua.',
+  });
+  broadcastMacaoState(room);
+}
+
+function handleRazboiDisconnect(ws) {
+  const found = findRazboiPlayer(ws);
+  if (!found) return;
+
+  const { room, seat } = found;
+  room.players[seat] = null;
+
+  const otherSeat = seat === 'p1' ? 'p2' : 'p1';
+  const opponent = room.players[otherSeat];
+
+  if (!opponent) {
+    razboiRooms.delete(room.roomCode);
+    return;
+  }
+
+  room.status = 'finished';
+
+  send(opponent.ws, {
+    type: 'razboi_error',
+    message: 'Adversarul a iesit din joc. Poti crea o camera noua.',
+  });
+  broadcastRazboiState(room);
 }
 
 function handleRematch(ws) {
@@ -667,6 +1819,45 @@ function handleMessage(ws, raw) {
       break;
     case 'hangman_play_again':
       handleHangmanPlayAgain(ws);
+      break;
+    case 'memory_create_room':
+      handleMemoryCreateRoom(ws);
+      break;
+    case 'memory_join_room':
+      handleMemoryJoinRoom(ws, msg.roomCode, msg.playerName, msg.mode);
+      break;
+    case 'memory_flip':
+      handleMemoryFlip(ws, msg.index);
+      break;
+    case 'memory_play_again':
+      handleMemoryPlayAgain(ws);
+      break;
+    case 'macao_create_room':
+      handleMacaoCreateRoom(ws);
+      break;
+    case 'macao_join_room':
+      handleMacaoJoinRoom(ws, msg.roomCode, msg.playerName);
+      break;
+    case 'macao_play':
+      handleMacaoPlay(ws, msg.cardId);
+      break;
+    case 'macao_draw':
+      handleMacaoDraw(ws);
+      break;
+    case 'macao_play_again':
+      handleMacaoPlayAgain(ws);
+      break;
+    case 'razboi_create_room':
+      handleRazboiCreateRoom(ws);
+      break;
+    case 'razboi_join_room':
+      handleRazboiJoinRoom(ws, msg.roomCode, msg.playerName);
+      break;
+    case 'razboi_play_round':
+      handleRazboiPlayRound(ws);
+      break;
+    case 'razboi_play_again':
+      handleRazboiPlayAgain(ws);
       break;
     default:
       send(ws, { type: 'error', message: 'Tip de mesaj necunoscut.' });

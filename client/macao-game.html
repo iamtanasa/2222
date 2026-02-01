@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Macao - Joc</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-entry" data-page="macao-game">
+  <div class="bulls-container">
+    <div class="back-button" id="macao-back-top">&larr; Înapoi</div>
+
+    <div class="bulls-icon">🃏</div>
+    <h1>Macao</h1>
+    <p class="subtitle" id="macao-status-text"></p>
+    <p class="room-label">Camera: <span id="macao-room-code-display">-</span></p>
+
+    <div class="glass-card bulls-card">
+      <main class="game-main macao-layout">
+      <section class="macao-opponent">
+        <div class="player-label">
+          <span id="macao-opponent-name">Adversar...</span>
+        </div>
+        <div class="macao-opponent-hand" id="macao-opponent-hand">
+          <!-- backs of cards here -->
+        </div>
+      </section>
+
+      <section class="macao-table">
+        <div class="macao-piles">
+          <div class="pile draw-pile" id="macao-draw-pile">
+            <div class="card-slot card-back">
+              <img class="card-img" src="../server/node_modules/svg-cards/png/2x/back-red.png" onerror="this.src='../server/node_modules/svg-cards/png/2x/back.png'" alt="Pachet" />
+            </div>
+            <span class="pile-count" id="macao-draw-count">0</span>
+            
+          </div>
+          <div class="pile discard-pile" id="macao-discard-pile">
+            <div class="card-slot" id="macao-top-discard"></div>
+            
+          </div>
+        </div>
+        <div class="macao-info-row">
+          <span id="macao-turn-indicator">Așteptăm jucători...</span>
+          <span id="macao-attack-info"></span>
+        </div>
+        <div class="macao-actions">
+          <button id="macao-draw-btn" class="btn-primary">Trage carte</button>
+        </div>
+      </section>
+
+      <section class="macao-player">
+        <div class="player-label">
+          <span id="macao-you-name">Tu</span>
+        </div>
+        <div class="macao-player-hand-wrapper">
+          <div class="macao-player-hand" id="macao-player-hand">
+            <!-- cards here -->
+          </div>
+        </div>
+      </section>
+    </main>
+    </div>
+
+    <!-- overlay de Game Over in stilul celorlalte jocuri -->
+    <div id="macao-over-section" class="section" style="display: none; text-align: center; margin-top: 16px;">
+      <div class="win-card">
+        <div class="win-icon">🎉</div>
+        <h2 class="section-title" style="text-align: center;">Joc terminat</h2>
+        <p id="macao-over-text" class="turn-info"></p>
+        <p id="macao-over-room" class="helper-text" style="margin-top: 6px;"></p>
+        <div class="win-buttons">
+          <button id="macao-play-again-overlay" class="btn-secondary">Joacă din nou</button>
+          <button id="macao-home-overlay" class="btn-primary">Acasă</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../script.js"></script>
+  <script src="macao.js"></script>
+</body>
+</html>
