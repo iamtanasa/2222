@@ -28,7 +28,7 @@ async function loadShopUser() {
   try {
     const { data, error } = await _supabase
       .from('LoginUsers')
-      .select('id, wins_bulls_cows, wins_hangman, wins_memory, wins_macao, wins_razboi, shop_spent')
+      .select('id, wins_bulls_cows, wins_hangman, wins_memory, wins_macao, wins_razboi, wins_triangles, shop_spent')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -43,7 +43,8 @@ async function loadShopUser() {
     const memory = Number.isFinite(data.wins_memory) ? data.wins_memory : 0;
     const macao = Number.isFinite(data.wins_macao) ? data.wins_macao : 0;
     const razboi = Number.isFinite(data.wins_razboi) ? data.wins_razboi : 0;
-    const totalWins = bulls + hangman + memory + macao + razboi;
+    const triangles = Number.isFinite(data.wins_triangles) ? data.wins_triangles : 0;
+    const totalWins = bulls + hangman + memory + macao + razboi + triangles;
 
     const spent = Number.isFinite(data.shop_spent) ? data.shop_spent : 0;
     const balance = Math.max(0, totalWins - spent);
@@ -306,7 +307,7 @@ async function buyChallenge(user, challengeId, price) {
     // 1. Re-citim soldul din LoginUsers (victorii + ce s-a cheltuit până acum)
     const { data: userRow, error: userError } = await _supabase
       .from('LoginUsers')
-      .select('id, wins_bulls_cows, wins_hangman, wins_memory, wins_macao, wins_razboi, shop_spent')
+      .select('id, wins_bulls_cows, wins_hangman, wins_memory, wins_macao, wins_razboi, wins_triangles, shop_spent')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -321,7 +322,8 @@ async function buyChallenge(user, challengeId, price) {
     const memory = Number.isFinite(userRow.wins_memory) ? userRow.wins_memory : 0;
     const macao = Number.isFinite(userRow.wins_macao) ? userRow.wins_macao : 0;
     const razboi = Number.isFinite(userRow.wins_razboi) ? userRow.wins_razboi : 0;
-    const totalWins = bulls + hangman + memory + macao + razboi;
+    const triangles = Number.isFinite(userRow.wins_triangles) ? userRow.wins_triangles : 0;
+    const totalWins = bulls + hangman + memory + macao + razboi + triangles;
 
     const spent = Number.isFinite(userRow.shop_spent) ? userRow.shop_spent : 0;
     const currentPoints = Math.max(0, totalWins - spent);

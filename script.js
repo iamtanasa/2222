@@ -111,7 +111,7 @@ function getLoggedInUser() {
     return { id, name };
 }
 
-// Helper: înregistrează o victorie în LoginUsers (bulls / hangman / memory / macao / razboi)
+// Helper: înregistrează o victorie în LoginUsers (bulls / hangman / memory / macao / razboi / triangles)
 async function recordWin(game) {
     const user = getLoggedInUser();
     if (!user) return; // dacă nu e login real, nu facem nimic
@@ -122,6 +122,7 @@ async function recordWin(game) {
     else if (game === 'memory') column = 'wins_memory';
     else if (game === 'macao') column = 'wins_macao';
     else if (game === 'razboi') column = 'wins_razboi';
+    else if (game === 'triangles') column = 'wins_triangles';
     if (!column) return;
 
     try {
