@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Shop provocări</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="page-entry" data-page="shop">
+  <div class="main-container">
+    <div class="back-button" onclick="navigateTo('2222.html')">← Înapoi</div>
+    <div class="main-icon">🛍️</div>
+    <h1>Shop</h1>
+    <p class="subtitle" id="shop-subtitle">Încarc datele tale...</p>
+
+    <div class="glass-card shop-section" id="shop-balance-card">
+      <h2 style="color:white; margin-bottom:10px; font-size:1.3rem;">Punctele tale</h2>
+      <p style="color:rgba(255,255,255,0.9); font-size:1rem;">
+        Utilizator: <span id="shop-username" style="font-weight:600;">-</span><br>
+        Sold disponibil: <span id="shop-points" style="font-weight:700; font-size:1.2rem;">0</span> puncte
+      </p>
+    </div>
+
+    <div class="shop-mode-toggle">
+      <button id="btn-mode-shop" class="shop-mode-btn active">🛒 Vezi provocările</button>
+      <button id="btn-mode-create" class="shop-mode-btn">✏️ Creează provocare</button>
+    </div>
+
+    <div id="shop-view-section">
+      <div class="glass-card shop-section" id="shop-available-card">
+        <h2 style="color:white; margin-bottom:12px; font-size:1.3rem;">Provocări de cumpărat</h2>
+        <p style="color:rgba(255,255,255,0.9); font-size:0.95rem; margin-bottom:12px;">
+          Provocările create de celălalt dintre voi, pe care le poți cumpăra cu puncte.
+        </p>
+        <div id="available-challenges" class="shop-list">
+          <p style="color:white; text-align:center;">Se încarcă provocările...</p>
+        </div>
+      </div>
+
+      <div class="glass-card shop-section" id="shop-mine-card">
+        <h2 style="color:white; margin-bottom:12px; font-size:1.3rem;">Provocările mele</h2>
+        <div id="my-challenges" class="shop-list">
+          <p style="color:white; text-align:center;">Se încarcă provocările tale...</p>
+        </div>
+      </div>
+
+      <div class="glass-card shop-section" id="shop-bought-card">
+        <h2 style="color:white; margin-bottom:12px; font-size:1.3rem;">Provocări cumpărate de mine</h2>
+        <p style="color:rgba(255,255,255,0.9); font-size:0.95rem; margin-bottom:12px;">
+          Aici vezi toate provocările pe care le-ai cumpărat tu.
+        </p>
+        <div id="bought-challenges" class="shop-list">
+          <p style="color:white; text-align:center;">Se încarcă provocările cumpărate...</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="create-view-section" class="shop-hidden">
+      <div class="glass-card shop-section" id="shop-create-card">
+        <h2 style="color:white; margin-bottom:12px; font-size:1.3rem;">Creează o provocare</h2>
+        <p style="color:rgba(255,255,255,0.9); font-size:0.95rem; margin-bottom:12px;">
+          Scrie o provocare pentru celălalt dintre voi și alege câte puncte costă.
+        </p>
+        <div class="shop-form-group">
+          <input type="text" id="challenge-title" placeholder="Titlul provocării" autocomplete="off">
+        </div>
+        <div class="shop-form-group">
+          <textarea id="challenge-desc" placeholder="Descrierea provocării"></textarea>
+        </div>
+        <div class="shop-form-group">
+          <input type="number" id="challenge-price" placeholder="Cât costă provocarea? (puncte)" min="1">
+        </div>
+        <button id="create-challenge-btn">Adaugă provocarea</button>
+        <p id="create-challenge-msg" class="shop-info-msg"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="shop.js"></script>
+</body>
+</html>

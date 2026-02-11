@@ -4,19 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Clasament - Universul Nostru</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="page-entry" data-page="leaderboard">
   <div class="main-container">
     <div class="back-button" onclick="goBack()">← Înapoi</div>
     <div class="main-icon">🏆</div>
     <h1>Clasament</h1>
-    <p class="subtitle">Vedem câte victorii are fiecare la Bulls &amp; Cows și Spânzurătoarea.</p>
+    <p class="subtitle"></p>
 
     <div class="glass-card" id="leaderboard-card">
-      <h2 class="section-title">Andrei vs Georgiana</h2>
+      
 
       <div id="leaderboard-content" class="leaderboard-content">
         <p style="color: white; text-align: center;">Se încarcă clasamentul...</p>
@@ -28,6 +28,7 @@
     </div>
   </div>
 
+  <script src="script.js"></script>
   <script src="leaderboard.js"></script>
   <script>
     function goBack() {

@@ -13,24 +13,24 @@
     <div class="back-button" onclick="goBack()">← Înapoi</div>
     <div class="main-icon">📅</div>
     <h1>Planificator de Întâlniri</h1>
-    <p class="subtitle">Stabilim momentele noastre speciale și vedem cât a mai rămas până ne revedem.</p>
+    
 
     <div class="glass-card planner-card">
       <h2 class="section-title">Adaugă o nouă întâlnire</h2>
-      <p class="helper-text">Alege un nume drăguț și data la care vă veți vedea.</p>
+    
       <div class="planner-form">
         <input id="planner-title" type="text" maxlength="40" placeholder="Ex: Seară de film" autocomplete="off" />
         <div class="planner-row">
           <input id="planner-date" type="date" />
           <input id="planner-time" type="time" />
         </div>
-        <button id="planner-add" class="btn-secondary">Adaugă întâlnirea</button>
+        <button id="planner-add" class="btn-secondary">Adaugă</button>
       </div>
     </div>
 
     <div class="glass-card planner-card">
       <h2 class="section-title">Întâlniri prestabilite</h2>
-      <p class="helper-text">Apasă pe un loc, îți completăm automat numele întâlnirii. Tu alegi doar data și ora.</p>
+      
       <div class="portals-grid planner-presets-grid">
         <div class="portal-card planner-preset" data-title="Faleză">
           <div class="portal-icon">🌊</div>
@@ -65,7 +65,7 @@
         <div class="portal-card planner-preset" data-title="Mall">
           <div class="portal-icon">🛍️</div>
           <div class="portal-name">Mall</div>
-          <div class="portal-desc">Shopping & înghețată</div>
+          <div class="portal-desc">Shopping</div>
         </div>
         <div class="portal-card planner-preset" data-title="Pe deal">
           <div class="portal-icon">⛰️</div>
@@ -79,7 +79,7 @@
         </div>
         <div class="portal-card planner-preset" data-title="La mine acasă">
           <div class="portal-icon">🏡</div>
-          <div class="portal-name">La mine acasă</div>
+          <div class="portal-name">Acasă</div>
           <div class="portal-desc">Seară cozy la mine</div>
         </div>
       </div>
@@ -111,7 +111,7 @@
 
     <div class="glass-card planner-card">
       <h2 class="section-title">Toate întâlnirile planificate</h2>
-      <p class="helper-text">Cele mai apropiate întâlniri apar primele.</p>
+      
       <div id="planner-list" class="planner-list"></div>
     </div>
   </div>

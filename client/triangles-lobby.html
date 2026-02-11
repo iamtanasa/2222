@@ -3,47 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Razboi - Lobby</title>
+  <title>Triunghiuri din puncte - Lobby</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="page-entry" data-page="razboi-lobby">
+<body class="page-entry" data-page="triangles-lobby">
   <div class="bulls-container">
     <div class="back-button" onclick="navigateTo('../2222.html')">&larr; Înapoi</div>
 
-    <div class="bulls-icon">⚔️</div>
-    <h1>Război</h1>
-    
+    <div class="bulls-icon">🔺</div>
+    <h1>Triunghiuri din puncte</h1>
+    <p class="subtitle">Desenează linii și formează cât mai multe triunghiuri.</p>
 
     <div class="glass-card bulls-card">
       <div class="section">
         <h2 class="section-title">Cine joacă?</h2>
-        <input id="razboi-player-name" type="text" placeholder="Ex: Andrei" maxlength="20" />
+        <input id="triangles-player-name" type="text" placeholder="Ex: Andrei" maxlength="20" />
         
       </div>
 
       <div class="section">
         <h2 class="section-title">Creează o cameră</h2>
-        <button id="razboi-create-room" class="btn-primary">Creează camera</button>
+        <button id="triangles-create-room" class="btn-primary">Creează camera</button>
         
       </div>
 
       <div class="section">
         
         <div class="join-room">
-          <input id="razboi-room-code" type="text" maxlength="4" placeholder="Cod cameră (4 litere)" />
-          <button id="razboi-join-room" class="btn-secondary">Intră în cameră</button>
+          <input id="triangles-room-code" type="text" maxlength="4" placeholder="Cod cameră (4 litere)" />
+          <button id="triangles-join-room" class="btn-secondary">Intră în cameră</button>
         </div>
-       
+        
       </div>
 
-      <p id="razboi-lobby-status" class="lobby-status"></p>
+      <p id="triangles-lobby-status" class="lobby-status"></p>
     </div>
   </div>
 
   <script src="../script.js"></script>
-  <script src="razboi.js"></script>
+  <script src="triangles.js"></script>
 </body>
 </html>

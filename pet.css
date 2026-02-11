@@ -1,0 +1,315 @@
+.pet-container {
+  max-width: 520px;
+}
+
+.pet-icon {
+  font-size: 80px;
+}
+
+.pet-main-card {
+  margin-top: 16px;
+  position: relative;
+}
+
+.pet-progress-bar {
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+  position: relative;
+}
+
+#pet-progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff4d6d, #ffb703);
+  box-shadow: 0 0 12px rgba(255, 183, 3, 0.6);
+  transition: width 0.4s ease-out;
+}
+
+#pet-progress-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.pet-photo-wrapper {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pet-photo-frame {
+  width: 270px;
+  height: 270px;
+  padding: 10px;
+  border-radius: 28px;
+  background: linear-gradient(45deg, #ff4d6d, #ffb703, #ff6b81);
+  background-size: 200% 200%;
+  animation: petFrameGlow 5s linear infinite;
+  box-shadow: 0 0 22px rgba(255, 77, 109, 0.6);
+  position: relative;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.pet-photo-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.pet-photo-frame.glow {
+  box-shadow: 0 0 32px rgba(255, 255, 255, 0.9), 0 0 40px rgba(255, 183, 3, 0.9);
+}
+
+.pet-particles {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.pet-particle {
+  position: absolute;
+  bottom: 14%;
+  transform: translateX(-50%) scale(var(--pet-particle-scale, 1));
+  font-size: 1.6rem;
+  animation:
+    petParticleFloat var(--pet-particle-duration, 1.2s) ease-out forwards;
+  animation-delay: var(--pet-particle-delay, 0s);
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+}
+
+.pet-photo-frame:hover,
+.pet-photo-frame:active {
+  transform: scale(1.03);
+  box-shadow: 0 0 28px rgba(255, 183, 3, 0.9);
+}
+
+#pet-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pet-photo-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+.pet-photo-caption {
+  margin-top: 10px;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.pet-stack-button {
+  position: absolute;
+  top: 52px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: none;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+  font-size: 1.1rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.pet-actions-title {
+  color: #fff;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.pet-items-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 18px;
+  margin-top: 16px;
+}
+
+.pet-item {
+  width: 90px;
+  height: 90px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-align: center;
+  font-size: 0.7rem;
+  user-select: none;
+  touch-action: none;
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, background 0.15s ease-out;
+}
+
+.pet-item-icon {
+  font-size: 2rem;
+  margin-bottom: 4px;
+}
+
+.pet-item-label {
+  line-height: 1.2;
+}
+
+.pet-item:hover,
+.pet-item:active {
+  transform: scale(1.06);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.pet-item.dragging-clone {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+.pet-hint {
+  margin-top: 14px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.pet-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.pet-modal-content {
+  width: 90%;
+  max-width: 520px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 26px;
+  padding: 18px 16px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.pet-modal-close {
+  float: right;
+  cursor: pointer;
+  font-size: 1.4rem;
+  color: #fff;
+}
+
+.pet-modal-title {
+  margin: 0 0 4px;
+  font-family: 'Dancing Script', cursive;
+  font-size: 1.8rem;
+  color: #fff;
+}
+
+.pet-modal-subtitle {
+  margin: 0 0 10px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+}
+
+.pet-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pet-gallery-item {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #000;
+}
+
+.pet-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pet-gallery-item.locked::after {
+  content: '\1f512';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  font-size: 1.4rem;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@keyframes petFrameGlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes petParticleFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 20px) scale(var(--pet-particle-scale, 1));
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -80px) scale(calc(var(--pet-particle-scale, 1) * 1.2));
+  }
+}
+
+@media (max-width: 380px) {
+  .pet-photo-frame {
+    width: 230px;
+    height: 230px;
+  }
+
+  .pet-item {
+    width: 80px;
+    height: 80px;
+  }
+}

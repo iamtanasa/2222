@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Petul Nostru Virtual</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="pet.css" />
+</head>
+<body class="page-entry" data-page="pet">
+  <div class="main-container pet-container">
+    <div class="back-button" onclick="goBackFromPet()">← Înapoi</div>
+
+    <div class="main-icon pet-icon">👶</div>
+    <h1>Micul Andrei</h1>
+    
+
+    <div class="glass-card pet-main-card">
+      <button id="pet-stack-button" class="pet-stack-button" type="button" title="Galeria cu poze">🖼️</button>
+
+      <div class="pet-progress-bar">
+        <div id="pet-progress-fill"></div>
+        <span id="pet-progress-label">0%</span>
+      </div>
+
+      <div class="pet-photo-wrapper">
+        <div class="pet-photo-frame" id="pet-photo-frame">
+          <div class="pet-photo-inner">
+            <img id="pet-photo" src="mic/1.jpeg" alt="Pet virtual" />
+            <div id="pet-photo-overlay" class="pet-photo-overlay hidden">Blocat</div>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="pet-items-row">
+        <div class="pet-item" data-type="food">
+          <div class="pet-item-icon">🍓</div>
+          
+        </div>
+        <div class="pet-item" data-type="water">
+          <div class="pet-item-icon">🍺</div>
+          
+        </div>
+      </div>
+      <div id="pet-daily-msg" class="pet-hint">Hrănește-mă</div>
+      
+    </div>
+  </div>
+
+  <div id="pet-gallery-modal" class="pet-modal hidden">
+    <div class="pet-modal-content">
+      <span class="pet-modal-close" id="pet-gallery-close">&times;</span>
+      <h2 class="pet-modal-title">Poze de când era Andrei mic</h2>
+      <p class="pet-modal-subtitle">Poze deblocate: <span id="pet-unlocked-count">1</span> / 15</p>
+      <div id="pet-gallery-grid" class="pet-gallery-grid"></div>
+    </div>
+  </div>
+
+  <!-- Fullscreen viewer pentru pozele din pet -->
+  <div id="pet-fullscreen-modal" class="modal fullscreen-viewer" style="display:none;">
+    <span class="close-fullscreen" id="pet-fullscreen-close">&times;</span>
+    <button class="nav-btn prev" id="pet-fullscreen-prev">&#10094;</button>
+    <img id="pet-fullscreen-img" src="" alt="Poză mare" />
+    <button class="nav-btn next" id="pet-fullscreen-next">&#10095;</button>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="pet.js"></script>
+  <script>
+    function goBackFromPet() {
+      document.body.classList.add('page-fade-out');
+      setTimeout(() => { window.location.href = '2222.html'; }, 600);
+    }
+  </script>
+</body>
+</html>

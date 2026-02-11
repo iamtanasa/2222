@@ -1,10 +1,11 @@
 // leaderboard.js
 // Afișează victoriile pentru Andrei și Georgiana din tabela LoginUsers
 
-const SUPABASE_URL = 'https://nzkihyaifxkfccwgiilp.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_5oxupUfCOgvdMAe0guBQWQ_XKfwq6dL';
+// Folosim nume diferite pentru a nu intra în conflict cu constanții din script.js
+const LB_SUPABASE_URL = 'https://nzkihyaifxkfccwgiilp.supabase.co';
+const LB_SUPABASE_KEY = 'sb_publishable_5oxupUfCOgvdMAe0guBQWQ_XKfwq6dL';
 
-const lbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const lbClient = supabase.createClient(LB_SUPABASE_URL, LB_SUPABASE_KEY);
 
 function formatName(name) {
   if (!name) return '';
@@ -32,26 +33,30 @@ function renderLeaderboard(users) {
       const razboi = Number.isFinite(u.wins_razboi) ? u.wins_razboi : 0;
       return `
         <div class="leaderboard-row">
-          <div class="leaderboard-name">${name}</div>
-          <div class="leaderboard-stat">
-            <span class="lb-label">Bulls &amp; Cows</span>
-            <span class="lb-value">${bulls}</span>
+          <div class="leaderboard-row-header">
+            <div class="leaderboard-name">${name}</div>
           </div>
-          <div class="leaderboard-stat">
-            <span class="lb-label">Spânzurătoarea</span>
-            <span class="lb-value">${hangman}</span>
-          </div>
-          <div class="leaderboard-stat">
-            <span class="lb-label">Memory Game</span>
-            <span class="lb-value">${memory}</span>
-          </div>
-          <div class="leaderboard-stat">
-            <span class="lb-label">Macao</span>
-            <span class="lb-value">${macao}</span>
-          </div>
-          <div class="leaderboard-stat">
-            <span class="lb-label">Război</span>
-            <span class="lb-value">${razboi}</span>
+          <div class="leaderboard-row-stats">
+            <div class="leaderboard-stat">
+              <span class="lb-label">Bulls &amp; Cows</span>
+              <span class="lb-value">${bulls}</span>
+            </div>
+            <div class="leaderboard-stat">
+              <span class="lb-label">Spânzurătoarea</span>
+              <span class="lb-value">${hangman}</span>
+            </div>
+            <div class="leaderboard-stat">
+              <span class="lb-label">Memory Game</span>
+              <span class="lb-value">${memory}</span>
+            </div>
+            <div class="leaderboard-stat">
+              <span class="lb-label">Macao</span>
+              <span class="lb-value">${macao}</span>
+            </div>
+            <div class="leaderboard-stat">
+              <span class="lb-label">Război</span>
+              <span class="lb-value">${razboi}</span>
+            </div>
           </div>
         </div>
       `;

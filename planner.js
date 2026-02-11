@@ -112,7 +112,7 @@ function renderPlannerList() {
   if (!upcoming.length) {
     const p = document.createElement('p');
     p.className = 'helper-text';
-    p.textContent = 'Nu avem încă întâlniri planificate. Adaugă prima voastră dată!';
+    p.textContent = 'Nu avem încă întâlniri planificate';
     list.appendChild(p);
     return;
   }

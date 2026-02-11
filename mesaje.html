@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mesaje - Universul Nostru</title>
+    <title>Mesaje</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet">
 </head>
@@ -12,34 +13,160 @@
     <div class="main-container">
         <div class="back-button" onclick="goBack()">← Înapoi</div>
         <div class="main-icon">💌</div>
-        <h1>Mesajele Iubirii</h1>
+        <h1>Mesajul zilei</h1>
         
         <div class="glass-card">
-            <div id="messages-container" class="messages-container">
-                <div class="message-card from-andrei">
-                    <div class="message-author">Andrei</div>
-                    <div class="message-text">Mesajul tău aici... 💕</div>
-                </div>
-                <div class="message-card from-georgiana">
-                    <div class="message-author">Georgiana</div>
-                    <div class="message-text">Mesajul tău aici... 💕</div>
-                </div>
+            <div id="random-message" class="message">
+                Mesajul zilei de azi
             </div>
-            <button onclick="sendMessage()" class="btn-add-memory">📝 Scrie un Mesaj</button>
+            <button id="btn-random-message" onclick="showRandomMessage()" class="btn-add-memory">✨ Generează un mesaj ✨</button>
+            <div id="next-message-info" style="margin-top: 10px; font-size: 0.85rem; color: rgba(255,255,255,0.9);">
+            </div>
         </div>
 
-        <button onclick="goBack()" class="btn-back">Înapoi la Univers</button>
+        
     </div>
 
+    <script src="script.js"></script>
     <script>
+        let mesajeData = null;
+        const STORAGE_KEY_DATE = 'berea_mesaj_data';
+        const STORAGE_KEY_INDEX = 'berea_mesaj_index';
+
+        function getTodayString() {
+            return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        }
+
+        function setButtonUsedState(used) {
+            const btn = document.getElementById('btn-random-message');
+            if (!btn) return;
+            if (used) {
+                btn.disabled = true;
+                btn.textContent = 'Ai deja mesajul de azi 💌';
+                btn.style.opacity = '0.7';
+            } else {
+                btn.disabled = false;
+                btn.textContent = '✨ Generează un mesaj ✨';
+                btn.style.opacity = '1';
+            }
+        }
+
+        function updateNextMessageInfo() {
+            const info = document.getElementById('next-message-info');
+            if (!info) return;
+
+            const today = getTodayString();
+            const storedDate = localStorage.getItem(STORAGE_KEY_DATE);
+
+            // Dacă nu există mesaj pentru azi, îl poate genera acum
+            if (storedDate !== today) {
+                info.textContent = 'Poți genera mesajul tău de azi chiar acum.';
+                return;
+            }
+
+            // Calculăm cât a mai rămas până la miezul nopții (următoarea zi)
+            const now = new Date();
+            const nextMidnight = new Date();
+            nextMidnight.setHours(24, 0, 0, 0);
+
+            let diffMs = nextMidnight - now;
+            if (diffMs <= 0) {
+                info.textContent = 'Poți genera un nou mesaj.';
+                return;
+            }
+
+            const totalMinutes = Math.floor(diffMs / 60000);
+            const ore = Math.floor(totalMinutes / 60);
+            const minute = totalMinutes % 60;
+
+            if (ore <= 0 && minute <= 1) {
+                info.textContent = 'Mai puțin de un minut până la următorul mesaj.';
+            } else if (ore <= 0) {
+                info.textContent = `Următorul mesaj va fi disponibil în ${minute} minute.`;
+            } else {
+                info.textContent = `Următorul mesaj va fi disponibil în ${ore} ore și ${minute} minute.`;
+            }
+        }
+
+        async function loadMesaje() {
+            try {
+                const response = await fetch('mesaje.json');
+                if (!response.ok) throw new Error('Nu s-a putut încărca mesaje.json');
+                mesajeData = await response.json();
+
+                const container = document.getElementById('random-message');
+                if (!container) return;
+
+                const today = getTodayString();
+                const storedDate = localStorage.getItem(STORAGE_KEY_DATE);
+                const storedIndexStr = localStorage.getItem(STORAGE_KEY_INDEX);
+
+                // Dacă există deja un mesaj salvat pentru azi, îl afișăm și blocăm butonul
+                if (storedDate === today && storedIndexStr !== null && mesajeData && Array.isArray(mesajeData.mesaje)) {
+                    const idx = parseInt(storedIndexStr, 10);
+                    if (!Number.isNaN(idx) && mesajeData.mesaje[idx]) {
+                        container.textContent = mesajeData.mesaje[idx];
+                        setButtonUsedState(true);
+                        updateNextMessageInfo();
+                        return;
+                    }
+                }
+
+                // Altfel, mesaj implicit și buton activ
+                if (mesajeData && mesajeData.nume) {
+                    container.textContent = `Apasă pe buton ca să primești un mesaj pentru ${mesajeData.nume} 💌`;
+                }
+                setButtonUsedState(false);
+                updateNextMessageInfo();
+            } catch (e) {
+                console.error('Eroare la încărcarea mesajelor:', e);
+            }
+        }
+
+        loadMesaje();
+
         function goBack() {
             document.body.classList.add('page-fade-out');
             setTimeout(() => { window.location.href = "2222.html"; }, 600);
         }
-        
-        function sendMessage() {
-            alert('📝 Funcție de mesaje - coming soon!');
+
+        function showRandomMessage() {
+            const container = document.getElementById('random-message');
+            if (!container) return;
+
+            if (!mesajeData || !Array.isArray(mesajeData.mesaje) || mesajeData.mesaje.length === 0) {
+                container.textContent = 'Nu am putut încărca mesajele acum. Încearcă din nou puțin mai târziu.';
+                return;
+            }
+
+            const today = getTodayString();
+            const storedDate = localStorage.getItem(STORAGE_KEY_DATE);
+            const storedIndexStr = localStorage.getItem(STORAGE_KEY_INDEX);
+
+            // Dacă deja există un mesaj pentru azi, doar îl reafișăm și nu schimbăm nimic
+            if (storedDate === today && storedIndexStr !== null) {
+                const idxOld = parseInt(storedIndexStr, 10);
+                if (!Number.isNaN(idxOld) && mesajeData.mesaje[idxOld]) {
+                    container.textContent = mesajeData.mesaje[idxOld];
+                    setButtonUsedState(true);
+                    updateNextMessageInfo();
+                    return;
+                }
+            }
+
+            const lista = mesajeData.mesaje;
+            const index = Math.floor(Math.random() * lista.length);
+            container.textContent = lista[index];
+
+            // Salvăm mesajul zilei și blocăm butonul
+            localStorage.setItem(STORAGE_KEY_DATE, getTodayString());
+            localStorage.setItem(STORAGE_KEY_INDEX, String(index));
+            setButtonUsedState(true);
+            updateNextMessageInfo();
         }
+
+        // Actualizăm informația despre următorul mesaj la fiecare minut
+        setInterval(updateNextMessageInfo, 60000);
     </script>
 </body>
 </html>

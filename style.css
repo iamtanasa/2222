@@ -253,6 +253,182 @@ button:active {
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
 }
 
+/* SHOP PROVOCĂRI */
+
+.shop-section {
+    text-align: left;
+}
+
+.shop-mode-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.shop-mode-btn {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    background: rgba(0, 0, 0, 0.15);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.shop-mode-btn.active {
+    background: linear-gradient(45deg, #ff4d6d, #ffb703);
+    border-color: transparent;
+}
+
+.shop-hidden {
+    display: none !important;
+}
+
+.shop-form-group {
+    margin-bottom: 10px;
+}
+
+.shop-form-group textarea {
+    width: 100%;
+    min-height: 80px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    outline: none;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 12px 16px;
+    font-size: 14px;
+    color: white;
+    resize: vertical;
+}
+
+.shop-form-group textarea::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.shop-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.shop-item {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 18px;
+    background: rgba(0, 0, 0, 0.18);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.shop-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
+}
+
+.shop-item-main {
+    width: 100%;
+}
+
+.shop-item-title {
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.shop-item-desc {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+}
+
+.shop-item-side {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.shop-item-top-row {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.shop-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.shop-item-price {
+    color: #fffb;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.shop-item-meta {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+    text-align: left;
+}
+
+.shop-buy-btn {
+    width: auto;
+    padding: 8px 12px;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(45deg, #00c6ff, #0072ff);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    white-space: nowrap;
+}
+
+.shop-delete-btn {
+    width: auto;
+    padding: 6px 10px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.shop-delete-btn:hover {
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.shop-buy-btn:hover {
+    filter: brightness(1.1);
+}
+
+.shop-info-msg {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.shop-info-msg.error {
+    color: #ffb3b3;
+}
+
+.shop-info-msg.success {
+    color: #c6ffb3;
+}
+
 .message {
     font-family: 'Dancing Script', cursive;
     font-size: 1.6rem;
@@ -278,9 +454,34 @@ button:active {
 }
 
 #counter {
-    font-size: 1.2rem;
-    color: white;
-    font-weight: 300;
+    font-size: 1.3rem;
+    color: #fff7d1;
+    font-weight: 600;
+    text-shadow: 0 0 6px rgba(255, 247, 209, 0.9),
+        0 0 14px rgba(255, 183, 3, 0.8),
+        0 0 26px rgba(255, 77, 109, 0.7);
+    animation: counterGlow 2.2s ease-in-out infinite;
+}
+
+@keyframes counterGlow {
+    0% {
+        text-shadow: 0 0 4px rgba(255, 247, 209, 0.6),
+            0 0 10px rgba(255, 183, 3, 0.6),
+            0 0 18px rgba(255, 77, 109, 0.5);
+        transform: scale(1);
+    }
+    50% {
+        text-shadow: 0 0 8px rgba(255, 247, 209, 1),
+            0 0 20px rgba(255, 183, 3, 0.95),
+            0 0 35px rgba(255, 77, 109, 0.85);
+        transform: scale(1.05);
+    }
+    100% {
+        text-shadow: 0 0 4px rgba(255, 247, 209, 0.6),
+            0 0 10px rgba(255, 183, 3, 0.6),
+            0 0 18px rgba(255, 77, 109, 0.5);
+        transform: scale(1);
+    }
 }
 
 .pulse {
@@ -1360,44 +1561,70 @@ button:active {
 .leaderboard-content {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-top: 16px;
+    gap: 14px;
+    margin-top: 18px;
 }
 
 .leaderboard-row {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    padding: 14px 16px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.leaderboard-row-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px;
-    border-radius: 16px;
-    background: rgba(0, 0, 0, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 10px;
 }
 
 .leaderboard-name {
-    flex: 1;
     color: #fff;
-    font-weight: 600;
-    font-size: 1rem;
+    font-weight: 700;
+    font-size: 1.15rem;
+}
+
+.leaderboard-row-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .leaderboard-stat {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 6px 10px;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    min-width: 80px;
+    justify-content: space-between;
 }
 
 .lb-label {
-    font-size: 0.7rem;
-    opacity: 0.8;
+    font-size: 0.8rem;
+    opacity: 0.9;
     color: #fff;
 }
 
 .lb-value {
-    font-size: 1.1rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: #ffeb3b;
+}
+
+@media (min-width: 768px) {
+    .leaderboard-row-stats {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .leaderboard-stat {
+        flex: 1 1 calc(50% - 8px);
+    }
+    .leaderboard-row {
+        padding: 16px 20px;
+    }
 }
 
 /* MEMORY GAME BOARD */

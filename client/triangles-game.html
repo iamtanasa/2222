@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Triunghiuri din puncte - Joc</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-entry" data-page="triangles-game">
+  <div class="bulls-container">
+    <div class="back-button" id="triangles-back-top">&larr; Înapoi</div>
+
+    <div class="bulls-icon">🔺</div>
+    <h1>Triunghiuri din puncte</h1>
+    <p class="subtitle" id="triangles-status-text"></p>
+    <p class="room-label">Camera: <span id="triangles-room-code-display">-</span></p>
+
+    <div class="glass-card bulls-card">
+      <main class="game-main triangles-layout">
+        <section class="triangles-score">
+          <div class="player-label">
+            <span id="triangles-you-name">Tu</span>
+            <span class="score-value" id="triangles-your-score">0</span>
+          </div>
+          <div class="player-label">
+            <span id="triangles-opponent-name">Adversar...</span>
+            <span class="score-value" id="triangles-opponent-score">0</span>
+          </div>
+          <p class="helper-text" id="triangles-turn-indicator">Așteptăm să intre și adversarul.</p>
+          <p class="helper-text">Mutări posibile: <span id="triangles-remaining-moves">-</span></p>
+        </section>
+
+        <section class="triangles-board-wrapper">
+          <canvas id="triangles-canvas" width="320" height="320"></canvas>
+        </section>
+      </main>
+    </div>
+
+    <div style="margin-top: 12px; text-align: center;">
+      <button id="triangles-end-game-button" class="btn-secondary">Joc terminat</button>
+    </div>
+
+    <div id="triangles-over-section" class="section" style="display: none; text-align: center; margin-top: 16px;">
+      <div class="win-card">
+        <div class="win-icon">🎉</div>
+        <h2 class="section-title" style="text-align: center;">Joc terminat</h2>
+        <p id="triangles-over-text" class="turn-info"></p>
+        <p id="triangles-over-room" class="helper-text" style="margin-top: 6px;"></p>
+        <div class="win-buttons">
+          <button id="triangles-play-again-overlay" class="btn-secondary">Joacă din nou</button>
+          <button id="triangles-home-overlay" class="btn-primary">Acasă</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../script.js"></script>
+  <script src="triangles.js"></script>
+</body>
+</html>

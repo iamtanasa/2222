@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2222 - Universul Nostru</title>
+    <title>2222</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
 
     <div class="main-container">
         <div class="main-icon pulse">🍺🍓</div>
-        <h1>Universul 2222</h1>
+        
         
         <div class="glass-card">
             <div class="photo-frame" id="frame-container">
@@ -26,34 +26,54 @@
                 <label for="photo-input" class="btn-upload">✨ Încarcă o poză ✨</label>
                 <input type="file" id="photo-input" accept="image/*" style="display: none;">
                 
-                <button onclick="openGallery()" class="btn-gallery">Vezi Galeria 📸</button>
+                <button onclick="openGallery()" class="btn-gallery">✨ Vezi Galeria ✨</button>
             </div>
             
             <div class="divider"></div>
             
-            <p class="counter-label">Suntem împreună de:</p>
+            
             <div id="counter">Calculăm...</div>
+        </div>
+
+        <!-- ÎNTÂLNIRE PLANIFICATĂ (DIN PLANNER) - apare doar dacă există ceva în viitor -->
+        <div id="next-meeting-card" class="glass-card" style="display: none;">
+            <h2 style="color: #fff; font-weight: 600; margin-bottom: 8px;">Următoarea noastră întâlnire</h2>
+            <p id="next-meeting-text" style="color: rgba(255,255,255,0.9); font-size: 0.95rem;"></p>
         </div>
         
         <!-- SECȚIUNEA PORTALE -->
         <div class="portals-container">
-            <p class="portals-title">Explorează Universul:</p>
+            
             <div class="portals-grid">
-                <div class="portal-card" onclick="navigateTo('amintiri.html')">
-                    <div class="portal-icon">🧩</div>
-                    <div class="portal-name">Puzzle</div>
-                    <div class="portal-desc">Joacă puzzle-ul nostru</div>
-                </div>
-                <div class="portal-card" onclick="navigateTo('timeline.html')">
-                    <div class="portal-icon">⏰</div>
-                    <div class="portal-name">Timeline</div>
-                    <div class="portal-desc">Momente speciale</div>
-                </div>
+                <!-- 1. Mesaje -->
                 <div class="portal-card" onclick="navigateTo('mesaje.html')">
                     <div class="portal-icon">💌</div>
                     <div class="portal-name">Mesaje</div>
-                    <div class="portal-desc">Cuvinte de iubire</div>
+                    <div class="portal-desc">Mesajul zilei</div>
                 </div>
+
+                <!-- 2. Micul Andrei -->
+                <div class="portal-card" onclick="navigateTo('pet.html')">
+                    <div class="portal-icon">👶</div>
+                    <div class="portal-name">Micul Andrei</div>
+                    <div class="portal-desc">Hrănește-l zilnic</div>
+                </div>
+
+                <!-- 3. Planificator -->
+                <div class="portal-card" onclick="navigateTo('planner.html')">
+                    <div class="portal-icon">📅</div>
+                    <div class="portal-name">Planificator</div>
+                    <div class="portal-desc">Stabilește întâlniri</div>
+                </div>
+
+                <!-- 4. Puzzle -->
+                <div class="portal-card" onclick="navigateTo('amintiri.html')">
+                    <div class="portal-icon">🧩</div>
+                    <div class="portal-name">Puzzle</div>
+                    <div class="portal-desc">Joacă puzzle cu noi</div>
+                </div>
+
+                <!-- 5. Jocuri -->
                 <div class="portal-card" onclick="navigateTo('client/index.html')">
                     <div class="portal-icon">🎯</div>
                     <div class="portal-name">Bulls &amp; Cows</div>
@@ -62,37 +82,46 @@
                 <div class="portal-card" onclick="navigateTo('client/hangman-index.html')">
                     <div class="portal-icon">🪢</div>
                     <div class="portal-name">Spânzurătoarea</div>
-                    <div class="portal-desc">Ghicește cuvântul în doi</div>
+                    <div class="portal-desc">Ghicește cuvântul</div>
                 </div>
                 <div class="portal-card" onclick="navigateTo('client/memory-index.html')">
                     <div class="portal-icon">🧠</div>
                     <div class="portal-name">Memory Game</div>
-                    <div class="portal-desc">Găsiți perechile împreună</div>
+                    <div class="portal-desc">Găsiți perechile</div>
                 </div>
                 <div class="portal-card" onclick="navigateTo('client/macao-lobby.html')">
                     <div class="portal-icon">🃏</div>
                     <div class="portal-name">Macao</div>
-                    <div class="portal-desc">Duel cu cărți 1v1</div>
+                    <div class="portal-desc">Duel 1v1 cu cărți</div>
                 </div>
                 <div class="portal-card" onclick="navigateTo('client/razboi-lobby.html')">
                     <div class="portal-icon">⚔️</div>
                     <div class="portal-name">Război</div>
-                    <div class="portal-desc">Runde de cărți cu număr</div>
+                    <div class="portal-desc">Câștigă toate carțile</div>
                 </div>
-                <div class="portal-card" onclick="navigateTo('planner.html')">
-                    <div class="portal-icon">📅</div>
-                    <div class="portal-name">Planificator</div>
-                    <div class="portal-desc">Stabilește și urmărește întâlniri</div>
+                <div class="portal-card" onclick="navigateTo('client/triangles-lobby.html')">
+                    <div class="portal-icon">🔺</div>
+                    <div class="portal-name">Triunghiuri</div>
+                    <div class="portal-desc">Formează triunghiuri</div>
                 </div>
+
+                <!-- 6. Shop -->
+                <div class="portal-card" onclick="navigateTo('shop.html')">
+                    <div class="portal-icon">🛍️</div>
+                    <div class="portal-name">Shop</div>
+                    <div class="portal-desc">Cumpără sau creează</div>
+                </div>
+
+                <!-- 7. Clasament -->
                 <div class="portal-card" onclick="navigateTo('leaderboard.html')">
                     <div class="portal-icon">🏆</div>
                     <div class="portal-name">Clasament</div>
-                    <div class="portal-desc">Victorii Andrei &amp; Georgiana</div>
+                    <div class="portal-desc">Andrei &amp; Georgiana</div>
                 </div>
             </div>
         </div>
 
-        <button onclick="logout()" class="btn-back">Înapoi la poartă</button>
+        
     </div>
 
     <div id="gallery-modal" class="modal">

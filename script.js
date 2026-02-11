@@ -160,13 +160,104 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!body) return;
 
     const page = body.dataset.page;
+
+    // Protecție pentru univers (2222.html) – nu intri fără login
     if (page === 'universe') {
         const isLoggedIn = localStorage.getItem('berea_auth_ok') === '1';
         if (!isLoggedIn) {
             window.location.href = 'index.html';
+            return;
+        }
+
+        // Dacă suntem în univers, încercăm să afișăm și următoarea întâlnire planificată (din planner)
+        loadNextMeetingForUniverse();
+    }
+
+    // "Soft back" pentru paginile secundare (puzzle, timeline, jocuri, etc.)
+    // Ideea: adăugăm un entry dummy în history; când utilizatorul apasă înapoi
+    // (sau face swipe pe iPhone), prindem evenimentul și îl trimitem înapoi la univers.
+    const isLoginPage = !page && document.querySelector('.login-container');
+    const isUniversePage = page === 'universe';
+
+    if (!isLoginPage && !isUniversePage && window.history && typeof window.history.pushState === 'function') {
+        const path = window.location.pathname || '';
+        const backTarget = path.includes('/client/') ? '../2222.html' : '2222.html';
+
+        try {
+            const state = { softBack: true, target: backTarget };
+            // înlocuim state-ul curent și mai adăugăm unul dummy, astfel încât primul "back"
+            // să declanșeze popstate, iar noi să redirecționăm frumos.
+            window.history.replaceState(state, '');
+            window.history.pushState({ ...state, dummy: true }, '');
+
+            const handlePop = (event) => {
+                if (event.state && event.state.softBack && event.state.target === backTarget) {
+                    window.removeEventListener('popstate', handlePop);
+                    window.location.href = backTarget;
+                }
+            };
+
+            window.addEventListener('popstate', handlePop);
+        } catch (err) {
+            console.warn('Nu am putut configura soft-back:', err);
         }
     }
 });
+
+// ==========================================
+// 6. ÎNTÂLNIRE PLANIFICATĂ (UNIVERS 2222)
+// ==========================================
+
+async function loadNextMeetingForUniverse() {
+    const card = document.getElementById('next-meeting-card');
+    const textEl = document.getElementById('next-meeting-text');
+    if (!card || !textEl) return;
+
+    if (typeof _supabase === 'undefined') {
+        card.style.display = 'none';
+        return;
+    }
+
+    try {
+        const nowIso = new Date().toISOString();
+        const { data, error } = await _supabase
+            .from('PlannerEvents')
+            .select('title, event_time')
+            .gt('event_time', nowIso)
+            .order('event_time', { ascending: true })
+            .limit(1);
+
+        if (error || !data || data.length === 0) {
+            card.style.display = 'none';
+            return;
+        }
+
+        const ev = data[0];
+        const d = new Date(ev.event_time);
+        if (!d || Number.isNaN(d.getTime()) || d.getTime() <= Date.now()) {
+            card.style.display = 'none';
+            return;
+        }
+
+        const title = (ev.title || 'Întâlnire specială').trim();
+        const dayStr = d.toLocaleDateString('ro-RO', {
+            weekday: 'long',
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+        });
+        const timeStr = d.toLocaleTimeString('ro-RO', {
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+
+        textEl.textContent = `${title} – ${dayStr}, ora ${timeStr}`;
+        card.style.display = 'block';
+    } catch (err) {
+        console.error('Eroare la încărcarea întâlnirii următoare:', err);
+        card.style.display = 'none';
+    }
+}
 
 // ==========================================
 // 2. ANIMAȚIA CU ELEMENTE CARE CAD

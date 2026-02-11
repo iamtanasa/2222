@@ -24,6 +24,7 @@ const hangmanRooms = new Map(); // pentru Spanzuratoarea
 const memoryRooms = new Map(); // pentru Memory Game
 const macaoRooms = new Map(); // pentru jocul Macao 2-jucatori
 const razboiRooms = new Map(); // pentru jocul Razboi 2-jucatori
+const trianglesRooms = new Map(); // pentru jocul Triunghiuri din puncte 2-jucatori
 
 function log(...args) {
   console.log('[SERVER]', ...args);
@@ -40,6 +41,7 @@ function generateRoomCode() {
   if (memoryRooms.has(code)) return generateRoomCode();
   if (macaoRooms.has(code)) return generateRoomCode();
   if (razboiRooms.has(code)) return generateRoomCode();
+  if (trianglesRooms.has(code)) return generateRoomCode();
   return code;
 }
 
@@ -322,6 +324,265 @@ function broadcastRazboiState(room) {
         state: buildRazboiState(room, seat),
       });
     }
+  });
+}
+
+// ----------------------- TRIANGLES HELPERS -----------------------
+
+function findTrianglesPlayer(ws) {
+  for (const room of trianglesRooms.values()) {
+    if (room.players.p1 && room.players.p1.ws === ws) {
+      return { room, seat: 'p1' };
+    }
+    if (room.players.p2 && room.players.p2.ws === ws) {
+      return { room, seat: 'p2' };
+    }
+  }
+  return null;
+}
+
+function createTrianglesPoints(count = 14) {
+  const points = [];
+  const minDist2 = 0.08 * 0.08;
+  let attempts = 0;
+
+  while (points.length < count && attempts < 2000) {
+    attempts += 1;
+    const x = 0.1 + 0.8 * Math.random();
+    const y = 0.1 + 0.8 * Math.random();
+
+    let ok = true;
+    for (const p of points) {
+      const dx = p.x - x;
+      const dy = p.y - y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < minDist2) {
+        ok = false;
+        break;
+      }
+    }
+
+    if (ok) {
+      points.push({ x, y });
+    }
+  }
+
+  return points;
+}
+
+function canonicalEdge(a, b) {
+  if (a === b) return null;
+  return a < b ? { a, b } : { a: b, b: a };
+}
+
+function edgeKey(i, j) {
+  return i < j ? `${i}-${j}` : `${j}-${i}`;
+}
+
+function buildEdgeSet(lines) {
+  const set = new Set();
+  (lines || []).forEach((l) => {
+    const key = edgeKey(l.a, l.b);
+    set.add(key);
+  });
+  return set;
+}
+
+function segmentsProperlyIntersect(p1, p2, p3, p4) {
+  const eps = 1e-6;
+  const x1 = p1.x;
+  const y1 = p1.y;
+  const x2 = p2.x;
+  const y2 = p2.y;
+  const x3 = p3.x;
+  const y3 = p3.y;
+  const x4 = p4.x;
+  const y4 = p4.y;
+
+  const denom = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3);
+  if (Math.abs(denom) < eps) {
+    // paralele sau aproape coliniare -> nu le consideram "trecere peste" aici
+    return false;
+  }
+
+  const t = ((x3 - x1) * (y4 - y3) - (y3 - y1) * (x4 - x3)) / denom;
+  const u = ((x3 - x1) * (y2 - y1) - (y3 - y1) * (x2 - x1)) / denom;
+
+  // intersectie strict in interiorul ambelor segmente (nu la capete)
+  if (t > eps && t < 1 - eps && u > eps && u < 1 - eps) {
+    return true;
+  }
+
+  return false;
+}
+
+function computeAllTriangles(points, lines) {
+  const result = [];
+  if (!points || points.length < 3) return result;
+
+  const n = points.length;
+  const edgeSet = buildEdgeSet(lines);
+  const eps = 1e-4;
+
+  for (let i = 0; i < n - 2; i++) {
+    for (let j = i + 1; j < n - 1; j++) {
+      if (!edgeSet.has(edgeKey(i, j))) continue;
+      for (let k = j + 1; k < n; k++) {
+        if (!edgeSet.has(edgeKey(i, k))) continue;
+        if (!edgeSet.has(edgeKey(j, k))) continue;
+
+        const p1 = points[i];
+        const p2 = points[j];
+        const p3 = points[k];
+        if (!p1 || !p2 || !p3) continue;
+
+        const ax = p2.x - p1.x;
+        const ay = p2.y - p1.y;
+        const bx = p3.x - p1.x;
+        const by = p3.y - p1.y;
+        const area = Math.abs(ax * by - ay * bx);
+        if (area < eps) continue; // aproape coliniar, nu-l consideram triunghi
+
+        result.push({ a: i, b: j, c: k });
+      }
+    }
+  }
+
+  return result;
+}
+
+function buildTrianglesState(room, seat) {
+  const you = room.players[seat];
+  const otherSeat = seat === 'p1' ? 'p2' : 'p1';
+  const opponent = room.players[otherSeat];
+
+  const yourScore = room.scores ? room.scores[seat] || 0 : 0;
+  const opponentScore = room.scores ? room.scores[otherSeat] || 0 : 0;
+
+  const triangles = (room.triangles || []).map((t) => {
+    const ownerSeat = t.owner === 'p1' || t.owner === 'p2' ? t.owner : null;
+    const ownerPlayer = ownerSeat ? room.players[ownerSeat] : null;
+    const ownerName = ownerPlayer && ownerPlayer.name ? ownerPlayer.name : null;
+    return {
+      a: t.a,
+      b: t.b,
+      c: t.c,
+      owner: t.owner === seat ? 'you' : 'opponent',
+      ownerSeat,
+      ownerName,
+    };
+  });
+
+  const remainingMoves = countRemainingTriangleEdges(room);
+
+  return {
+    roomCode: room.roomCode,
+    status: room.status,
+    youName: you ? you.name : null,
+    opponentName: opponent ? opponent.name : null,
+    yourTurn: room.currentTurn === seat,
+    yourScore,
+    opponentScore,
+    points: room.points || [],
+    lines: room.lines || [],
+    triangles,
+    remainingMoves,
+  };
+}
+
+function broadcastTrianglesState(room) {
+  ['p1', 'p2'].forEach((seat) => {
+    const player = room.players[seat];
+    if (player && player.ws && player.ws.readyState === WebSocket.OPEN) {
+      send(player.ws, {
+        type: 'triangles_state',
+        state: buildTrianglesState(room, seat),
+      });
+    }
+  });
+}
+
+function startTrianglesGame(room) {
+  room.points = createTrianglesPoints(14);
+  room.lines = [];
+  room.triangles = [];
+  room.scores = { p1: 0, p2: 0 };
+  room.status = 'active';
+  room.currentTurn = Math.random() < 0.5 ? 'p1' : 'p2';
+  room.linesRemaining = 1; // fiecare jucator incepe tura cu 1 linie disponibila (2 puncte)
+}
+
+function countRemainingTriangleEdges(room) {
+  const points = room.points || [];
+  const n = points.length;
+  if (n < 2) return 0;
+
+  const existingSet = buildEdgeSet(room.lines || []);
+  let count = 0;
+
+  for (let i = 0; i < n - 1; i++) {
+    for (let j = i + 1; j < n; j++) {
+      // 1) linia nu trebuie sa existe deja
+      if (existingSet.has(edgeKey(i, j))) continue;
+
+      const pA = points[i];
+      const pB = points[j];
+      if (!pA || !pB) continue;
+
+      let valid = true;
+      // 2) nu are voie sa treaca peste nicio linie existenta (dar poate sa se intalneasca in capete)
+      for (const l of room.lines || []) {
+        const pC = points[l.a];
+        const pD = points[l.b];
+        if (!pC || !pD) continue;
+
+        const sharesEndpoint = i === l.a || i === l.b || j === l.a || j === l.b;
+        if (sharesEndpoint) continue;
+
+        if (segmentsProperlyIntersect(pA, pB, pC, pD)) {
+          valid = false;
+          break;
+        }
+      }
+
+      if (valid) {
+        count += 1;
+      }
+    }
+  }
+
+  return count;
+}
+
+function endTrianglesGame(room) {
+  if (!room || room.status === 'finished') return;
+
+  room.status = 'finished';
+
+  const p1Score = room.scores && Number.isFinite(room.scores.p1) ? room.scores.p1 : 0;
+  const p2Score = room.scores && Number.isFinite(room.scores.p2) ? room.scores.p2 : 0;
+
+  ['p1', 'p2'].forEach((seatKey) => {
+    const player = room.players[seatKey];
+    if (!player || !player.ws) return;
+    let winner;
+    if (p1Score === p2Score) winner = 'draw';
+    else if ((p1Score > p2Score && seatKey === 'p1') || (p2Score > p1Score && seatKey === 'p2')) {
+      winner = 'you';
+    } else {
+      winner = 'opponent';
+    }
+
+    const otherKey = seatKey === 'p1' ? 'p2' : 'p1';
+    const opponent = room.players[otherKey];
+
+    send(player.ws, {
+      type: 'triangles_game_over',
+      winner,
+      opponentName: opponent ? opponent.name : null,
+      yourScore: seatKey === 'p1' ? p1Score : p2Score,
+      opponentScore: seatKey === 'p1' ? p2Score : p1Score,
+    });
   });
 }
 
@@ -1252,6 +1513,248 @@ function handleRazboiPlayAgain(ws) {
   broadcastRazboiState(room);
 }
 
+// ----------------------- TRIANGLES MESAJE -----------------------
+
+function handleTrianglesCreateRoom(ws) {
+  const roomCode = generateRoomCode();
+  send(ws, { type: 'triangles_room_created', roomCode });
+}
+
+function handleTrianglesJoinRoom(ws, roomCode, playerName) {
+  if (!roomCode || typeof roomCode !== 'string') {
+    send(ws, { type: 'triangles_error', message: 'Cod de camera invalid.' });
+    return;
+  }
+  roomCode = roomCode.toUpperCase();
+  playerName = (playerName || 'Anonim').slice(0, 20);
+
+  let room = trianglesRooms.get(roomCode);
+  if (!room) {
+    room = {
+      roomCode,
+      players: { p1: null, p2: null },
+      points: [],
+      lines: [],
+      triangles: [],
+      scores: { p1: 0, p2: 0 },
+      currentTurn: null,
+      status: 'waiting',
+    };
+    trianglesRooms.set(roomCode, room);
+  }
+
+  const existing = findTrianglesPlayer(ws);
+  if (existing && existing.room.roomCode !== roomCode) {
+    handleTrianglesDisconnect(ws);
+  }
+
+  let seat = null;
+  if (!room.players.p1) {
+    seat = 'p1';
+    room.players.p1 = { name: playerName, ws };
+  } else if (!room.players.p2) {
+    seat = 'p2';
+    room.players.p2 = { name: playerName, ws };
+  } else {
+    send(ws, { type: 'triangles_error', message: 'Camera este deja plina.' });
+    return;
+  }
+
+  if (room.players.p1 && room.players.p2 && room.status !== 'active' && room.status !== 'finished') {
+    startTrianglesGame(room);
+  }
+
+  broadcastTrianglesState(room);
+}
+
+function handleTrianglesPlay(ws, linesParam) {
+  const found = findTrianglesPlayer(ws);
+  if (!found) {
+    send(ws, { type: 'triangles_error', message: 'Nu esti intr-o camera.' });
+    return;
+  }
+
+  const { room, seat } = found;
+
+  if (room.status !== 'active') {
+    send(ws, { type: 'triangles_error', message: 'Jocul nu este activ.' });
+    return;
+  }
+
+  if (room.currentTurn !== seat) {
+    send(ws, { type: 'triangles_error', message: 'Nu este randul tau.' });
+    return;
+  }
+
+  if (typeof room.linesRemaining !== 'number') {
+    room.linesRemaining = 1;
+  }
+
+  if (room.linesRemaining <= 0) {
+    send(ws, {
+      type: 'triangles_error',
+      message: 'Nu mai ai linii in aceasta tura. Asteapta randul adversarului.',
+    });
+    return;
+  }
+  // acceptam un singur segment de linie per mesaj; tura se schimba cand nu mai ai linii (baza 1, +1 pentru fiecare triunghi)
+  let lineObj = null;
+  if (Array.isArray(linesParam)) {
+    if (linesParam.length !== 1) {
+      send(ws, { type: 'triangles_error', message: 'Trebuie sa trasezi cate o linie pe rand.' });
+      return;
+    }
+    lineObj = linesParam[0];
+  } else {
+    lineObj = linesParam;
+  }
+
+  const n = room.points ? room.points.length : 0;
+  const a = Number(lineObj && lineObj.a);
+  const b = Number(lineObj && lineObj.b);
+  if (!Number.isInteger(a) || !Number.isInteger(b)) {
+    send(ws, { type: 'triangles_error', message: 'Puncte invalide pentru linie.' });
+    return;
+  }
+  if (a < 0 || a >= n || b < 0 || b >= n) {
+    send(ws, { type: 'triangles_error', message: 'Punct in afara tablei.' });
+    return;
+  }
+  if (a === b) {
+    send(ws, { type: 'triangles_error', message: 'Nu poti trasa o linie dintr-un punct in el insusi.' });
+    return;
+  }
+
+  const edge = canonicalEdge(a, b);
+  if (!edge) {
+    send(ws, { type: 'triangles_error', message: 'Linie invalida.' });
+    return;
+  }
+
+  const existingEdgeKey = edgeKey(edge.a, edge.b);
+  const existingSet = buildEdgeSet(room.lines || []);
+  if (existingSet.has(existingEdgeKey)) {
+    send(ws, { type: 'triangles_error', message: 'Exista deja o linie intre aceste puncte.' });
+    return;
+  }
+
+  // regula: o linie noua nu poate sa treaca peste o alta linie existenta (doar sa se intalneasca in capete)
+  const points = room.points || [];
+  const pA = points[edge.a];
+  const pB = points[edge.b];
+  if (!pA || !pB) {
+    send(ws, { type: 'triangles_error', message: 'Puncte invalide pentru linie.' });
+    return;
+  }
+
+  for (const l of room.lines || []) {
+    const pC = points[l.a];
+    const pD = points[l.b];
+    if (!pC || !pD) continue;
+
+    // permitem intersectia la capete (daca impart un punct comun)
+    const sharesEndpoint =
+      edge.a === l.a || edge.a === l.b || edge.b === l.a || edge.b === l.b;
+    if (sharesEndpoint) continue;
+
+    if (segmentsProperlyIntersect(pA, pB, pC, pD)) {
+      send(ws, {
+        type: 'triangles_error',
+        message: 'Linia ta ar trece peste o alta linie existenta. Alege un alt segment.',
+      });
+      return;
+    }
+  }
+
+  const newLines = [edge];
+
+  // pregatim setul de triunghiuri existente (chei sortate a-b-c)
+  const existingTriangleKeys = new Set();
+  (room.triangles || []).forEach((t) => {
+    const arr = [t.a, t.b, t.c].sort((x, y) => x - y);
+    existingTriangleKeys.add(arr.join('-'));
+  });
+
+  const allLines = (room.lines || []).concat(newLines);
+  const allTriangles = computeAllTriangles(room.points || [], allLines);
+  const newTriangles = [];
+
+  allTriangles.forEach((tri) => {
+    const arr = [tri.a, tri.b, tri.c].sort((x, y) => x - y);
+    const key = arr.join('-');
+    if (!existingTriangleKeys.has(key)) {
+      existingTriangleKeys.add(key);
+      newTriangles.push(tri);
+    }
+  });
+
+  // mutarea este valida -> actualizam room
+  room.lines = (room.lines || []).concat(newLines);
+  if (!room.triangles) room.triangles = [];
+  if (!room.scores) room.scores = { p1: 0, p2: 0 };
+
+  newTriangles.forEach((tri) => {
+    room.triangles.push({ a: tri.a, b: tri.b, c: tri.c, owner: seat });
+    room.scores[seat] = (room.scores[seat] || 0) + 1;
+  });
+
+  // actualizam liniile ramase in tura curenta:
+  // fiecare linie consuma 1, fiecare triunghi nou ofera +1 linie (2 puncte noi)
+  const trianglesGained = newTriangles.length;
+  room.linesRemaining = (room.linesRemaining || 0) - 1 + trianglesGained;
+
+  // daca nu mai avem linii disponibile in aceasta tura si jocul continua, trecem tura la adversar
+  if (room.linesRemaining <= 0 && room.status === 'active') {
+    const otherSeat = seat === 'p1' ? 'p2' : 'p1';
+    room.currentTurn = otherSeat;
+    room.linesRemaining = 1;
+  }
+
+  // verificam daca mai exista mutari valide (cel putin 1 linie ramasa; jocul se opreste cand nu mai exista nicio linie noua)
+  const remainingEdges = countRemainingTriangleEdges(room);
+  if (remainingEdges < 1) {
+    endTrianglesGame(room);
+  }
+
+  broadcastTrianglesState(room);
+}
+
+function handleTrianglesPlayAgain(ws) {
+  const found = findTrianglesPlayer(ws);
+  if (!found) {
+    send(ws, { type: 'triangles_error', message: 'Nu esti intr-o camera.' });
+    return;
+  }
+
+  const { room } = found;
+
+  if (!room.players.p1 || !room.players.p2) {
+    send(ws, { type: 'triangles_error', message: 'Avem nevoie de doi jucatori pentru rematch.' });
+    return;
+  }
+
+  startTrianglesGame(room);
+  broadcastTrianglesState(room);
+}
+
+function handleTrianglesForceEnd(ws) {
+  const found = findTrianglesPlayer(ws);
+  if (!found) {
+    send(ws, { type: 'triangles_error', message: 'Nu esti intr-o camera.' });
+    return;
+  }
+
+  const { room } = found;
+
+  if (room.status !== 'active') {
+    send(ws, { type: 'triangles_error', message: 'Jocul nu este activ.' });
+    return;
+  }
+
+  endTrianglesGame(room);
+  broadcastTrianglesState(room);
+}
+
 // ----------------------- HANGMAN MESAJE -----------------------
 
 function handleHangmanCreateRoom(ws) {
@@ -1639,6 +2142,7 @@ function handleDisconnect(ws) {
   handleMemoryDisconnect(ws);
   handleMacaoDisconnect(ws);
   handleRazboiDisconnect(ws);
+  handleTrianglesDisconnect(ws);
 }
 
 function handleHangmanDisconnect(ws) {
@@ -1735,6 +2239,30 @@ function handleRazboiDisconnect(ws) {
     message: 'Adversarul a iesit din joc. Poti crea o camera noua.',
   });
   broadcastRazboiState(room);
+}
+
+function handleTrianglesDisconnect(ws) {
+  const found = findTrianglesPlayer(ws);
+  if (!found) return;
+
+  const { room, seat } = found;
+  room.players[seat] = null;
+
+  const otherSeat = seat === 'p1' ? 'p2' : 'p1';
+  const opponent = room.players[otherSeat];
+
+  if (!opponent) {
+    trianglesRooms.delete(room.roomCode);
+    return;
+  }
+
+  room.status = 'finished';
+
+  send(opponent.ws, {
+    type: 'triangles_error',
+    message: 'Adversarul a iesit din joc. Poti crea o camera noua.',
+  });
+  broadcastTrianglesState(room);
 }
 
 function handleRematch(ws) {
@@ -1846,6 +2374,21 @@ function handleMessage(ws, raw) {
       break;
     case 'macao_play_again':
       handleMacaoPlayAgain(ws);
+      break;
+    case 'triangles_create_room':
+      handleTrianglesCreateRoom(ws);
+      break;
+    case 'triangles_join_room':
+      handleTrianglesJoinRoom(ws, msg.roomCode, msg.playerName);
+      break;
+    case 'triangles_play':
+      handleTrianglesPlay(ws, msg.lines);
+      break;
+    case 'triangles_force_end':
+      handleTrianglesForceEnd(ws);
+      break;
+    case 'triangles_play_again':
+      handleTrianglesPlayAgain(ws);
       break;
     case 'razboi_create_room':
       handleRazboiCreateRoom(ws);
