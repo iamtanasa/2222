@@ -160,6 +160,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const body = document.body;
     if (!body) return;
 
+    // Dacă ne întoarcem pe pagină din istoric (back/swipe), ne asigurăm că nu rămâne blocat fade-out-ul.
+    body.classList.remove('page-fade-out');
+
     const page = body.dataset.page;
 
     // Protecție pentru univers (2222.html) – nu intri fără login
