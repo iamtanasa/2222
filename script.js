@@ -12,6 +12,14 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let allPhotosData = [];
 let currentPhotoIndex = 0;
 
+// Forțează reîncărcarea paginii atunci când este readusă din istoricul browserului
+// (de exemplu, când faci swipe înapoi sau folosești butonul „Back” pe telefon).
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+
 // ==========================================
 // 1. LOGICA PENTRU LOGIN & LOGOUT
 // ==========================================
