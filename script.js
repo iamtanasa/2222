@@ -187,15 +187,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const state = { softBack: true, target: backTarget };
             // înlocuim state-ul curent și mai adăugăm unul dummy, astfel încât primul "back"
-            // să declanșeze popstate, iar noi să redirecționăm frumos.
+            // (sau swipe înapoi pe telefon) să declanșeze popstate pe această pagină,
+            // iar noi să redirecționăm direct către pagina principală.
             window.history.replaceState(state, '');
             window.history.pushState({ ...state, dummy: true }, '');
 
-            const handlePop = (event) => {
-                if (event.state && event.state.softBack && event.state.target === backTarget) {
-                    window.removeEventListener('popstate', handlePop);
-                    window.location.href = backTarget;
-                }
+            const handlePop = () => {
+                window.removeEventListener('popstate', handlePop);
+                window.location.href = backTarget;
             };
 
             window.addEventListener('popstate', handlePop);
@@ -720,9 +719,19 @@ async function savePhotoDate() {
     const year = parseInt(yearSelect.value, 10);
     if (!day || !month || !year) return;
 
-    // Construim o dată validă folosind obiectul Date (evită date invalide, ex: 31 februarie)
+    // Validăm data folosind obiectul Date (evită date invalide, ex: 31 februarie),
+    // dar construim stringul manual ca să nu mai pierdem o zi din cauza fusului orar.
     const tmpDate = new Date(year, month - 1, day);
-    const dateStr = tmpDate.toISOString().slice(0, 10); // YYYY-MM-DD
+    if (
+        tmpDate.getFullYear() !== year ||
+        tmpDate.getMonth() !== month - 1 ||
+        tmpDate.getDate() !== day
+    ) {
+        alert('Data aleasă nu este validă.');
+        return;
+    }
+
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`; // YYYY-MM-DD
 
     const { data, error } = await _supabase
         .from('Poze')

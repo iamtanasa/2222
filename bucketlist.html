@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Bucket List</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="bucketlist.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
+</head>
+<body class="page-entry" data-page="bucketlist">
+  <div class="main-container">
+    <div class="back-button" onclick="goBack()">← Înapoi</div>
+    <div class="main-icon">✨</div>
+    <h1>Bucket List</h1>
+
+    <div class="glass-card bucket-card">
+      <div class="bucket-mode-toggle">
+        <button id="bucket-mode-list" class="bucket-mode-btn active">Lista de dorințe</button>
+        <button id="bucket-mode-create" class="bucket-mode-btn">Creează dorință</button>
+      </div>
+
+      <div class="bucket-views">
+        <div id="bucket-view-create" class="bucket-view">
+          
+          
+
+          <div class="bucket-form">
+            <input id="bucket-title" type="text" maxlength="80" placeholder="Ex: Weekend la munte" autocomplete="off" />
+            <textarea id="bucket-notes" rows="3" maxlength="300" placeholder="Detalii (opțional)"></textarea>
+            <button id="bucket-add">Adaugă</button>
+          </div>
+        </div>
+
+        <div id="bucket-view-list" class="bucket-view active">
+          
+          
+          <div class="bucket-filter-bar">
+            <button id="bucket-filter-all" class="bucket-filter-btn active">Toate</button>
+            <button id="bucket-filter-todo" class="bucket-filter-btn">De făcut</button>
+            <button id="bucket-filter-done" class="bucket-filter-btn">Împlinite</button>
+          </div>
+          <div id="bucket-list" class="bucket-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="script.js"></script>
+  <script src="bucketlist.js"></script>
+  <script>
+    function goBack() {
+      document.body.classList.add('page-fade-out');
+      setTimeout(() => { window.location.href = '2222.html'; }, 600);
+    }
+  </script>
+</body>
+</html>

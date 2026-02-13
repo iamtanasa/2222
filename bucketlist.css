@@ -1,0 +1,309 @@
+/* Stiluri specifice pentru Bucket List */
+
+.page-entry[data-page="bucketlist"] .main-icon {
+  font-size: 72px;
+}
+
+.bucket-card {
+  text-align: left;
+}
+
+/* Culori in tema pentru texte in bucket list */
+.page-entry[data-page="bucketlist"] h1,
+.page-entry[data-page="bucketlist"] .section-title,
+.page-entry[data-page="bucketlist"] .helper-text,
+.page-entry[data-page="bucketlist"] .bucket-stats {
+  color: #fff;
+}
+
+.page-entry[data-page="bucketlist"] .helper-text {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.bucket-mode-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.bucket-mode-btn {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(0, 0, 0, 0.15);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.bucket-mode-btn.active {
+  background: linear-gradient(45deg, #ff4d6d, #ffb703);
+  border-color: transparent;
+  box-shadow: 0 8px 18px rgba(255, 77, 109, 0.45);
+}
+
+.bucket-views {
+  position: relative;
+  overflow: hidden;
+}
+
+.bucket-view {
+  display: none;
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.bucket-view.active {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.bucket-form input[type="text"],
+.bucket-form textarea {
+  margin-bottom: 10px;
+}
+
+.bucket-form textarea {
+  width: 100%;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  color: #fff;
+  resize: vertical;
+}
+
+/* Folosim stilul global de button (gradient mare) si nu mai suprascriem nimic special aici pentru Adaugă */
+
+.bucket-form textarea::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.bucket-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 12px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.bucket-checkbox-row input[type="checkbox"] {
+  width: auto;
+}
+
+.bucket-stats-card {
+  text-align: center;
+}
+
+.bucket-stats {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.9rem;
+}
+
+.bucket-filter-bar {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.bucket-filter-btn {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.12);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.bucket-filter-btn.active {
+  background: linear-gradient(45deg, #ff4d6d, #ffb703);
+  border-color: transparent;
+  box-shadow: 0 6px 14px rgba(255, 77, 109, 0.4);
+}
+
+.bucket-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.bucket-item {
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+   width: 100%;
+   max-width: 280px;
+}
+
+.bucket-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.bucket-item-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bucket-item-title {
+  font-weight: 600;
+}
+
+.bucket-item-title.done {
+  text-decoration: line-through;
+  opacity: 0.9;
+}
+
+.bucket-item-notes {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.bucket-item-meta {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.bucket-status-chip {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.bucket-status-chip.done {
+  background: rgba(76, 175, 80, 0.3);
+  color: #e8ffe9;
+}
+
+.bucket-heart {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.bucket-heart.done {
+  background: rgba(255, 77, 109, 0.85);
+  border-color: rgba(255, 169, 190, 0.9);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(255, 77, 109, 0.5);
+}
+
+.bucket-item-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.bucket-small-btn {
+  width: auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 0.75rem;
+  text-transform: none;
+  letter-spacing: 0;
+  box-shadow: none;
+}
+
+.bucket-small-btn.highlight {
+  background: linear-gradient(45deg, #4caf50, #8bc34a);
+  border-color: transparent;
+}
+
+.bucket-small-btn.danger {
+  background: rgba(255, 59, 48, 0.35);
+  border-color: rgba(255, 204, 203, 0.8);
+}
+
+.bucket-trash {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.bucket-trash:hover {
+  background: rgba(255, 59, 48, 0.7);
+  border-color: rgba(255, 204, 203, 0.9);
+  box-shadow: 0 6px 14px rgba(255, 59, 48, 0.45);
+}
+
+.bucket-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.bucket-meta-row .bucket-item-meta {
+  flex: 1;
+}
+
+.bucket-empty-text {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 480px) {
+  .bucket-item {
+    padding: 8px 10px;
+  }
+
+  .bucket-form textarea {
+    font-size: 0.8rem;
+  }
+}
