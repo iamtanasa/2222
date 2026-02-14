@@ -1,21 +1,28 @@
 document.addEventListener('DOMContentLoaded', function () {
     const valentineSection = document.getElementById('valentine-section');
+    const dragobeteSection = document.getElementById('dragobete-section');
     const moodSection = document.getElementById('mood-section');
 
     const today = new Date();
-    // TEMP: pentru testare, considerăm că NU este 14 februarie
-    // Revino la verificarea reală când vrei din nou varianta Valentine
-    const isValentine = false;
+    const isValentine = today.getDate() === 14 && today.getMonth() === 1; // 1 = februarie
+    const isDragobete = today.getDate() === 24 && today.getMonth() === 1;
 
     if (isValentine) {
         if (valentineSection) valentineSection.style.display = 'block';
+        if (dragobeteSection) dragobeteSection.style.display = 'none';
+        if (moodSection) moodSection.style.display = 'none';
+    } else if (isDragobete) {
+        if (valentineSection) valentineSection.style.display = 'none';
+        if (dragobeteSection) dragobeteSection.style.display = 'block';
         if (moodSection) moodSection.style.display = 'none';
     } else {
         if (valentineSection) valentineSection.style.display = 'none';
+        if (dragobeteSection) dragobeteSection.style.display = 'none';
         if (moodSection) moodSection.style.display = 'block';
     }
 
     setupValentineSection();
+    setupDragobeteSection();
     setupMoodSection();
 });
 
@@ -47,6 +54,43 @@ function setupValentineSection() {
         const x = Math.cos(angle) * distance;
         const y = Math.sin(angle) * distance;
 
+        noBtn.style.transform = `translate(${x}px, ${y}px)`;
+    };
+
+    ['click', 'touchstart'].forEach(eventName => {
+        noBtn.addEventListener(eventName, function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            moveNoButton();
+        });
+    });
+}
+
+function setupDragobeteSection() {
+    const yesBtn = document.getElementById('dragobete-yes');
+    const noBtn = document.getElementById('dragobete-no');
+    const gifWrapper = document.getElementById('dragobete-gif-wrapper');
+    const loveMessage = document.getElementById('dragobete-love-message');
+
+    if (!yesBtn || !noBtn || !gifWrapper) return;
+
+    yesBtn.addEventListener('click', function () {
+        gifWrapper.style.display = 'block';
+        const buttonsContainer = yesBtn.parentElement;
+        if (buttonsContainer) {
+            buttonsContainer.style.display = 'none';
+        }
+        if (loveMessage) {
+            loveMessage.style.display = 'block';
+        }
+    });
+
+    const moveNoButton = () => {
+        const angleDeg = Math.random() * 120 - 60;
+        const angle = angleDeg * Math.PI / 180;
+        const distance = 40 + Math.random() * 60;
+        const x = Math.cos(angle) * distance;
+        const y = Math.sin(angle) * distance;
         noBtn.style.transform = `translate(${x}px, ${y}px)`;
     };
 
