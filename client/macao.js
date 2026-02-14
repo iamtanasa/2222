@@ -187,6 +187,9 @@ function initMacaoGame() {
     drawPile.addEventListener('click', () => {
       if (!macaoLastState) return;
       if (!(macaoLastState.status === 'active' && macaoLastState.yourTurn)) return;
+      // Tap animation
+      drawPile.classList.add('macao-draw-tap');
+      setTimeout(() => drawPile.classList.remove('macao-draw-tap'), 250);
       macaoSend({ type: 'macao_draw' });
     });
   }
@@ -250,6 +253,11 @@ function renderMacaoCardBack() {
   return `<img class="card-img" src="${src}" onerror="this.src='${fallback}'" alt="back" />`;
 }
 
+// Track previous state for animation diffing
+let macaoPrevHandIds = [];
+let macaoPrevOppCount = 0;
+let macaoPrevTopDiscardId = null;
+
 function applyMacaoState(state) {
   if (!state) return;
 
@@ -281,10 +289,13 @@ function applyMacaoState(state) {
   if (turnIndicator) {
     if (state.status !== 'active') {
       turnIndicator.textContent = '';
+      turnIndicator.classList.remove('macao-your-turn');
     } else if (state.yourTurn) {
       turnIndicator.textContent = 'Este randul tau.';
+      turnIndicator.classList.add('macao-your-turn');
     } else {
       turnIndicator.textContent = 'Este randul adversarului.';
+      turnIndicator.classList.remove('macao-your-turn');
     }
   }
 
@@ -302,21 +313,37 @@ function applyMacaoState(state) {
   }
 
   if (oppHandEl) {
-    oppHandEl.innerHTML = '';
     const count = state.opponentCardCount || 0;
+    const prevCount = macaoPrevOppCount;
+    oppHandEl.innerHTML = '';
     for (let i = 0; i < count; i++) {
       const div = document.createElement('div');
       div.className = 'macao-card macao-card-back';
+      // Animate only new cards (extras)
+      if (i >= prevCount) {
+        div.classList.add('macao-opp-appear');
+        div.style.animationDelay = `${(i - prevCount) * 0.06}s`;
+      }
       div.innerHTML = renderMacaoCardBack();
       oppHandEl.appendChild(div);
     }
+    macaoPrevOppCount = count;
   }
 
   if (playerHandEl) {
+    const currentIds = (state.yourHand || []).map(c => c.id);
+    const newIds = currentIds.filter(id => !macaoPrevHandIds.includes(id));
+    
     playerHandEl.innerHTML = '';
-    (state.yourHand || []).forEach((card) => {
+    (state.yourHand || []).forEach((card, idx) => {
       const div = document.createElement('div');
       div.className = 'macao-card macao-card-face';
+      // Animate newly added cards
+      if (newIds.includes(card.id)) {
+        div.classList.add('macao-card-appear');
+        const newIdx = newIds.indexOf(card.id);
+        div.style.animationDelay = `${newIdx * 0.08}s`;
+      }
       div.innerHTML = renderMacaoCardFace(card);
       div.dataset.cardId = card.id;
       div.addEventListener('click', () => {
@@ -325,6 +352,7 @@ function applyMacaoState(state) {
       });
       playerHandEl.appendChild(div);
     });
+    macaoPrevHandIds = currentIds;
   }
 
   if (drawCountEl) {
@@ -332,9 +360,16 @@ function applyMacaoState(state) {
   }
 
   if (topDiscardEl) {
-    topDiscardEl.innerHTML = '';
-    if (state.topDiscard) {
-      topDiscardEl.innerHTML = renderMacaoCardFace(state.topDiscard);
+    const newDiscardId = state.topDiscard ? state.topDiscard.id : null;
+    if (newDiscardId !== macaoPrevTopDiscardId) {
+      topDiscardEl.innerHTML = '';
+      if (state.topDiscard) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'macao-discard-reveal';
+        wrapper.innerHTML = renderMacaoCardFace(state.topDiscard);
+        topDiscardEl.appendChild(wrapper);
+      }
+      macaoPrevTopDiscardId = newDiscardId;
     }
   }
 

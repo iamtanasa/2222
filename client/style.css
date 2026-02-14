@@ -158,6 +158,122 @@ body {
   opacity: 0.9;
 }
 
+/* ---- Razboi Card Animations ---- */
+
+/* Deck pulse on tap */
+.razboi-player .card-back,
+.razboi-opponent .card-back {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.razboi-player .card-back:active {
+  transform: scale(0.92);
+}
+
+.razboi-player .card-back:hover {
+  box-shadow: 0 0 14px rgba(255,199,95,0.3);
+}
+
+/* Card slot for played cards */
+.razboi-row .card-slot:not(.card-back) {
+  background: rgba(255,255,255,0.06);
+  border: 1px dashed rgba(255,255,255,0.12);
+  overflow: visible;
+}
+
+/* Razboi card reveal animation */
+.razboi-card-reveal {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.razboi-card-reveal img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+/* Player card slides up + reveal */
+.razboi-player .razboi-card-reveal {
+  animation: razboiPlayerReveal 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes razboiPlayerReveal {
+  0% {
+    transform: translateY(20px) scale(0.6);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-4px) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Opponent card slides down + reveal */
+.razboi-opponent .razboi-card-reveal {
+  animation: razboiOpponentReveal 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes razboiOpponentReveal {
+  0% {
+    transform: translateY(-20px) scale(0.6);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(4px) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Winning card glow */
+.razboi-card-reveal.razboi-win {
+  animation: razboiWinPulse 0.6s ease forwards;
+}
+
+@keyframes razboiWinPulse {
+  0%   { box-shadow: 0 0 0 transparent; transform: scale(1); }
+  50%  { box-shadow: 0 0 20px rgba(255,199,95,0.8), 0 0 40px rgba(255,199,95,0.3); transform: scale(1.08); }
+  100% { box-shadow: 0 0 12px rgba(255,199,95,0.5), 0 0 24px rgba(255,199,95,0.15); transform: scale(1.03); }
+}
+
+/* Losing card dim */
+.razboi-card-reveal.razboi-lose {
+  animation: razboiLoseDim 0.4s ease forwards;
+}
+
+@keyframes razboiLoseDim {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0.45; transform: scale(0.93); filter: grayscale(0.5); }
+}
+
+/* War shake effect on center info */
+.razboi-war-shake {
+  animation: razboiWarShake 0.5s ease;
+}
+
+@keyframes razboiWarShake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-6px); }
+  30% { transform: translateX(6px); }
+  45% { transform: translateX(-4px); }
+  60% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+  90% { transform: translateX(2px); }
+}
+
 /* -------------------- TRIANGLES LAYOUT -------------------- */
 
 .triangles-layout {
@@ -222,6 +338,120 @@ body {
 /* ascundem butonul "Trage carte" pentru Macao - folosim tap pe pachet */
 #macao-draw-btn {
   display: none;
+}
+
+/* ---- Macao Card Animations ---- */
+
+/* Player card appear animation */
+.macao-card.macao-card-appear {
+  animation: macaoCardAppear 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes macaoCardAppear {
+  0% {
+    transform: translateY(20px) scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(-4px) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Opponent card appear animation */
+.macao-card.macao-opp-appear {
+  animation: macaoOppAppear 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes macaoOppAppear {
+  0% {
+    transform: translateY(-15px) scale(0.6);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Card played — flies to discard */
+.macao-card.macao-card-played {
+  animation: macaoCardPlayed 0.3s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes macaoCardPlayed {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.8) translateY(-20px);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(0.5) translateY(-40px);
+    opacity: 0;
+  }
+}
+
+/* Discard pile card reveal */
+.macao-discard-reveal {
+  animation: macaoDiscardReveal 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes macaoDiscardReveal {
+  0% {
+    transform: scale(0.6) rotateZ(-8deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08) rotateZ(2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotateZ(0deg);
+    opacity: 1;
+  }
+}
+
+/* Draw pile tap effect */
+.macao-draw-tap .card-slot {
+  animation: macaoDrawTap 0.2s ease;
+}
+
+@keyframes macaoDrawTap {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+/* Player card hover/tap interaction */
+.macao-card.macao-card-face {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.macao-card.macao-card-face:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 12px rgba(255, 199, 95, 0.25);
+}
+
+.macao-card.macao-card-face:active {
+  transform: translateY(-3px) scale(0.95);
+}
+
+/* Turn indicator pulse */
+.macao-your-turn {
+  animation: macaoTurnPulse 1.5s ease infinite;
+}
+
+@keyframes macaoTurnPulse {
+  0%, 100% { color: rgba(255, 199, 95, 0.9); }
+  50% { color: rgba(255, 255, 255, 1); text-shadow: 0 0 10px rgba(255, 199, 95, 0.5); }
 }
 
 /* scrollbar orizontal discret, cu forma rotunjita (aproape semicerc) */

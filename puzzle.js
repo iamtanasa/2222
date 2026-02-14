@@ -551,6 +551,11 @@ function winGame() {
     gameState.isPlaying = false;
     stopTimer();
 
+    // Acordăm puncte în funcție de dificultate: 3=Ușor(1p), 4=Mediu(3p), 5=Greu(5p)
+    const difficultyPoints = { 3: 1, 4: 3, 5: 5 };
+    const points = difficultyPoints[gameState.difficulty] || 1;
+    if (typeof recordPoints === 'function') recordPoints('puzzle', points);
+
     const timeString = document.getElementById('stat-time').textContent;
 
     document.getElementById('final-image').innerHTML = 

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Portalul nostru</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="page-entry" data-page="love-portal">
+
+    <div class="main-container">
+        <div class="back-button" onclick="goBack()">← Înapoi</div>
+        <div class="main-icon pulse">💖</div>
+        <h1 class="portal-page-title">Portalul nostru</h1>
+
+        <div class="glass-card">
+            <!-- Secțiunea specială pentru 14 februarie -->
+            <div id="valentine-section" class="portal-section">
+                <p class="portal-question">
+                    Vrei să fii My Valentine azi și pentru anii ce urmează?
+                </p>
+                <p id="valentine-love-message" class="portal-love-message" style="display:none;">
+                    Te iubesc din toată inima mea, ești tot ce mi-am dorit pe pământul acesta. Sunt și îți voi fi mereu alături. Sunt cel mai norocos iubit din lume! ❤️❤️❤️
+                </p>
+                <div class="valentine-buttons">
+                    <button id="valentine-yes" class="portal-btn-yes">Da</button>
+                    <button id="valentine-no" class="portal-btn-no" type="button">Nu</button>
+                </div>
+                <div id="valentine-gif-wrapper" class="valentine-gif-wrapper" style="display:none;">
+                    <div class="tenor-gif-embed" data-postid="7866746943736865719" data-share-method="host" data-aspect-ratio="1" data-width="100%">
+                        <a href="https://tenor.com/view/cute2-gif-7866746943736865719">Cute2 GIF</a>from 
+                        <a href="https://tenor.com/search/cute2-gifs">Cute2 GIFs</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secțiunea pentru toate celelalte zile -->
+            <div id="mood-section" class="portal-section" style="display:none;">
+                <p class="portal-question">Cât de bine te simți azi?</p>
+                <div class="mood-slider-wrapper">
+                    <div class="mood-slider-container">
+                        <input type="range" id="mood-slider" class="mood-slider" min="0" max="100" value="50">
+                    </div>
+                    <div class="mood-value-label"><span id="mood-value">50</span>%</div>
+                </div>
+                <div id="support-message" class="support-message"></div>
+                <div id="support-gifs" class="support-gifs">
+                    <div class="support-gif" data-gif="1">
+                        <div class="tenor-gif-embed" data-postid="2097232044545995975" data-share-method="host" data-aspect-ratio="1" data-width="100%">
+                            <a href="https://tenor.com/view/an-%E1%BB%A7i-gif-2097232044545995975">An ủi Sticker</a>from 
+                            <a href="https://tenor.com/search/an+%E1%BB%A7i-stickers">An ủi Stickers</a>
+                        </div>
+                    </div>
+                    <div class="support-gif" data-gif="2">
+                        <div class="tenor-gif-embed" data-postid="24910613" data-share-method="host" data-aspect-ratio="1" data-width="100%">
+                            <a href="https://tenor.com/view/tkthao219-bubududu-gif-24910613">Tkthao219 Bubududu Sticker</a>from 
+                            <a href="https://tenor.com/search/tkthao219-stickers">Tkthao219 Stickers</a>
+                        </div>
+                    </div>
+                    <div class="support-gif" data-gif="3">
+                        <div class="tenor-gif-embed" data-postid="7250001467643729459" data-share-method="host" data-aspect-ratio="1.23333" data-width="100%">
+                            <a href="https://tenor.com/view/milk-and-mocha-gif-mocha-makeing-love-gif-7250001467643729459">Milk And Mocha Gif Mocha Makeing Love Sticker</a>from 
+                            <a href="https://tenor.com/search/milk+and+mocha+gif-stickers">Milk And Mocha Gif Stickers</a>
+                        </div>
+                    </div>
+                    <div class="support-gif" data-gif="4">
+                        <div class="tenor-gif-embed" data-postid="11092575278240837627" data-share-method="host" data-aspect-ratio="1" data-width="100%">
+                            <a href="https://tenor.com/view/thank-you-gif-11092575278240837627">Thank You GIF</a>from 
+                            <a href="https://tenor.com/search/thank+you-gifs">Thank You GIFs</a>
+                        </div>
+                    </div>
+                    <div class="support-gif" data-gif="5">
+                        <div class="tenor-gif-embed" data-postid="23446439" data-share-method="host" data-aspect-ratio="1" data-width="100%">
+                            <a href="https://tenor.com/view/panda-bear-wakey-gif-23446439">Panda Bear Sticker</a>from 
+                            <a href="https://tenor.com/search/panda-stickers">Panda Stickers</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="portal.js"></script>
+    <script>
+        function goBack() {
+            document.body.classList.add('page-fade-out');
+            setTimeout(() => { window.location.href = '2222.html'; }, 600);
+        }
+    </script>
+    <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
+</body>
+</html>

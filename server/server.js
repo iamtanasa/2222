@@ -311,6 +311,7 @@ function buildRazboiState(room, seat) {
     battleSize: room.battlePile ? room.battlePile.length : 0,
     message: room.lastMessage || null,
     inWar: !!room.inWar,
+    roundWinner: room.lastRoundWinner ? (room.lastRoundWinner === seat ? 'you' : 'opponent') : null,
     requiredPresses,
   };
 }
@@ -681,7 +682,8 @@ function applyRazboiStep(room, seat) {
       room.inWar = true;
       room.warValue = warValue;
       room.drawCount = { p1: 0, p2: 0 };
-      room.lastMessage = `Razboi! Valoare ${warValue}. Scoateti ${warValue} carti (apasand pe pachete).`;
+      room.lastRoundWinner = null;
+      room.lastMessage = `Razboi! Valoare ${warValue}. Scoateti ${warValue} carti.`;
       return;
     }
 
@@ -694,6 +696,7 @@ function applyRazboiStep(room, seat) {
     room.lastMessage = `Runda castigata de ${
       winnerSeat === 'p1' ? room.players.p1.name : room.players.p2.name
     }.`;
+    room.lastRoundWinner = winnerSeat;
 
     room.inWar = false;
     room.warValue = 0;
@@ -767,6 +770,7 @@ function applyRazboiStep(room, seat) {
     room.lastMessage = `Razboiul a fost castigat de ${
       winnerSeat === 'p1' ? room.players.p1.name : room.players.p2.name
     }.`;
+    room.lastRoundWinner = winnerSeat;
 
     room.phase = 'normal';
     room.inWar = false;

@@ -114,6 +114,40 @@
       
       <div id="planner-list" class="planner-list"></div>
     </div>
+
+    <div class="glass-card planner-card">
+      <h2 class="section-title">🎰 Roata Norocoasă</h2>
+
+      <div class="wheel-mode-toggle">
+        <button class="wheel-mode-btn active" data-mode="all">Toate</button>
+        <button class="wheel-mode-btn" data-mode="custom">Doar ale mele</button>
+      </div>
+
+      <div class="wheel-wrapper" id="wheel-wrapper">
+        <div class="wheel-pointer">▼</div>
+        <canvas id="wheel-canvas" width="320" height="320"></canvas>
+      </div>
+      <div id="wheel-result" class="wheel-result hidden"></div>
+
+      <div class="wheel-custom-section">
+        <p class="helper-text" style="margin-top:16px;">Adaugă propriile opțiuni în roată:</p>
+        <div class="wheel-add-row">
+          <input id="wheel-custom-input" type="text" maxlength="30" placeholder="Ex: Apus la lac" autocomplete="off" />
+          <button id="wheel-add-btn" class="btn-secondary wheel-add-btn">+</button>
+        </div>
+        <div id="wheel-custom-list" class="wheel-custom-list"></div>
+      </div>
+    </div>
+
+    <!-- Zoom overlay for the wheel -->
+    <div id="wheel-zoom-overlay" class="wheel-zoom-overlay hidden">
+      <div class="wheel-zoom-content">
+        <div class="wheel-pointer">▼</div>
+        <canvas id="wheel-canvas-zoom" width="600" height="600"></canvas>
+      </div>
+      <div id="wheel-result-zoom" class="wheel-result hidden"></div>
+      <div class="wheel-zoom-hint">Apasă oriunde pentru a închide</div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

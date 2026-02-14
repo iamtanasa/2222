@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Păcănele 🎰</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="slots.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
+</head>
+<body class="page-entry" data-page="slots">
+  <div class="main-container">
+    <div class="back-button" onclick="goBack()">← Înapoi</div>
+    <div class="main-icon pulse">🎰</div>
+    <h1 class="portal-page-title">Sizzling Hot</h1>
+
+    <!-- Balance display -->
+    <div class="glass-card slots-balance-card">
+      <div class="slots-balance-row">
+        <span class="slots-balance-label">Puncte disponibile:</span>
+        <span class="slots-balance-value" id="slots-balance">0</span>
+      </div>
+    </div>
+
+    <!-- Slot machine -->
+    <div class="glass-card slots-machine-card">
+      <!-- Win display -->
+      <div class="slots-win-display hidden" id="slots-win-display">
+        <span id="slots-win-text"></span>
+      </div>
+
+      <!-- Reels -->
+      <div class="slots-reels-frame" id="slots-reels-frame">
+        <div class="slots-payline line-1" data-line="1"></div>
+        <div class="slots-payline line-2" data-line="2"></div>
+        <div class="slots-payline line-3" data-line="3"></div>
+        <div class="slots-payline line-4" data-line="4">
+          <svg viewBox="0 0 300 174" preserveAspectRatio="none"><polyline points="0,29 75,87 150,145 225,87 300,29" /></svg>
+        </div>
+        <div class="slots-payline line-5" data-line="5">
+          <svg viewBox="0 0 300 174" preserveAspectRatio="none"><polyline points="0,145 75,87 150,29 225,87 300,145" /></svg>
+        </div>
+        <div class="slots-reels" id="slots-reels">
+          <div class="slots-reel" id="reel-0">
+            <div class="slots-reel-inner">
+              <div class="slots-symbol"></div>
+              <div class="slots-symbol"></div>
+              <div class="slots-symbol"></div>
+            </div>
+          </div>
+          <div class="slots-reel" id="reel-1">
+            <div class="slots-reel-inner">
+              <div class="slots-symbol"></div>
+              <div class="slots-symbol"></div>
+              <div class="slots-symbol"></div>
+            </div>
+          </div>
+          <div class="slots-reel" id="reel-2">
+            <div class="slots-reel-inner">
+              <div class="slots-symbol"></div>
+              <div class="slots-symbol"></div>
+              <div class="slots-symbol"></div>
+            </div>
+          </div>
+          <div class="slots-reel" id="reel-3">
+            <div class="slots-reel-inner">
+              <div class="slots-symbol"></div>
+              <div class="slots-symbol"></div>
+              <div class="slots-symbol"></div>
+            </div>
+          </div>
+          <div class="slots-reel" id="reel-4">
+            <div class="slots-reel-inner">
+              <div class="slots-symbol"></div>
+              <div class="slots-symbol"></div>
+              <div class="slots-symbol"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="slots-controls">
+        <div class="slots-bet-section">
+          <label class="slots-label">Linia:</label>
+          <div class="slots-lines-btns">
+            <button class="slots-line-btn active" data-lines="1">1</button>
+            <button class="slots-line-btn" data-lines="3">3</button>
+            <button class="slots-line-btn" data-lines="5">5</button>
+          </div>
+        </div>
+        <div class="slots-bet-section">
+          <label class="slots-label">Miza/linie:</label>
+          <div class="slots-bet-btns">
+            <button class="slots-bet-btn active" data-bet="1">1</button>
+            <button class="slots-bet-btn" data-bet="2">2</button>
+            <button class="slots-bet-btn" data-bet="5">5</button>
+            <button class="slots-bet-btn" data-bet="10">10</button>
+          </div>
+        </div>
+        <div class="slots-total-bet">
+          Total: <span id="slots-total-bet">1</span> pct
+        </div>
+      </div>
+
+      <!-- Lever / Spin -->
+      <div class="slots-lever-section">
+        <button id="slots-spin-btn" class="slots-spin-btn">
+          <span class="slots-spin-icon">🎰</span>
+          <span class="slots-spin-text">SPIN</span>
+        </button>
+      </div>
+
+      <!-- Gamble (double-or-nothing) -->
+      <div class="slots-gamble-section hidden" id="slots-gamble-section">
+        <p class="slots-gamble-text">Câștig: <span id="slots-gamble-amount">0</span> pct — Alege culoarea!</p>
+
+        <!-- Card area -->
+        <div class="gamble-card-area">
+          <div class="gamble-history" id="gamble-history"></div>
+          <div class="gamble-card-wrapper" id="gamble-card-wrapper">
+            <div class="gamble-card" id="gamble-card">
+              <div class="gamble-card-face gamble-card-back">
+                <img src="server/node_modules/svg-cards/png/2x/back-red.png" alt="card back" />
+              </div>
+              <div class="gamble-card-face gamble-card-front" id="gamble-card-front">
+                <img id="gamble-card-img" src="" alt="card" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Choice buttons -->
+        <div class="gamble-choice-btns">
+          <button class="gamble-choice-btn gamble-red" id="gamble-red-btn">
+            <span class="gamble-suit">♥ ♦</span>
+            <span>Roșu</span>
+          </button>
+          <button class="gamble-collect-btn" id="slots-collect-btn">
+            <span>💰</span>
+            <span>Colectează</span>
+          </button>
+          <button class="gamble-choice-btn gamble-black" id="gamble-black-btn">
+            <span class="gamble-suit">♠ ♣</span>
+            <span>Negru</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paytable -->
+    <div class="glass-card slots-paytable-card">
+      <h2 class="section-title" style="cursor:pointer" onclick="togglePaytable()">📋 Tabel Plăți <span id="paytable-arrow">▼</span></h2>
+      <div id="slots-paytable" class="slots-paytable hidden">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="slots.js"></script>
+  <script>
+    function goBack() {
+      document.body.classList.add('page-fade-out');
+      setTimeout(() => { window.location.href = '2222.html'; }, 600);
+    }
+    function togglePaytable() {
+      const pt = document.getElementById('slots-paytable');
+      const arrow = document.getElementById('paytable-arrow');
+      pt.classList.toggle('hidden');
+      arrow.textContent = pt.classList.contains('hidden') ? '▼' : '▲';
+    }
+  </script>
+</body>
+</html>

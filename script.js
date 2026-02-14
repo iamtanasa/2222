@@ -119,7 +119,7 @@ function getLoggedInUser() {
     return { id, name };
 }
 
-// Helper: înregistrează o victorie în LoginUsers (bulls / hangman / memory / macao / razboi / triangles)
+// Helper: înregistrează o victorie în LoginUsers (bulls / hangman / memory / macao / razboi / triangles / balloon / puzzle)
 async function recordWin(game) {
     const user = getLoggedInUser();
     if (!user) return; // dacă nu e login real, nu facem nimic
@@ -131,6 +131,8 @@ async function recordWin(game) {
     else if (game === 'macao') column = 'wins_macao';
     else if (game === 'razboi') column = 'wins_razboi';
     else if (game === 'triangles') column = 'wins_triangles';
+    else if (game === 'balloon') column = 'wins_balloon';
+    else if (game === 'puzzle') column = 'wins_puzzle';
     if (!column) return;
 
     try {
@@ -160,6 +162,46 @@ async function recordWin(game) {
         }
     } catch (e) {
         console.error('Nu am putut actualiza victoriile:', e);
+    }
+}
+
+// Helper: adăugaă un număr variabil de puncte la o coloană (ex: puzzle cu dificultati diferite)
+async function recordPoints(game, points) {
+    const user = getLoggedInUser();
+    if (!user || !points || points <= 0) return;
+
+    let column = null;
+    if (game === 'balloon') column = 'wins_balloon';
+    else if (game === 'puzzle') column = 'wins_puzzle';
+    else if (game === 'bulls') column = 'wins_bulls_cows';
+    else if (game === 'hangman') column = 'wins_hangman';
+    else if (game === 'memory') column = 'wins_memory';
+    else if (game === 'macao') column = 'wins_macao';
+    else if (game === 'razboi') column = 'wins_razboi';
+    else if (game === 'triangles') column = 'wins_triangles';
+    if (!column) return;
+
+    try {
+        const { data, error } = await _supabase
+            .from('LoginUsers')
+            .select(column)
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (error || !data) return;
+
+        const current = Number.isFinite(data[column]) ? data[column] : 0;
+
+        const { error: updateError } = await _supabase
+            .from('LoginUsers')
+            .update({ [column]: current + points })
+            .eq('id', user.id);
+
+        if (updateError) {
+            console.error('Eroare la actualizarea punctelor:', updateError.message || updateError);
+        }
+    } catch (e) {
+        console.error('Nu am putut actualiza punctele:', e);
     }
 }
 

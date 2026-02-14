@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pop the Balloon 🎈</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="page-entry" data-page="pop-balloon">
+
+    <div class="main-container">
+        <div class="back-button" onclick="goBack()">← Înapoi</div>
+        <div class="main-icon pulse">🎈</div>
+        <h1 class="portal-page-title">Pop the Balloon</h1>
+
+        <div class="glass-card">
+            <div class="pop-stats">
+                <span class="pop-stat">💥 <span id="pop-score">0</span></span>
+                <span class="pop-stat pop-lives" id="pop-lives">❤️❤️❤️</span>
+            </div>
+            <div id="balloons-area" class="balloons-area"></div>
+            <div id="balloons-controls" class="balloons-controls" style="display:none;">
+                <p class="support-message">Ai spart toate baloanele.</p>
+                <button id="balloons-restart" class="btn-secondary">Repornește jocul 🎈</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="pop-balloon.js"></script>
+    <script>
+        function goBack() {
+            document.body.classList.add('page-fade-out');
+            setTimeout(() => { window.location.href = '2222.html'; }, 600);
+        }
+    </script>
+</body>
+</html>

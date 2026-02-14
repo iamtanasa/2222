@@ -32,6 +32,8 @@ function renderLeaderboard(users) {
       const macao = Number.isFinite(u.wins_macao) ? u.wins_macao : 0;
       const razboi = Number.isFinite(u.wins_razboi) ? u.wins_razboi : 0;
       const triangles = Number.isFinite(u.wins_triangles) ? u.wins_triangles : 0;
+      const balloon = Number.isFinite(u.wins_balloon) ? u.wins_balloon : 0;
+      const puzzle = Number.isFinite(u.wins_puzzle) ? u.wins_puzzle : 0;
       return `
         <div class="leaderboard-row">
           <div class="leaderboard-row-header">
@@ -62,6 +64,14 @@ function renderLeaderboard(users) {
               <span class="lb-label">Triunghiuri</span>
               <span class="lb-value">${triangles}</span>
             </div>
+            <div class="leaderboard-stat">
+              <span class="lb-label">Pop Balloon</span>
+              <span class="lb-value">${balloon}</span>
+            </div>
+            <div class="leaderboard-stat">
+              <span class="lb-label">Puzzle</span>
+              <span class="lb-value">${puzzle}</span>
+            </div>
           </div>
         </div>
       `;
@@ -80,7 +90,7 @@ async function loadLeaderboard() {
   try {
     const { data, error } = await lbClient
       .from('LoginUsers')
-      .select('name, wins_bulls_cows, wins_hangman, wins_memory, wins_macao, wins_razboi, wins_triangles')
+      .select('name, wins_bulls_cows, wins_hangman, wins_memory, wins_macao, wins_razboi, wins_triangles, wins_balloon, wins_puzzle')
       .order('name', { ascending: true });
 
     if (error) {
@@ -137,7 +147,7 @@ async function resetScores() {
 
     const { error: updateError } = await lbClient
       .from('LoginUsers')
-      .update({ wins_bulls_cows: 0, wins_hangman: 0, wins_memory: 0, wins_macao: 0, wins_razboi: 0, wins_triangles: 0 })
+      .update({ wins_bulls_cows: 0, wins_hangman: 0, wins_memory: 0, wins_macao: 0, wins_razboi: 0, wins_triangles: 0, wins_balloon: 0, wins_puzzle: 0, shop_spent: 0 })
       .in('id', ids);
 
     if (updateError) {

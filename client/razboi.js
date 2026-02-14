@@ -177,8 +177,14 @@ function razboiPngPathForCard(card) {
 function renderRazboiCardFace(card) {
   const src = razboiPngPathForCard(card);
   if (!src) return '';
-  return `<img class="card-img" src="${src}" alt="card" />`;
+  return `<div class="razboi-card-reveal" data-card-id="${card.suit}_${card.rank}">
+    <img class="card-img" src="${src}" alt="card" />
+  </div>`;
 }
+
+// Track displayed cards to avoid re-animating unchanged ones
+let razboiLastYouCardId = null;
+let razboiLastOppCardId = null;
 
 function initRazboiGame() {
   const params = new URLSearchParams(window.location.search);
@@ -259,16 +265,50 @@ function applyRazboiState(state) {
   }
 
   if (oppLastEl) {
-    oppLastEl.innerHTML = '';
-    if (state.lastOpponentCard) {
-      oppLastEl.innerHTML = renderRazboiCardFace(state.lastOpponentCard);
+    const newOppId = state.lastOpponentCard ? `${state.lastOpponentCard.suit}_${state.lastOpponentCard.rank}` : null;
+    if (newOppId !== razboiLastOppCardId) {
+      oppLastEl.innerHTML = '';
+      if (state.lastOpponentCard) {
+        oppLastEl.innerHTML = renderRazboiCardFace(state.lastOpponentCard);
+      }
+      razboiLastOppCardId = newOppId;
     }
   }
 
   if (youLastEl) {
-    youLastEl.innerHTML = '';
-    if (state.lastYouCard) {
-      youLastEl.innerHTML = renderRazboiCardFace(state.lastYouCard);
+    const newYouId = state.lastYouCard ? `${state.lastYouCard.suit}_${state.lastYouCard.rank}` : null;
+    if (newYouId !== razboiLastYouCardId) {
+      youLastEl.innerHTML = '';
+      if (state.lastYouCard) {
+        youLastEl.innerHTML = renderRazboiCardFace(state.lastYouCard);
+      }
+      razboiLastYouCardId = newYouId;
+    }
+  }
+
+  // Apply win/lose glow after both cards are visible
+  if (state.lastYouCard && state.lastOpponentCard && !state.inWar) {
+    const result = state.roundWinner;
+    setTimeout(() => {
+      const youCard = youLastEl && youLastEl.querySelector('.razboi-card-reveal');
+      const oppCard = oppLastEl && oppLastEl.querySelector('.razboi-card-reveal');
+      if (result === 'you') {
+        if (youCard) youCard.classList.add('razboi-win');
+        if (oppCard) oppCard.classList.add('razboi-lose');
+      } else if (result === 'opponent') {
+        if (oppCard) oppCard.classList.add('razboi-win');
+        if (youCard) youCard.classList.add('razboi-lose');
+      }
+    }, 500);
+  }
+
+  // War shake effect
+  if (state.inWar) {
+    const centerInfo = document.querySelector('.razboi-center-info');
+    if (centerInfo) {
+      centerInfo.classList.remove('razboi-war-shake');
+      void centerInfo.offsetWidth; // force reflow
+      centerInfo.classList.add('razboi-war-shake');
     }
   }
 
@@ -306,6 +346,8 @@ function applyRazboiState(state) {
           const youLastEl2 = document.getElementById('razboi-you-last');
           if (oppLastEl2) oppLastEl2.innerHTML = '';
           if (youLastEl2) youLastEl2.innerHTML = '';
+          razboiLastYouCardId = null;
+          razboiLastOppCardId = null;
         }, 2000);
       } else {
         // doar o singura carte intoarsa in runda normala

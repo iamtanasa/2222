@@ -253,6 +253,253 @@ button:active {
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
 }
 
+/* PORTAL IUBIRE / MOOD */
+
+.portal-page-title {
+    font-family: 'Dancing Script', cursive;
+    color: #ffffff;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.portal-section {
+    margin-top: 10px;
+}
+
+.portal-question {
+    color: #ffffff;
+    font-size: 1rem;
+    margin-bottom: 20px;
+}
+
+.portal-love-message {
+    color: #ffffff;
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+}
+
+.valentine-buttons {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.portal-btn-yes {
+    flex: 0 0 48%;
+    max-width: none;
+    z-index: 2;
+}
+
+.portal-btn-no {
+    position: relative;
+    flex: 0 0 48%;
+    max-width: none;
+    transition: transform 0.25s ease;
+}
+
+/* Suprascriem efectul global de hover ca sa nu strice animatia de translate */
+.portal-btn-yes:hover,
+.portal-btn-no:hover {
+    transform: none;
+}
+
+.valentine-gif-wrapper {
+    margin-top: 20px;
+}
+
+.valentine-gif-wrapper .tenor-gif-embed,
+.support-gif .tenor-gif-embed {
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.mood-slider-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 15px;
+}
+
+.mood-slider-container {
+    width: 100%;
+    max-width: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mood-slider {
+    width: 100%;
+}
+
+/* Stil personalizat pentru slider (track gros, rotunjit, buton vizibil) */
+.mood-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.35);
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.25);
+}
+
+.mood-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: url('client/hangman-head2.png') center center / contain no-repeat, #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 8px rgba(255, 77, 109, 0.8);
+    cursor: pointer;
+}
+
+.mood-slider::-moz-range-track {
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.35);
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.25);
+}
+
+.mood-slider::-moz-range-thumb {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: url('client/hangman-head2.png') center center / contain no-repeat, #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 8px rgba(255, 77, 109, 0.8);
+    cursor: pointer;
+}
+
+.mood-value-label {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.support-message {
+    margin-top: 10px;
+    color: #ffffff;
+    font-size: 0.95rem;
+}
+
+.support-gifs {
+    margin-top: 15px;
+}
+
+.support-gif {
+    display: none;
+}
+
+.support-gif.active {
+    display: block;
+}
+
+/* BALLOONS MODE / POP THE BALLOON */
+
+.pop-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    font-size: 1rem;
+    color: #fff;
+    font-weight: 600;
+}
+
+.pop-stat {
+    letter-spacing: 1px;
+}
+
+.pop-lives {
+    font-size: 1.1rem;
+}
+
+.balloons-area {
+    position: relative;
+    width: 100%;
+    height: 260px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.balloons-controls {
+    margin-top: 10px;
+    text-align: center;
+}
+
+.balloon {
+    position: absolute;
+    bottom: -120px;
+    width: 80px;
+    height: 110px;
+    border-radius: 50% 50% 45% 45%;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.8), #ff4d6d);
+    box-shadow: 0 8px 14px rgba(0, 0, 0, 0.25);
+    /* animația va rula o singură dată; durata exactă este setată din JS */
+    animation: floatBalloon 16s linear forwards;
+    cursor: pointer;
+    background-size: cover;
+    background-position: center;
+}
+
+.balloon.popped {
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+}
+
+.balloon::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 70px;
+    border-left: 2px solid rgba(255, 255, 255, 0.7);
+    border-radius: 999px;
+    opacity: 0.9;
+    animation: swayString 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes floatBalloon {
+    0% {
+        transform: translateY(0) translateX(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    85% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-320px) translateX(var(--drift, 0px));
+        opacity: 0;
+    }
+}
+
+@keyframes swayString {
+    0% {
+        transform: translateX(-50%) rotate(-4deg);
+    }
+    100% {
+        transform: translateX(-50%) rotate(4deg);
+    }
+}
+
+.back-btn {
+    margin-top: 10px;
+}
+
 /* SHOP PROVOCĂRI */
 
 .shop-section {
