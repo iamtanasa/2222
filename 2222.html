@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet">
+    <script src="next-meeting.js"></script>
 </head>
 <body class="page-entry" data-page="universe">
 
@@ -184,5 +185,12 @@
     </div>
 
     <script src="script.js"></script>
+    <script src="next-meeting.js"></script>
+    <script>
+        // Inițializez countdown-ul pentru următoarea întâlnire când pagina se încarcă
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAndDisplayNextMeeting();
+        });
+    </script>
 </body>
 </html>

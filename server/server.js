@@ -170,6 +170,10 @@ function buildMacaoState(room, seat) {
     ? room.discardPile[room.discardPile.length - 1]
     : null;
 
+  const turnsToSkip =
+    room.skipTurns && typeof room.skipTurns[seat] === 'number' ? room.skipTurns[seat] : 0;
+  const freePlay = room.freePlaySeat === seat;
+
   return {
     roomCode: room.roomCode,
     status: room.status,
@@ -178,6 +182,10 @@ function buildMacaoState(room, seat) {
     yourTurn: room.currentTurn === seat,
     pendingDraw: room.pendingDraw || 0,
     attackActive: room.attackActive || false,
+    pendingSuitChoice: room.pendingSuitChoice === seat,
+    demandedSuit: room.demandedSuit || null,
+    turnsToSkip,
+    freePlay,
     yourHand: youHand,
     opponentCardCount: (room.hands[otherSeat] || []).length,
     drawPileCount: room.drawPile.length,
@@ -294,9 +302,10 @@ function buildRazboiState(room, seat) {
   const lastOpp = room.lastCards ? room.lastCards[otherSeat] : null;
 
    let requiredPresses = 0;
-   if (room.inWar && typeof room.warValue === 'number' && room.warValue > 0 && room.drawCount) {
+   if (room.inWar && room.drawCount) {
+     const needed = room.warDrawRequired != null ? room.warDrawRequired : (room.warValue || 0);
      const done = Math.min(room.drawCount.p1 || 0, room.drawCount.p2 || 0);
-     requiredPresses = Math.max(room.warValue - done, 0);
+     requiredPresses = Math.max(needed - done, 0);
    }
 
   return {
@@ -676,14 +685,17 @@ function applyRazboiStep(room, seat) {
     const v2 = razboiRankValue(c2.rank);
 
     if (v1 === v2) {
-      // egalitate -> intra in razboi, pastram cartile de egalitate pe masa
-      const warValue = v1;
+      // egalitate -> intra in razboi; As = 1 carte, nu 14
+      const effectiveWarValue = v1 === 14 ? 1 : v1;
       room.phase = 'war';
       room.inWar = true;
-      room.warValue = warValue;
+      room.warValue = effectiveWarValue;
+      const p1Len = room.decks.p1 ? room.decks.p1.length : 0;
+      const p2Len = room.decks.p2 ? room.decks.p2.length : 0;
+      room.warDrawRequired = Math.min(effectiveWarValue, p1Len, p2Len);
       room.drawCount = { p1: 0, p2: 0 };
       room.lastRoundWinner = null;
-      room.lastMessage = `Razboi! Valoare ${warValue}. Scoateti ${warValue} carti.`;
+      room.lastMessage = `Razboi! Valoare ${effectiveWarValue}. Scoateti ${room.warDrawRequired} carti.`;
       return;
     }
 
@@ -706,18 +718,16 @@ function applyRazboiStep(room, seat) {
     return;
   }
 
-  // ---------------- Faza de razboi: fiecare scoate warValue carti ----------------
+  // ---------------- Faza de razboi: amandoi scot acelasi numar (warDrawRequired) ----------------
   if (room.phase === 'war') {
-    const needed = room.warValue || 0;
+    const needed = room.warDrawRequired != null ? room.warDrawRequired : (room.warValue || 0);
     if (needed <= 0) {
-      // ceva nu e in regula, revenim la normal
       room.phase = 'normal';
       room.inWar = false;
       room.drawCount = { p1: 0, p2: 0 };
       return;
     }
 
-    // fiecare jucator poate scoate pana la needed carti, nu trebuie sa astepte adversarul la fiecare
     if ((room.drawCount[seat] || 0) >= needed) {
       return;
     }
@@ -732,18 +742,16 @@ function applyRazboiStep(room, seat) {
     const doneP1 = room.drawCount.p1 || 0;
     const doneP2 = room.drawCount.p2 || 0;
 
-    // un jucator termina razboiul cand a scos needed carti SAU cand nu mai are carti deloc
     const p1Done = doneP1 >= needed || p1.length === 0;
     const p2Done = doneP2 >= needed || p2.length === 0;
 
     if (!p1Done || !p2Done) {
       const minDone = Math.min(doneP1, doneP2);
       const remaining = Math.max(needed - minDone, 0);
-      room.lastMessage = `Razboi in curs... Mai scoateti ${remaining} carti.`;
+      room.lastMessage = `Razboi in curs... Mai scoateti ${remaining} carti (acelasi numar).`;
       return;
     }
 
-    // ambele parti au scos toate cartile pentru acest razboi -> decidem
     const c1 = room.lastCards.p1;
     const c2 = room.lastCards.p2;
     if (!c1 || !c2) {
@@ -754,11 +762,13 @@ function applyRazboiStep(room, seat) {
     const v2 = razboiRankValue(c2.rank);
 
     if (v1 === v2) {
-      // razboi continuat cu noua valoare, lasam ultimele carti vizibile pana se scot altele
-      const warValue = v1;
-      room.warValue = warValue;
+      const effectiveWarValue = v1 === 14 ? 1 : v1;
+      room.warValue = effectiveWarValue;
+      const p1Len = room.decks.p1 ? room.decks.p1.length : 0;
+      const p2Len = room.decks.p2 ? room.decks.p2.length : 0;
+      room.warDrawRequired = Math.min(effectiveWarValue, p1Len, p2Len);
       room.drawCount = { p1: 0, p2: 0 };
-      room.lastMessage = `Razboi continuat! Valoare ${warValue}. Scoateti ${warValue} carti.`;
+      room.lastMessage = `Razboi continuat! Valoare ${effectiveWarValue}. Scoateti ${room.warDrawRequired} carti (acelasi numar).`;
       return;
     }
 
@@ -786,8 +796,12 @@ function dealMacaoInitial(room) {
   room.discardPile = [];
   room.hands = { p1: [], p2: [] };
   room.currentTurn = Math.random() < 0.5 ? 'p1' : 'p2';
+  room.skipTurns = { p1: 0, p2: 0 };
+  room.freePlaySeat = null;
   room.pendingDraw = 0;
   room.attackActive = false;
+  room.pendingSuitChoice = null;
+  room.demandedSuit = null;
 
   // fiecare jucator primeste 5 carti
   const initialCards = 5;
@@ -841,9 +855,10 @@ function refillMacaoDrawPileIfNeeded(room) {
   room.discardPile = [top];
 }
 
-function canPlayOnTop(card, topCard, attackActive) {
+function canPlayOnTop(card, topCard, attackActive, demandedSuit) {
   if (!topCard) return true;
 
+  const effectiveSuit = (topCard.rank === '7' && demandedSuit) ? demandedSuit : topCard.suit;
   const topIsRedJoker = topCard.rank === 'JOKER_RED';
   const topIsBlackJoker = topCard.rank === 'JOKER_BLACK';
 
@@ -896,9 +911,9 @@ function canPlayOnTop(card, topCard, attackActive) {
     return false;
   }
 
-  // normal: potrivim dupa culoare sau rang, As-ul poate fi pus oricand, jokerii oricand
+  // normal: potrivim dupa culoare sau rang (pentru 7 folosim demandedSuit), As-ul poate fi pus oricand, jokerii oricand
   if (card.rank === 'A') return true;
-  if (card.suit === topCard.suit) return true;
+  if (card.suit === effectiveSuit) return true;
   if (card.rank === topCard.rank) return true;
   if (card.rank === 'JOKER_BLACK' || card.rank === 'JOKER_RED') return true;
   return false;
@@ -910,6 +925,21 @@ function macaoAttackValue(card) {
   if (card.rank === 'JOKER_BLACK') return 5; // joker negru: +5 carti
   if (card.rank === 'JOKER_RED') return 10; // joker rosu: +10 carti
   return 0;
+}
+
+function macaoAdvanceTurn(room, fromSeat) {
+  if (!room || !fromSeat) return;
+  if (!room.skipTurns) {
+    room.skipTurns = { p1: 0, p2: 0 };
+  }
+  const otherSeat = fromSeat === 'p1' ? 'p2' : 'p1';
+  const skips = room.skipTurns[otherSeat] || 0;
+  if (skips > 0) {
+    room.skipTurns[otherSeat] = skips - 1;
+    room.currentTurn = fromSeat;
+  } else {
+    room.currentTurn = otherSeat;
+  }
 }
 
 function applyMacaoPlay(room, seat, cardId) {
@@ -926,8 +956,16 @@ function applyMacaoPlay(room, seat, cardId) {
   const card = hand[idx];
   const top = room.discardPile.length ? room.discardPile[room.discardPile.length - 1] : null;
 
-  if (!canPlayOnTop(card, top, room.attackActive)) {
+  const freePlayActive = room.freePlaySeat === seat;
+
+  if (!freePlayActive && !canPlayOnTop(card, top, room.attackActive, room.demandedSuit)) {
     return { error: 'Nu poti juca aceasta carte acum.' };
+  }
+
+  room.demandedSuit = null;
+
+  if (freePlayActive) {
+    room.freePlaySeat = null;
   }
 
   // scoatem cartea din mana si o punem pe talon
@@ -935,22 +973,27 @@ function applyMacaoPlay(room, seat, cardId) {
   room.discardPile.push(card);
 
   // efectele cartilor speciale
+  let stoppedAttackWithFour = false;
   const attackVal = macaoAttackValue(card);
   if (attackVal > 0) {
     room.pendingDraw = (room.pendingDraw || 0) + attackVal;
     room.attackActive = true;
   } else if (card.rank === 'A') {
-    // As: adversarul sare o tura, iar jucatorul care a pus Asul pastreaza randul.
-    // Nu modificam culori, doar efectul de "stai o tura".
+    const otherSeat = seat === 'p1' ? 'p2' : 'p1';
+    if (!room.skipTurns) {
+      room.skipTurns = { p1: 0, p2: 0 };
+    }
+    room.skipTurns[otherSeat] = (room.skipTurns[otherSeat] || 0) + 1;
   }
 
-  // daca s-a jucat un 4 in timpul unui atac, acesta opreste obligatia de a trage carti
   if (card.rank === '4' && room.attackActive && room.pendingDraw > 0) {
     room.pendingDraw = 0;
     room.attackActive = false;
+    stoppedAttackWithFour = true;
+    const otherSeat = seat === 'p1' ? 'p2' : 'p1';
+    room.freePlaySeat = otherSeat;
   }
 
-  // verificam daca jucatorul a ramas fara carti
   if (hand.length === 0) {
     room.status = 'finished';
     ['p1', 'p2'].forEach((s) => {
@@ -962,10 +1005,12 @@ function applyMacaoPlay(room, seat, cardId) {
     return { ok: true, finished: true };
   }
 
-  // schimbam tura in mod normal, DAR daca s-a pus As, jucatorul isi pastreaza randul
-  if (card.rank !== 'A') {
-    room.currentTurn = room.currentTurn === 'p1' ? 'p2' : 'p1';
+  if (card.rank === '7') {
+    room.pendingSuitChoice = seat;
+    return { ok: true, finished: false };
   }
+
+  macaoAdvanceTurn(room, seat);
   return { ok: true, finished: false };
 }
 
@@ -975,6 +1020,7 @@ function applyMacaoDraw(room, seat) {
   }
 
   const hand = room.hands[seat] || [];
+  room.freePlaySeat = null;
   let cardsToDraw = 1;
   if (room.attackActive && room.pendingDraw > 0) {
     cardsToDraw = room.pendingDraw;
@@ -992,9 +1038,121 @@ function applyMacaoDraw(room, seat) {
   // dupa ce ai tras penalizarea, atacul se opreste si tura trece la adversar
   room.pendingDraw = 0;
   room.attackActive = false;
-  room.currentTurn = room.currentTurn === 'p1' ? 'p2' : 'p1';
+  macaoAdvanceTurn(room, seat);
 
   return { ok: true };
+}
+
+function applyMacaoPlayPairs(room, seat, cardIds) {
+  if (room.currentTurn !== seat || room.status !== 'active') {
+    return { error: 'Nu este randul tau sau jocul nu este activ.' };
+  }
+  if (room.pendingSuitChoice) {
+    return { error: 'Alege mai intai culoarea pentru 7.' };
+  }
+
+  const hand = room.hands[seat] || [];
+  if (!Array.isArray(cardIds) || cardIds.length < 2 || cardIds.length % 2 !== 0) {
+    return { error: 'Selecteaza un numar par de carti (perechi).' };
+  }
+
+  const uniq = new Set(cardIds);
+  if (uniq.size !== cardIds.length) {
+    return { error: 'Aceeasi carte nu poate fi selectata de doua ori.' };
+  }
+
+  const cards = [];
+  for (const id of cardIds) {
+    const idx = hand.findIndex((c) => c.id === id);
+    if (idx === -1) return { error: 'Nu ai toate cartile selectate in mana.' };
+    cards.push(hand[idx]);
+  }
+
+  for (let i = 0; i < cards.length; i += 2) {
+    if (cards[i].rank !== cards[i + 1].rank) {
+      return { error: 'Cartile trebuie sa formeze perechi de acelasi fel (acelasi numar/symbol).' };
+    }
+  }
+
+  const top = room.discardPile.length ? room.discardPile[room.discardPile.length - 1] : null;
+  if (!canPlayOnTop(cards[0], top, room.attackActive, room.demandedSuit)) {
+    return { error: 'Prima carte din pereche nu se potriveste cu talonul.' };
+  }
+
+  room.demandedSuit = null;
+
+  for (let i = cards.length - 1; i >= 0; i--) {
+    const idx = hand.findIndex((x) => x.id === cards[i].id);
+    if (idx !== -1) hand.splice(idx, 1);
+  }
+  for (const c of cards) {
+    room.discardPile.push(c);
+  }
+
+  const lastCard = cards[cards.length - 1];
+  let totalAttack = 0;
+  let hasFour = false;
+  let aceCount = 0;
+  for (const c of cards) {
+    totalAttack += macaoAttackValue(c);
+    if (c.rank === '4') hasFour = true;
+    if (c.rank === 'A') aceCount += 1;
+  }
+  let stoppedAttackWithFour = false;
+  const hadAttackBefore = room.attackActive && room.pendingDraw > 0;
+  if (hasFour && totalAttack > 0) {
+    room.pendingDraw = 0;
+    room.attackActive = false;
+    if (hadAttackBefore) {
+      stoppedAttackWithFour = true;
+      const otherSeat = seat === 'p1' ? 'p2' : 'p1';
+      room.freePlaySeat = otherSeat;
+    }
+  } else if (totalAttack > 0) {
+    room.pendingDraw = (room.pendingDraw || 0) + totalAttack;
+    room.attackActive = true;
+  }
+
+  if (hand.length === 0) {
+    room.status = 'finished';
+    ['p1', 'p2'].forEach((s) => {
+      const p = room.players[s];
+      if (!p || !p.ws) return;
+      const winner = s === seat ? 'you' : 'opponent';
+      send(p.ws, { type: 'macao_game_over', winner });
+    });
+    return { ok: true };
+  }
+
+  const otherSeat = seat === 'p1' ? 'p2' : 'p1';
+  if (aceCount > 0) {
+    if (!room.skipTurns) {
+      room.skipTurns = { p1: 0, p2: 0 };
+    }
+    room.skipTurns[otherSeat] = (room.skipTurns[otherSeat] || 0) + aceCount;
+  }
+
+  if (lastCard.rank === '7') {
+    room.pendingSuitChoice = seat;
+    return { ok: true };
+  }
+  macaoAdvanceTurn(room, seat);
+  return { ok: true };
+}
+
+function handleMacaoPlayPairs(ws, cardIds) {
+  const found = findMacaoPlayer(ws);
+  if (!found) {
+    send(ws, { type: 'macao_error', message: 'Nu esti intr-o camera.' });
+    return;
+  }
+  const { room, seat } = found;
+  const result = applyMacaoPlayPairs(room, seat, cardIds);
+  if (result.error) {
+    send(ws, { type: 'macao_error', message: result.error });
+    return;
+  }
+  broadcastMacaoState(room);
 }
 
 // ----------------------- HANGMAN HELPERS -----------------------
@@ -1292,7 +1450,7 @@ function handleMemoryFlip(ws, index) {
           room.currentTurn = otherKey;
         }
         broadcastMemoryState(room);
-      }, 900);
+      }, 1500);
     }
   }
 }
@@ -1378,12 +1536,39 @@ function handleMacaoPlay(ws, cardId) {
   }
 
   const { room, seat } = found;
+  if (room.pendingSuitChoice === seat) {
+    send(ws, { type: 'macao_error', message: 'Alege mai intai culoarea pentru 7.' });
+    return;
+  }
+
   const result = applyMacaoPlay(room, seat, cardId);
   if (result.error) {
     send(ws, { type: 'macao_error', message: result.error });
     return;
   }
 
+  broadcastMacaoState(room);
+}
+
+function handleMacaoChooseSuit(ws, suit) {
+  const found = findMacaoPlayer(ws);
+  if (!found) {
+    send(ws, { type: 'macao_error', message: 'Nu esti intr-o camera.' });
+    return;
+  }
+  const { room, seat } = found;
+  if (room.pendingSuitChoice !== seat) {
+    send(ws, { type: 'macao_error', message: 'Nu astepti alegerea culorii.' });
+    return;
+  }
+  const validSuits = ['heart', 'diamond', 'club', 'spade'];
+  if (!validSuits.includes(suit)) {
+    send(ws, { type: 'macao_error', message: 'Culoare invalida.' });
+    return;
+  }
+  room.demandedSuit = suit;
+  room.pendingSuitChoice = null;
+  macaoAdvanceTurn(room, seat);
   broadcastMacaoState(room);
 }
 
@@ -2373,6 +2558,12 @@ function handleMessage(ws, raw) {
     case 'macao_play':
       handleMacaoPlay(ws, msg.cardId);
       break;
+    case 'macao_choose_suit':
+      handleMacaoChooseSuit(ws, msg.suit);
+      break;
+    case 'macao_play_pairs':
+      handleMacaoPlayPairs(ws, msg.cardIds);
+      break;
     case 'macao_draw':
       handleMacaoDraw(ws);
       break;
@@ -2411,8 +2602,15 @@ function handleMessage(ws, raw) {
   }
 }
 
+const HEARTBEAT_INTERVAL_MS = 25000;
+
 wss.on('connection', (ws) => {
   log('Client conectat');
+  ws.isAlive = true;
+
+  ws.on('pong', () => {
+    ws.isAlive = true;
+  });
 
   ws.on('message', (data) => handleMessage(ws, data));
 
@@ -2424,6 +2622,18 @@ wss.on('connection', (ws) => {
   ws.on('error', (err) => {
     log('Eroare WebSocket', err.message);
   });
+});
+
+wss.on('listening', () => {
+  setInterval(() => {
+    wss.clients.forEach((ws) => {
+      if (ws.isAlive === false) {
+        return ws.terminate();
+      }
+      ws.isAlive = false;
+      ws.ping();
+    });
+  }, HEARTBEAT_INTERVAL_MS);
 });
 
 log(`WebSocket server pornit pe portul ${PORT}`);

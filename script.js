@@ -222,9 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = 'index.html';
             return;
         }
-
-        // Dacă suntem în univers, încercăm să afișăm și următoarea întâlnire planificată (din planner)
-        loadNextMeetingForUniverse();
+        // Countdown-ul pentru următoarea întâlnire se inițiază din next-meeting.js
     }
 
     // "Soft back" pentru paginile secundare (puzzle, timeline, jocuri, etc.)
@@ -257,60 +255,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// ==========================================
-// 6. ÎNTÂLNIRE PLANIFICATĂ (UNIVERS 2222)
-// ==========================================
-
-async function loadNextMeetingForUniverse() {
-    const card = document.getElementById('next-meeting-card');
-    const textEl = document.getElementById('next-meeting-text');
-    if (!card || !textEl) return;
-
-    if (typeof _supabase === 'undefined') {
-        card.style.display = 'none';
-        return;
-    }
-
-    try {
-        const nowIso = new Date().toISOString();
-        const { data, error } = await _supabase
-            .from('PlannerEvents')
-            .select('title, event_time')
-            .gt('event_time', nowIso)
-            .order('event_time', { ascending: true })
-            .limit(1);
-
-        if (error || !data || data.length === 0) {
-            card.style.display = 'none';
-            return;
-        }
-
-        const ev = data[0];
-        const d = new Date(ev.event_time);
-        if (!d || Number.isNaN(d.getTime()) || d.getTime() <= Date.now()) {
-            card.style.display = 'none';
-            return;
-        }
-
-        const title = (ev.title || 'Întâlnire specială').trim();
-        const dayStr = d.toLocaleDateString('ro-RO', {
-            weekday: 'long',
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric',
-        });
-        const timeStr = d.toLocaleTimeString('ro-RO', {
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-
-        textEl.textContent = `${title} – ${dayStr}, ora ${timeStr}`;
-        card.style.display = 'block';
-    } catch (err) {
-        console.error('Eroare la încărcarea întâlnirii următoare:', err);
-        card.style.display = 'none';
-    }
-}
+// Funcția veche a fost înlocuită cu versiunea nouă din next-meeting.js
+// care include countdown live cu zile, ore, minute, secunde
 
 // ==========================================
 // 2. ANIMAȚIA CU ELEMENTE CARE CAD

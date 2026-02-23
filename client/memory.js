@@ -14,6 +14,17 @@ let memoryOpponentScore = 0;
 let memoryCurrentTurn = null; // 'you' sau 'opponent'
 let memoryFlippedIndexes = []; // indexii temporar intoarși
 let memoryImageMap = null; // pairId -> url din galerie
+let memoryLastBoardSignature = null; // pentru a amesteca imaginile la fiecare joc nou
+let memoryImageBoardSignature = null;
+let memoryImageUrlsCache = null;
+
+function memoryHashString(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  }
+  return h || 1;
+}
 
 function mgGetLoggedInUser() {
   if (typeof getLoggedInUser === 'function') return getLoggedInUser();
@@ -145,35 +156,63 @@ async function ensureMemoryImagesForBoard(state) {
 
   if (!pairIds.length) return;
 
-  if (!memoryImageMap) {
-    memoryImageMap = {};
+  const boardKey = (state.board || [])
+    .map((c) => String(c.pairId))
+    .join(',');
+  const signature = `${state.roomCode || ''}|${boardKey}`;
+  if (memoryImageBoardSignature === signature && memoryImageMap) {
+    return;
   }
 
-  const missing = pairIds.filter((id) => !(id in memoryImageMap));
-  if (!missing.length) return;
-
   // Avem nevoie de poze din galerie doar daca exista clientul Supabase global
-  if (typeof _supabase === 'undefined') return;
+  if (typeof _supabase === 'undefined') {
+    memoryImageMap = {};
+    memoryImageBoardSignature = signature;
+    return;
+  }
 
   try {
-    const { data, error } = await _supabase
-      .from('Poze')
-      .select('id, url')
-      .order('id', { ascending: true })
-      .limit(60);
+    if (!memoryImageUrlsCache) {
+      const { data, error } = await _supabase
+        .from('Poze')
+        .select('id, url')
+        .order('id', { ascending: true })
+        .limit(60);
 
-    if (error || !data || !data.length) {
-      console.error('Nu am putut incarca poze pentru Memory Game:', error || 'fara date');
-      return;
+      if (error || !data || !data.length) {
+        console.error('Nu am putut incarca poze pentru Memory Game:', error || 'fara date');
+        memoryImageMap = {};
+        memoryImageBoardSignature = signature;
+        return;
+      }
+
+      memoryImageUrlsCache = data.map((p) => p.url);
     }
 
-    const urls = data.map((p) => p.url);
-    const sortedIds = missing.slice().sort((a, b) => a - b);
+    const urls = memoryImageUrlsCache.slice();
 
-    sortedIds.forEach((pid, idx) => {
+    const seedObj = { value: memoryHashString(signature) };
+    function seededRandom() {
+      let x = seedObj.value;
+      x ^= x << 13;
+      x ^= x >>> 17;
+      x ^= x << 5;
+      seedObj.value = x >>> 0;
+      return (seedObj.value % 1000000000) / 1000000000;
+    }
+
+    for (let i = urls.length - 1; i > 0; i--) {
+      const j = Math.floor(seededRandom() * (i + 1));
+      [urls[i], urls[j]] = [urls[j], urls[i]];
+    }
+
+    memoryImageMap = {};
+    const uniquePairIds = Array.from(new Set(pairIds));
+    uniquePairIds.forEach((pid, idx) => {
       const url = urls[idx % urls.length];
       memoryImageMap[pid] = url;
     });
+    memoryImageBoardSignature = signature;
   } catch (e) {
     console.error('Eroare la incarcarea pozelor pentru Memory Game:', e);
   }
@@ -283,6 +322,15 @@ function initMemoryGame() {
 
 async function applyMemoryState(state) {
   if (!state) return;
+
+  // daca tabla s-a schimbat (joc nou sau rematch), resetam mapping-ul de poze
+  if (Array.isArray(state.board)) {
+    const signature = state.board.map((c) => c.pairId).join(',');
+    if (signature && signature !== memoryLastBoardSignature) {
+      memoryLastBoardSignature = signature;
+      memoryImageMap = null;
+    }
+  }
 
   await ensureMemoryImagesForBoard(state);
 

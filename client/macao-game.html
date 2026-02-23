@@ -47,8 +47,22 @@
           <span id="macao-turn-indicator">Așteptăm jucători...</span>
           <span id="macao-attack-info"></span>
         </div>
+        <div id="macao-suit-picker" class="macao-suit-picker" style="display: none;">
+          <button type="button" class="macao-suit-btn" data-suit="diamond" title="Romb">♦</button>
+          <button type="button" class="macao-suit-btn" data-suit="heart" title="Inima roșie">♥</button>
+          <button type="button" class="macao-suit-btn" data-suit="club" title="Trefla">♣</button>
+          <button type="button" class="macao-suit-btn" data-suit="spade" title="Pica">♠</button>
+        </div>
         <div class="macao-actions">
           <button id="macao-draw-btn" class="btn-primary">Trage carte</button>
+          <button id="macao-pairs-btn" class="btn-secondary macao-pairs-btn" style="display: none;">Aruncă perechi</button>
+        </div>
+        <div id="macao-pair-confirm-wrap" class="macao-pair-confirm-wrap" style="display: none;">
+          <span class="macao-pair-hint">Selectează perechile în ordine: prima carte, apoi perechea ei.</span>
+          <div class="macao-pair-btns">
+            <button type="button" id="macao-pair-confirm" class="btn-primary">Pune în talon</button>
+            <button type="button" id="macao-pair-cancel" class="btn-secondary">Anulează</button>
+          </div>
         </div>
       </section>
 

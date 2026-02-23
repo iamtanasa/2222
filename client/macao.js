@@ -208,6 +208,69 @@ function initMacaoGame() {
     });
   }
 
+  document.querySelectorAll('.macao-suit-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const suit = btn.dataset.suit;
+      if (suit) macaoSend({ type: 'macao_choose_suit', suit });
+    });
+  });
+
+  const pairsBtn = document.getElementById('macao-pairs-btn');
+  if (pairsBtn) {
+    pairsBtn.addEventListener('click', () => {
+      macaoPairMode = true;
+      macaoSelectedForPairs = [];
+      macaoUpdatePairSelectionUI();
+      const wrap = document.getElementById('macao-pair-confirm-wrap');
+      if (wrap) wrap.style.display = 'flex';
+      if (pairsBtn) pairsBtn.style.display = 'none';
+    });
+  }
+
+  const pairConfirm = document.getElementById('macao-pair-confirm');
+  const pairCancel = document.getElementById('macao-pair-cancel');
+  if (pairConfirm) {
+    pairConfirm.addEventListener('click', () => {
+      const state = macaoLastState;
+      if (!state || macaoSelectedForPairs.length < 2 || macaoSelectedForPairs.length % 2 !== 0) {
+        alert('Selectează perechi de carti de acelasi fel (numar par de carti).');
+        return;
+      }
+      const hand = state.yourHand || [];
+      const cards = macaoSelectedForPairs.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
+      if (cards.length !== macaoSelectedForPairs.length) return;
+      for (let i = 0; i < cards.length; i += 2) {
+        if (cards[i].rank !== cards[i + 1].rank) {
+          alert('Cartile trebuie sa formeze perechi de acelasi fel.');
+          return;
+        }
+      }
+      const top = state.topDiscard;
+      if (!macaoClientCanPlayOnTop(cards[0], top, state.attackActive, state.demandedSuit)) {
+        alert('Prima carte din selectie trebuie sa se potriveasca cu talonul.');
+        return;
+      }
+      macaoSend({ type: 'macao_play_pairs', cardIds: macaoSelectedForPairs });
+      macaoPairMode = false;
+      macaoSelectedForPairs = [];
+      const wrap = document.getElementById('macao-pair-confirm-wrap');
+      if (wrap) wrap.style.display = 'none';
+    });
+  }
+  if (pairCancel) {
+    pairCancel.addEventListener('click', () => {
+      macaoPairMode = false;
+      macaoSelectedForPairs = [];
+      const wrap = document.getElementById('macao-pair-confirm-wrap');
+      if (wrap) wrap.style.display = 'none';
+      macaoUpdatePairSelectionUI();
+      const pairBtnEl = document.getElementById('macao-pairs-btn');
+      if (pairBtnEl && macaoLastState && macaoHasPairsAndPlayable(macaoLastState)) {
+        pairBtnEl.style.display = 'inline-block';
+      }
+    });
+  }
+
   macaoConnectWebSocket()
     .then(() => {
       macaoSend({
@@ -258,6 +321,62 @@ let macaoPrevHandIds = [];
 let macaoPrevOppCount = 0;
 let macaoPrevTopDiscardId = null;
 
+let macaoPairMode = false;
+let macaoSelectedForPairs = [];
+
+function macaoClientCanPlayOnTop(card, topCard, attackActive, demandedSuit) {
+  if (!topCard) return true;
+  const effectiveSuit = (topCard.rank === '7' && demandedSuit) ? demandedSuit : topCard.suit;
+  if (card.rank === 'A' || card.rank === 'JOKER_BLACK' || card.rank === 'JOKER_RED') return true;
+  if (attackActive) {
+    return ['2', '3', '4', 'JOKER_BLACK', 'JOKER_RED'].includes(card.rank);
+  }
+  if (card.suit === effectiveSuit || card.rank === topCard.rank) return true;
+  return false;
+}
+
+function macaoHasPairsAndPlayable(state) {
+  const hand = state.yourHand || [];
+  if (hand.length < 2 || !state.yourTurn || state.status !== 'active' || state.pendingSuitChoice) return false;
+  const byRank = {};
+  hand.forEach((c) => {
+    const r = c.rank;
+    if (!byRank[r]) byRank[r] = [];
+    byRank[r].push(c);
+  });
+  const hasPair = Object.values(byRank).some((arr) => arr.length >= 2);
+  if (!hasPair) return false;
+  const top = state.topDiscard;
+  return hand.some((c) => macaoClientCanPlayOnTop(c, top, state.attackActive, state.demandedSuit));
+}
+
+function macaoOnCardClick(card) {
+  const state = macaoLastState;
+  if (!state || state.status !== 'active') return;
+
+  if (macaoPairMode) {
+    const idx = macaoSelectedForPairs.indexOf(card.id);
+    if (idx === -1) macaoSelectedForPairs.push(card.id);
+    else macaoSelectedForPairs.splice(idx, 1);
+    macaoUpdatePairSelectionUI();
+    return;
+  }
+
+  if (state.pendingSuitChoice) return;
+  if (!state.yourTurn) return;
+  macaoSend({ type: 'macao_play', cardId: card.id });
+}
+
+function macaoUpdatePairSelectionUI() {
+  const playerHandEl = document.getElementById('macao-player-hand');
+  if (!playerHandEl) return;
+  const cards = playerHandEl.querySelectorAll('.macao-card-face[data-card-id]');
+  cards.forEach((el) => {
+    const id = el.dataset.cardId;
+    el.classList.toggle('macao-card-selected', macaoSelectedForPairs.includes(id));
+  });
+}
+
 function applyMacaoState(state) {
   if (!state) return;
 
@@ -300,11 +419,17 @@ function applyMacaoState(state) {
   }
 
   if (attackInfo) {
+    let infoText = '';
     if (state.attackActive && state.pendingDraw > 0) {
-      attackInfo.textContent = `Atac activ: trebuie trase ${state.pendingDraw} carti.`;
-    } else {
-      attackInfo.textContent = '';
+      infoText = `Atac activ: trebuie trase ${state.pendingDraw} carti.`;
     }
+    if (state.turnsToSkip && state.turnsToSkip > 0) {
+      const t = state.turnsToSkip;
+      const turnsLabel = t === 1 ? 'tura' : 'ture';
+      const skipText = `Mai trebuie sa stai ${t} ${turnsLabel}.`;
+      infoText = infoText ? `${infoText} ${skipText}` : skipText;
+    }
+    attackInfo.textContent = infoText;
   }
 
   // ascundem fereastra de game over cand jocul nu este terminat
@@ -331,28 +456,30 @@ function applyMacaoState(state) {
   }
 
   if (playerHandEl) {
-    const currentIds = (state.yourHand || []).map(c => c.id);
-    const newIds = currentIds.filter(id => !macaoPrevHandIds.includes(id));
-    
-    playerHandEl.innerHTML = '';
-    (state.yourHand || []).forEach((card, idx) => {
-      const div = document.createElement('div');
-      div.className = 'macao-card macao-card-face';
-      // Animate newly added cards
-      if (newIds.includes(card.id)) {
-        div.classList.add('macao-card-appear');
-        const newIdx = newIds.indexOf(card.id);
-        div.style.animationDelay = `${newIdx * 0.08}s`;
-      }
-      div.innerHTML = renderMacaoCardFace(card);
-      div.dataset.cardId = card.id;
-      div.addEventListener('click', () => {
-        if (!state.yourTurn || state.status !== 'active') return;
-        macaoSend({ type: 'macao_play', cardId: card.id });
+    const hand = state.yourHand || [];
+    const currentIds = hand.map(c => c.id);
+    const handUnchanged =
+      currentIds.length === macaoPrevHandIds.length &&
+      currentIds.every((id, i) => id === macaoPrevHandIds[i]);
+
+    if (!handUnchanged) {
+      const newIds = currentIds.filter(id => !macaoPrevHandIds.includes(id));
+      playerHandEl.innerHTML = '';
+      hand.forEach((card, idx) => {
+        const div = document.createElement('div');
+        div.className = 'macao-card macao-card-face';
+        if (newIds.includes(card.id)) {
+          div.classList.add('macao-card-appear');
+          const newIdx = newIds.indexOf(card.id);
+          div.style.animationDelay = `${newIdx * 0.08}s`;
+        }
+        div.innerHTML = renderMacaoCardFace(card);
+        div.dataset.cardId = card.id;
+        div.addEventListener('click', () => macaoOnCardClick(card));
+        playerHandEl.appendChild(div);
       });
-      playerHandEl.appendChild(div);
-    });
-    macaoPrevHandIds = currentIds;
+      macaoPrevHandIds = currentIds;
+    }
   }
 
   if (drawCountEl) {
@@ -375,6 +502,33 @@ function applyMacaoState(state) {
 
   if (drawBtn) {
     drawBtn.disabled = !(state.status === 'active' && state.yourTurn);
+  }
+
+  if (!state.yourTurn || state.status !== 'active' || state.pendingSuitChoice) {
+    macaoPairMode = false;
+    macaoSelectedForPairs = [];
+  }
+
+  const suitPickerEl = document.getElementById('macao-suit-picker');
+  if (suitPickerEl) {
+    suitPickerEl.style.display = state.pendingSuitChoice ? 'flex' : 'none';
+  }
+
+  const pairBtnEl = document.getElementById('macao-pairs-btn');
+  const pairConfirmWrap = document.getElementById('macao-pair-confirm-wrap');
+  if (pairBtnEl) {
+    const showPairBtn = state.yourTurn && state.status === 'active' && !state.pendingSuitChoice && macaoHasPairsAndPlayable(state);
+    pairBtnEl.style.display = showPairBtn && !macaoPairMode ? 'inline-block' : 'none';
+  }
+  if (pairConfirmWrap) {
+    pairConfirmWrap.style.display = macaoPairMode ? 'flex' : 'none';
+  }
+
+  if (macaoPairMode) {
+    macaoUpdatePairSelectionUI();
+  } else {
+    const cards = document.getElementById('macao-player-hand');
+    if (cards) cards.querySelectorAll('.macao-card-selected').forEach((el) => el.classList.remove('macao-card-selected'));
   }
 
   // cand primim un state "finished", afisam si fereastra de game over cu info de baza

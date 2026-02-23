@@ -18,30 +18,31 @@ const SYMBOLS = [
   { id: 'star',       emoji: '⭐', type: 'emoji' },  // scatter
 ];
 
-// Weighted reel strip (more low-value, fewer high-value)
+// Weighted reel strip — balanced: cherry slightly less, others more, stars rarer
 // Index into SYMBOLS array
 const REEL_STRIP = [
-  0, 0, 0, 0, 0, 0, 0, 0,  // cherry (8) — foarte comun
-  1, 1, 1, 1, 1, 1,          // lemon (6)
-  2, 2, 2, 2, 2, 2,          // orange (6)
-  3, 3, 3, 3, 3,              // plum (5)
-  4, 4, 4, 4,                  // watermelon (4)
-  5, 5, 5,                      // grapes (3)
-  6, 6,                          // seven (2)
-  7, 7, 7,                      // star/scatter (3)
+  0, 0, 0, 0, 0, 0, 0,                    // cherry (7) — slightly reduced
+  1, 1, 1, 1, 1,                           // lemon (5) — increased
+  2, 2, 2, 2, 2,                           // orange (5) — increased
+  3, 3, 3, 3,                              // plum (4) — increased
+  4, 4, 4,                                 // watermelon (3) — increased
+  5, 5,                                    // grapes (2) — unchanged
+  6, 6,                                    // seven (2) — unchanged
+  7,                                        // star/scatter (1) — reduced from 2
+  0, 1, 2, 3, 4, 5, 6                     // blanks (7) — reduced
 ];
 
-// ── Paytable (multipliers per bet-per-line) ──
+// ── Paytable (multipliers per bet-per-line) — reduced for realism ──
 // Format: { symbolId: { 2: mult, 3: mult, 4: mult, 5: mult } }
 const PAYTABLE = {
-  cherry:     { 2: 4,   3: 10,   4: 40,   5: 100 },
-  lemon:      { 3: 10,   4: 40,   5: 100 },
-  orange:     { 3: 16,  4: 50,   5: 150 },
-  plum:       { 3: 24,  4: 80,   5: 200 },
-  watermelon: { 3: 40,  4: 120,  5: 400 },
+  cherry:     { 2: 2,   3: 4,    4: 12,   5: 30 },
+  lemon:      { 3: 8,   4: 20,   5: 50 },
+  orange:     { 3: 10,  4: 25,   5: 75 },
+  plum:       { 3: 12,  4: 40,   5: 100 },
+  watermelon: { 3: 20,  4: 60,   5: 200 },
   grapes:     { 3: 60,  4: 200,  5: 600 },
   seven:      { 3: 200, 4: 1000, 5: 5000 },
-  star:       { 3: 5,   4: 20,   5: 100 },  // scatter pays on any position
+  star:       { 3: 3,   4: 10,   5: 50 },  // scatter pays on any position
 };
 
 // ── 5 Paylines (row indices: 0=top, 1=mid, 2=bottom) ──
@@ -162,29 +163,42 @@ function generateGrid() {
     grid.push(column);
   }
 
-  // ~35% chance: nudge a near-win into a small win for better feel
-  if (Math.random() < 0.35) {
+  // 23% chance: nudge a near-win into a small win
+  if (Math.random() < 0.23) {
     nudgeGrid(grid);
   }
 
   return grid;
 }
 
-// Nudge: pick a random payline row, pick a common symbol, force 3 in a row
+// Nudge: pick a random payline row, pick a common symbol, force 3 in a row (balanced)
 function nudgeGrid(grid) {
   const row = Math.floor(Math.random() * 3); // 0, 1, or 2
-  // Pick a common fruit (cherry, lemon, orange, plum)
-  const commonSymbols = [0, 1, 2, 3];
-  const sym = commonSymbols[Math.floor(Math.random() * commonSymbols.length)];
+  // Pick from symbols - cherry/lemon/orange most common, plum/watermelon rare, grapes/seven very rare, stars rare
+  const rand = Math.random();
+  let sym;
+  if (rand < 0.60) {
+    // 60% - cherry, lemon, orange
+    sym = Math.floor(Math.random() * 3);
+  } else if (rand < 0.85) {
+    // 25% - plum, watermelon
+    sym = 3 + Math.floor(Math.random() * 2);
+  } else if (rand < 0.95) {
+    // 10% - grapes, seven
+    sym = 5 + Math.floor(Math.random() * 2);
+  } else {
+    // 5% - star (scatter)
+    sym = 7;
+  }
   // Force first 3 reels to have this symbol on this row
   for (let col = 0; col < 3; col++) {
     grid[col][row] = sym;
   }
-  // Small chance to extend to 4
-  if (Math.random() < 0.2) {
+  // Chance to extend to 4 (16%)
+  if (Math.random() < 0.16) {
     grid[3][row] = sym;
-    // Very small chance for 5
-    if (Math.random() < 0.15) {
+    // Chance for 5 (8%)
+    if (Math.random() < 0.08) {
       grid[4][row] = sym;
     }
   }
