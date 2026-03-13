@@ -2,10 +2,23 @@
 // Server WebSocket pentru jocul Bulls & Cows 1v1
 // Extins pentru Spanzuratoarea 2-jucatori si Memory Game 2-jucatori
 
+const http = require('http');
 const WebSocket = require('ws');
 
 const PORT = process.env.PORT || 8080;
-const wss = new WebSocket.Server({ port: PORT });
+
+// HTTP server pentru health-check (Render are nevoie de un endpoint HTTP activ)
+const httpServer = http.createServer((req, res) => {
+  if (req.url === '/health' || req.url === '/') {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({ status: 'ok', uptime: process.uptime() }));
+  } else {
+    res.writeHead(404);
+    res.end();
+  }
+});
+
+const wss = new WebSocket.Server({ server: httpServer });
 
 // roomCode -> room
 // room = {
@@ -911,8 +924,9 @@ function canPlayOnTop(card, topCard, attackActive, demandedSuit) {
     return false;
   }
 
-  // normal: potrivim dupa culoare sau rang (pentru 7 folosim demandedSuit), As-ul poate fi pus oricand, jokerii oricand
+  // normal: potrivim dupa culoare sau rang (pentru 7 folosim demandedSuit), As-ul si 7 pot fi puse oricand, jokerii oricand
   if (card.rank === 'A') return true;
+  if (card.rank === '7') return true;
   if (card.suit === effectiveSuit) return true;
   if (card.rank === topCard.rank) return true;
   if (card.rank === 'JOKER_BLACK' || card.rank === 'JOKER_RED') return true;
@@ -1052,8 +1066,8 @@ function applyMacaoPlayPairs(room, seat, cardIds) {
   }
 
   const hand = room.hands[seat] || [];
-  if (!Array.isArray(cardIds) || cardIds.length < 2 || cardIds.length % 2 !== 0) {
-    return { error: 'Selecteaza un numar par de carti (perechi).' };
+  if (!Array.isArray(cardIds) || cardIds.length < 2) {
+    return { error: 'Selecteaza cel putin 2 carti.' };
   }
 
   const uniq = new Set(cardIds);
@@ -1068,10 +1082,19 @@ function applyMacaoPlayPairs(room, seat, cardIds) {
     cards.push(hand[idx]);
   }
 
-  for (let i = 0; i < cards.length; i += 2) {
-    if (cards[i].rank !== cards[i + 1].rank) {
-      return { error: 'Cartile trebuie sa formeze perechi de acelasi fel (acelasi numar/symbol).' };
+  // Grupam cartile consecutive dupa rang si verificam ca formeaza grupuri valide
+  const groups = [];
+  let gi = 0;
+  while (gi < cards.length) {
+    const groupRank = cards[gi].rank;
+    let ge = gi + 1;
+    while (ge < cards.length && cards[ge].rank === groupRank) ge++;
+    const groupSize = ge - gi;
+    if (groupSize < 2) {
+      return { error: 'Fiecare grup de carti trebuie sa aiba cel putin 2 carti de acelasi fel.' };
     }
+    groups.push({ rank: groupRank, start: gi, end: ge });
+    gi = ge;
   }
 
   const top = room.discardPile.length ? room.discardPile[room.discardPile.length - 1] : null;
@@ -1325,8 +1348,15 @@ function handleMemoryJoinRoom(ws, roomCode, playerName, mode) {
     handleMemoryDisconnect(ws);
   }
 
+  // Reconectare: daca exista deja un jucator cu acelasi nume, actualizam ws-ul
   let sideKey = null;
-  if (!room.players.a) {
+  if (room.players.a && room.players.a.name === playerName) {
+    sideKey = 'a';
+    room.players.a.ws = ws;
+  } else if (room.players.b && room.players.b.name === playerName) {
+    sideKey = 'b';
+    room.players.b.ws = ws;
+  } else if (!room.players.a) {
     sideKey = 'a';
     room.players.a = { name: playerName, ws };
     room.mode = normalizedMode;
@@ -1509,8 +1539,15 @@ function handleMacaoJoinRoom(ws, roomCode, playerName) {
     handleMacaoDisconnect(ws);
   }
 
+  // Reconectare: daca exista deja un jucator cu acelasi nume, actualizam ws-ul
   let seat = null;
-  if (!room.players.p1) {
+  if (room.players.p1 && room.players.p1.name === playerName) {
+    seat = 'p1';
+    room.players.p1.ws = ws;
+  } else if (room.players.p2 && room.players.p2.name === playerName) {
+    seat = 'p2';
+    room.players.p2.ws = ws;
+  } else if (!room.players.p1) {
     seat = 'p1';
     room.players.p1 = { name: playerName, ws };
   } else if (!room.players.p2) {
@@ -1641,8 +1678,15 @@ function handleRazboiJoinRoom(ws, roomCode, playerName) {
     handleRazboiDisconnect(ws);
   }
 
+  // Reconectare: daca exista deja un jucator cu acelasi nume, actualizam ws-ul
   let seat = null;
-  if (!room.players.p1) {
+  if (room.players.p1 && room.players.p1.name === playerName) {
+    seat = 'p1';
+    room.players.p1.ws = ws;
+  } else if (room.players.p2 && room.players.p2.name === playerName) {
+    seat = 'p2';
+    room.players.p2.ws = ws;
+  } else if (!room.players.p1) {
     seat = 'p1';
     room.players.p1 = { name: playerName, ws };
   } else if (!room.players.p2) {
@@ -1737,8 +1781,15 @@ function handleTrianglesJoinRoom(ws, roomCode, playerName) {
     handleTrianglesDisconnect(ws);
   }
 
+  // Reconectare: daca exista deja un jucator cu acelasi nume, actualizam ws-ul
   let seat = null;
-  if (!room.players.p1) {
+  if (room.players.p1 && room.players.p1.name === playerName) {
+    seat = 'p1';
+    room.players.p1.ws = ws;
+  } else if (room.players.p2 && room.players.p2.name === playerName) {
+    seat = 'p2';
+    room.players.p2.ws = ws;
+  } else if (!room.players.p1) {
     seat = 'p1';
     room.players.p1 = { name: playerName, ws };
   } else if (!room.players.p2) {
@@ -1979,7 +2030,12 @@ function handleHangmanJoinRoom(ws, roomCode, playerName) {
     handleHangmanDisconnect(ws);
   }
 
-  if (!room.players.setter) {
+  // Reconectare: daca exista deja un jucator cu acelasi nume, actualizam ws-ul
+  if (room.players.setter && room.players.setter.name === playerName) {
+    room.players.setter.ws = ws;
+  } else if (room.players.guesser && room.players.guesser.name === playerName) {
+    room.players.guesser.ws = ws;
+  } else if (!room.players.setter) {
     room.players.setter = { name: playerName, ws };
   } else if (!room.players.guesser) {
     room.players.guesser = { name: playerName, ws };
@@ -2188,7 +2244,12 @@ function handleJoinRoom(ws, roomCode, playerName) {
     handleDisconnect(ws);
   }
 
-  if (!room.players.player1) {
+  // Reconectare: daca exista deja un jucator cu acelasi nume, actualizam ws-ul
+  if (room.players.player1 && room.players.player1.name === playerName) {
+    room.players.player1.ws = ws;
+  } else if (room.players.player2 && room.players.player2.name === playerName) {
+    room.players.player2.ws = ws;
+  } else if (!room.players.player1) {
     room.players.player1 = { name: playerName, ws, secret: null, guesses: [] };
   } else if (!room.players.player2) {
     room.players.player2 = { name: playerName, ws, secret: null, guesses: [] };
@@ -2612,7 +2673,20 @@ wss.on('connection', (ws) => {
     ws.isAlive = true;
   });
 
-  ws.on('message', (data) => handleMessage(ws, data));
+  ws.on('message', (data) => {
+    // Clientul trimite ping JSON pentru keep-alive; raspundem cu pong JSON
+    try {
+      const parsed = JSON.parse(data);
+      if (parsed.type === 'ping') {
+        ws.isAlive = true;
+        send(ws, { type: 'pong' });
+        return;
+      }
+    } catch (_) {
+      // nu e JSON valid, continuam normal
+    }
+    handleMessage(ws, data);
+  });
 
   ws.on('close', () => {
     log('Client deconectat');
@@ -2624,16 +2698,17 @@ wss.on('connection', (ws) => {
   });
 });
 
-wss.on('listening', () => {
-  setInterval(() => {
-    wss.clients.forEach((ws) => {
-      if (ws.isAlive === false) {
-        return ws.terminate();
-      }
-      ws.isAlive = false;
-      ws.ping();
-    });
-  }, HEARTBEAT_INTERVAL_MS);
-});
+// Heartbeat: verificam daca clientii mai raspund la ping
+setInterval(() => {
+  wss.clients.forEach((ws) => {
+    if (ws.isAlive === false) {
+      return ws.terminate();
+    }
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, HEARTBEAT_INTERVAL_MS);
 
-log(`WebSocket server pornit pe portul ${PORT}`);
+httpServer.listen(PORT, () => {
+  log(`WebSocket + HTTP server pornit pe portul ${PORT}`);
+});
