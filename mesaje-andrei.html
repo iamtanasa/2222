@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Scrie mesaje</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="page-entry">
+
+    <div class="main-container">
+        <div class="back-button" onclick="goBack()">← Înapoi</div>
+        <div class="main-icon">✍️</div>
+        <h1>Mesajele lui Andrei</h1>
+
+        <!-- Formular 1: Mesaj simplu -->
+        <div class="glass-card">
+            <h2 class="mesaj-andrei-title">💌 Mesaj simplu</h2>
+            <p class="portal-question">Acest mesaj va apărea în „Adevaratul mesaj al zilei"</p>
+            <div class="mesaj-andrei-form">
+                <textarea id="simple-msg-input" class="mesaj-andrei-input" placeholder="Scrie un mesaj frumos..." maxlength="500" rows="3"></textarea>
+                <button id="simple-msg-send" class="mesaj-andrei-btn">Trimite 💝</button>
+                <p id="simple-msg-status" class="mesaj-andrei-status"></p>
+            </div>
+        </div>
+
+        <!-- Formular 2: Mesaj programat -->
+        <div class="glass-card">
+            <h2 class="mesaj-andrei-title">📅 Mesaj programat</h2>
+            <p class="portal-question">Programează un mesaj care va apărea în „Starea ta" la data și ora aleasă</p>
+            <div class="mesaj-andrei-form">
+                <input type="text" id="sched-title-input" class="mesaj-andrei-input" placeholder="Titlul mesajului..." maxlength="200" style="height:auto;">
+                <textarea id="sched-msg-input" class="mesaj-andrei-input" placeholder="Scrie mesajul special..." maxlength="1000" rows="3"></textarea>
+
+                <div class="sched-datetime-row">
+                    <label class="sched-label">Data și ora:</label>
+                    <input type="datetime-local" id="sched-datetime" class="sched-datetime-input">
+                </div>
+
+                <div class="sched-image-section">
+                    <label class="sched-label">Efect special (opțional):</label>
+                    <div class="sched-effects-grid" id="sched-effects-grid">
+                        <button type="button" class="sched-effect-btn" data-effect="none">❌ Fără</button>
+                        <button type="button" class="sched-effect-btn" data-effect="fireworks">🎆 Artificii</button>
+                        <button type="button" class="sched-effect-btn" data-effect="hearts">💕 Inimioare</button>
+                        <button type="button" class="sched-effect-btn" data-effect="sparkles">✨ Sclipici</button>
+                        <button type="button" class="sched-effect-btn" data-effect="stars">⭐ Steluțe</button>
+                        <button type="button" class="sched-effect-btn" data-effect="confetti">🎉 Confetti</button>
+                        <button type="button" class="sched-effect-btn" data-effect="snow">❄️ Zăpadă</button>
+                        <button type="button" class="sched-effect-btn" data-effect="petals">🌸 Petale</button>
+                    </div>
+                </div>
+
+                <div class="sched-image-section">
+                    <label class="sched-label">Adaugă o imagine (opțional):</label>
+                    <div class="sched-image-options">
+                        <button type="button" id="sched-img-upload-btn" class="sched-option-btn">📷 Încarcă o poză</button>
+                        <input type="file" id="sched-img-file" accept="image/*" style="display:none;">
+                        <span class="sched-or">sau</span>
+                        <input type="url" id="sched-img-url" class="mesaj-andrei-input" placeholder="Lipește un URL de imagine/GIF..." style="height:auto;">
+                    </div>
+                    <div id="sched-img-preview-wrapper" class="sched-img-preview-wrapper" style="display:none;">
+                        <img id="sched-img-preview" class="sched-img-preview" alt="Preview">
+                        <button type="button" id="sched-img-remove" class="sched-img-remove">✕</button>
+                    </div>
+                </div>
+
+                <button id="sched-msg-send" class="mesaj-andrei-btn">Programează 📅</button>
+                <p id="sched-msg-status" class="mesaj-andrei-status"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var user = getLoggedInUser();
+            if (!user || user.name !== 'andrei') {
+                window.location.href = 'portal.html';
+                return;
+            }
+            setupSimpleForm();
+            setupScheduledForm();
+        });
+
+        function goBack() {
+            document.body.classList.add('page-fade-out');
+            setTimeout(function () { window.location.href = 'portal.html'; }, 600);
+        }
+
+        // Efecte - selectare
+        document.getElementById('sched-effects-grid').addEventListener('click', function(e) {
+            var btn = e.target.closest('.sched-effect-btn');
+            if (!btn) return;
+            document.querySelectorAll('.sched-effect-btn').forEach(function(b) { b.classList.remove('selected'); });
+            btn.classList.add('selected');
+        });
+
+        // ── Formular 1: mesaje simple ──
+        function setupSimpleForm() {
+            var input = document.getElementById('simple-msg-input');
+            var btn = document.getElementById('simple-msg-send');
+            var status = document.getElementById('simple-msg-status');
+
+            btn.addEventListener('click', async function () {
+                var msg = input.value.trim();
+                if (!msg) return;
+
+                btn.disabled = true;
+                btn.textContent = 'Se trimite...';
+
+                var result = await _supabase
+                    .from('andrei_messages')
+                    .insert({ message: msg });
+
+                if (result.error) {
+                    btn.textContent = 'Eroare ❌';
+                    btn.disabled = false;
+                    return;
+                }
+
+                input.value = '';
+                status.textContent = 'Mesajul a fost adăugat! 💌';
+                btn.textContent = 'Trimis! 💝';
+                setTimeout(function () {
+                    btn.textContent = 'Trimite 💝';
+                    btn.disabled = false;
+                    status.textContent = '';
+                }, 2500);
+            });
+        }
+
+        // ── Formular 2: mesaje programate ──
+        var scheduledImageData = null;
+
+        function setupScheduledForm() {
+            var input = document.getElementById('sched-msg-input');
+            var datetime = document.getElementById('sched-datetime');
+            var fileInput = document.getElementById('sched-img-file');
+            var uploadBtn = document.getElementById('sched-img-upload-btn');
+            var urlInput = document.getElementById('sched-img-url');
+            var previewWrapper = document.getElementById('sched-img-preview-wrapper');
+            var preview = document.getElementById('sched-img-preview');
+            var removeBtn = document.getElementById('sched-img-remove');
+            var btn = document.getElementById('sched-msg-send');
+            var status = document.getElementById('sched-msg-status');
+
+            // Minim = acum
+            var now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            datetime.min = now.toISOString().slice(0, 16);
+
+            uploadBtn.addEventListener('click', function () { fileInput.click(); });
+
+            // Upload fișier – redimensionare + compresie JPEG
+            fileInput.addEventListener('change', function (e) {
+                var file = e.target.files[0];
+                if (!file) return;
+
+                var reader = new FileReader();
+                reader.onload = function (event) {
+                    var img = new Image();
+                    img.onload = function () {
+                        var canvas = document.createElement('canvas');
+                        var MAX_W = 600;
+                        var w = img.width, h = img.height;
+                        if (w > MAX_W) { h = h * (MAX_W / w); w = MAX_W; }
+                        canvas.width = w;
+                        canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        scheduledImageData = canvas.toDataURL('image/jpeg', 0.7);
+                        preview.src = scheduledImageData;
+                        previewWrapper.style.display = 'block';
+                        urlInput.value = '';
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Sau URL
+            urlInput.addEventListener('input', function () {
+                var url = urlInput.value.trim();
+                if (url) {
+                    scheduledImageData = null;
+                    preview.src = url;
+                    previewWrapper.style.display = 'block';
+                    fileInput.value = '';
+                } else if (!scheduledImageData) {
+                    previewWrapper.style.display = 'none';
+                }
+            });
+
+            // Șterge imagine
+            removeBtn.addEventListener('click', function () {
+                scheduledImageData = null;
+                fileInput.value = '';
+                urlInput.value = '';
+                previewWrapper.style.display = 'none';
+            });
+
+            // Trimite
+            btn.addEventListener('click', async function () {
+                var msg = input.value.trim();
+                var dt = datetime.value;
+                if (!msg) { status.textContent = 'Scrie un mesaj!'; return; }
+                if (!dt) { status.textContent = 'Alege data și ora!'; return; }
+
+                btn.disabled = true;
+                btn.textContent = 'Se programează...';
+
+                var imageUrl = scheduledImageData || urlInput.value.trim() || null;
+                var titleInput = document.getElementById('sched-title-input');
+                var title = titleInput.value.trim() || null;
+                var selectedEffect = document.querySelector('.sched-effect-btn.selected');
+                var effect = selectedEffect ? selectedEffect.getAttribute('data-effect') : 'none';
+                if (effect === 'none') effect = null;
+
+                var result = await _supabase
+                    .from('scheduled_messages')
+                    .insert({
+                        title: title,
+                        message: msg,
+                        image_url: imageUrl,
+                        effect: effect,
+                        scheduled_at: new Date(dt).toISOString()
+                    });
+
+                if (result.error) {
+                    status.textContent = 'Eroare la salvare ❌';
+                    btn.textContent = 'Programează 📅';
+                    btn.disabled = false;
+                    return;
+                }
+
+                input.value = '';
+                datetime.value = '';
+                scheduledImageData = null;
+                fileInput.value = '';
+                urlInput.value = '';
+                titleInput.value = '';
+                document.querySelectorAll('.sched-effect-btn').forEach(function(b) { b.classList.remove('selected'); });
+                previewWrapper.style.display = 'none';
+                status.textContent = 'Mesajul a fost programat! 📅✨';
+                btn.textContent = 'Programat! ✅';
+                setTimeout(function () {
+                    btn.textContent = 'Programează 📅';
+                    btn.disabled = false;
+                    status.textContent = '';
+                }, 2500);
+            });
+        }
+    </script>
+</body>
+</html>

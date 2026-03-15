@@ -2,24 +2,30 @@ document.addEventListener('DOMContentLoaded', function () {
     const valentineSection = document.getElementById('valentine-section');
     const dragobeteSection = document.getElementById('dragobete-section');
     const moodSection = document.getElementById('mood-section');
+    const scheduledSection = document.getElementById('scheduled-msg-section');
 
     const today = new Date();
     const isValentine = today.getDate() === 14 && today.getMonth() === 1; // 1 = februarie
     const isDragobete = today.getDate() === 24 && today.getMonth() === 1;
 
-    if (isValentine) {
-        if (valentineSection) valentineSection.style.display = 'block';
-        if (dragobeteSection) dragobeteSection.style.display = 'none';
-        if (moodSection) moodSection.style.display = 'none';
-    } else if (isDragobete) {
-        if (valentineSection) valentineSection.style.display = 'none';
-        if (dragobeteSection) dragobeteSection.style.display = 'block';
-        if (moodSection) moodSection.style.display = 'none';
-    } else {
-        if (valentineSection) valentineSection.style.display = 'none';
-        if (dragobeteSection) dragobeteSection.style.display = 'none';
-        if (moodSection) moodSection.style.display = 'block';
-    }
+    // Ascundem totul inițial, setupMesajAndreiSection decide dacă există mesaj programat
+    if (valentineSection) valentineSection.style.display = 'none';
+    if (dragobeteSection) dragobeteSection.style.display = 'none';
+    if (moodSection) moodSection.style.display = 'none';
+    if (scheduledSection) scheduledSection.style.display = 'none';
+
+    // Funcția principală care decide ce secțiune se afișează
+    setupMesajAndreiSection().then(function(hasScheduled) {
+        if (hasScheduled) {
+            // Mesajul programat a preluat pagina, nu afișăm nimic altceva
+        } else if (isValentine) {
+            if (valentineSection) valentineSection.style.display = 'block';
+        } else if (isDragobete) {
+            if (dragobeteSection) dragobeteSection.style.display = 'block';
+        } else {
+            if (moodSection) moodSection.style.display = 'block';
+        }
+    });
 
     setupValentineSection();
     setupDragobeteSection();
@@ -194,4 +200,97 @@ function setupMoodSection() {
     slider.addEventListener('touchend', triggerAnimation);
 
     updateLabel();
+}
+
+async function setupMesajAndreiSection() {
+    // Buton doar pentru Andrei
+    const section = document.getElementById('mesaj-andrei-section');
+    if (section) {
+        const user = getLoggedInUser();
+        if (user && user.name === 'andrei') {
+            section.style.display = 'block';
+        }
+    }
+
+    // Mesaj programat – preia toată pagina dacă există unul activ azi
+    const schedSection = document.getElementById('scheduled-msg-section');
+    if (!schedSection) return false;
+
+    try {
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+        const tomorrowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
+
+        const { data } = await _supabase
+            .from('scheduled_messages')
+            .select('title, message, image_url, effect, scheduled_at')
+            .gte('scheduled_at', todayStart)
+            .lt('scheduled_at', tomorrowStart)
+            .lte('scheduled_at', now.toISOString())
+            .order('scheduled_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (data && data.message) {
+            document.getElementById('scheduled-msg-title').textContent = data.title || '💌 Un mesaj special pentru tine';
+            document.getElementById('scheduled-msg-text').textContent = data.message;
+            if (data.image_url) {
+                const img = document.createElement('img');
+                img.src = data.image_url;
+                img.alt = 'Imagine specială';
+                img.className = 'scheduled-msg-img';
+                document.getElementById('scheduled-msg-image').appendChild(img);
+            }
+            schedSection.style.display = 'block';
+            if (data.effect) playEffect(data.effect);
+            return true;
+        }
+    } catch (e) { /* silent */ }
+
+    return false;
+}
+
+function playEffect(type) {
+    var canvas = document.getElementById('effects-canvas');
+    if (!canvas) return;
+
+    var effects = {
+        fireworks:  { chars: ['🎆','🎇','✨','💥','🌟'], count: 40, duration: 4000 },
+        hearts:     { chars: ['❤️','💕','💖','💗','💓','💝','💞','💘','🥰'], count: 35, duration: 5000 },
+        sparkles:   { chars: ['✨','💫','⭐','🌟','✧','★'], count: 45, duration: 4000 },
+        stars:      { chars: ['⭐','🌟','💫','✨','🌠'], count: 40, duration: 4500 },
+        confetti:   { chars: ['🎊','🎉','🟡','🔴','🔵','🟢','🟣','🟠'], count: 50, duration: 4000 },
+        snow:       { chars: ['❄️','🌨️','❅','❆','✻'], count: 40, duration: 6000 },
+        petals:     { chars: ['🌸','🌺','🌷','🌹','💮','🏵️'], count: 35, duration: 5000 }
+    };
+
+    var eff = effects[type];
+    if (!eff) return;
+
+    for (var i = 0; i < eff.count; i++) {
+        spawnParticle(canvas, eff, i);
+    }
+
+    setTimeout(function() { canvas.innerHTML = ''; }, eff.duration + 2000);
+}
+
+function spawnParticle(canvas, eff, index) {
+    setTimeout(function() {
+        var el = document.createElement('span');
+        el.className = 'effect-particle';
+        el.textContent = eff.chars[Math.floor(Math.random() * eff.chars.length)];
+
+        var startX = Math.random() * 100;
+        var endX = startX + (Math.random() - 0.5) * 40;
+        var dur = (eff.duration * 0.6) + Math.random() * (eff.duration * 0.4);
+        var size = 14 + Math.random() * 18;
+
+        el.style.left = startX + '%';
+        el.style.fontSize = size + 'px';
+        el.style.setProperty('--end-x', endX + '%');
+        el.style.animationDuration = dur + 'ms';
+
+        canvas.appendChild(el);
+        setTimeout(function() { if (el.parentNode) el.remove(); }, dur + 100);
+    }, index * 80);
 }

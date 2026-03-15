@@ -67,6 +67,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
+  position: relative;
 }
 
 .card-slot {
@@ -502,6 +503,42 @@ body {
   gap: 0.75rem;
 }
 
+.macao-demanded-suit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.75);
+  border: 2px solid rgba(255, 199, 95, 0.7);
+  box-shadow: 0 0 10px rgba(255, 199, 95, 0.4);
+  z-index: 5;
+  animation: demandedPop 0.3s ease;
+}
+
+.demanded-symbol {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.demanded-red {
+  color: #e74c3c;
+}
+
+.demanded-black {
+  color: #ffffff;
+}
+
+@keyframes demandedPop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 .macao-suit-picker {
   display: flex;
   align-items: center;
@@ -568,8 +605,36 @@ body {
 }
 
 .macao-card.macao-card-selected {
-  box-shadow: 0 0 0 3px rgba(255, 199, 95, 0.9), 0 8px 20px rgba(0, 0, 0, 0.4);
-  transform: translateY(-8px);
+  transform: translateY(-10px);
+  z-index: 2;
+}
+
+.macao-card.macao-card-sel-yellow {
+  box-shadow: 0 0 0 3px rgba(255, 199, 50, 1), 0 0 16px rgba(255, 199, 50, 0.6), 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.macao-card.macao-card-sel-red {
+  box-shadow: 0 0 0 3px rgba(230, 50, 50, 1), 0 0 16px rgba(230, 50, 50, 0.6), 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Pe mobil facem selectia mai vizibila si evitam hover sticky */
+@media (hover: none) {
+  .macao-card.macao-card-face:hover {
+    transform: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+  .macao-card.macao-card-face:active {
+    transform: scale(0.95);
+  }
+  .macao-card.macao-card-selected {
+    transform: translateY(-12px);
+  }
+  .macao-card.macao-card-sel-yellow {
+    box-shadow: 0 0 0 4px rgba(255, 199, 50, 1), 0 0 20px rgba(255, 199, 50, 0.7), 0 8px 20px rgba(0, 0, 0, 0.4);
+  }
+  .macao-card.macao-card-sel-red {
+    box-shadow: 0 0 0 4px rgba(230, 50, 50, 1), 0 0 20px rgba(230, 50, 50, 0.7), 0 8px 20px rgba(0, 0, 0, 0.4);
+  }
 }
 
 .bulls-container {

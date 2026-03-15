@@ -5,6 +5,9 @@
 let memorySocket = null;
 let memoryRoomCode = null;
 let memoryPlayerName = null;
+let _memReconnectTimer = null;
+let _memReconnectDelay = 1000;
+let _memPingInterval = null;
 let memoryMode = 'easy';
 let memoryIsHost = false;
 let memoryBoard = [];
@@ -56,6 +59,32 @@ function memoryWsUrl() {
   return `${protocol}://${localHost}:${port}`;
 }
 
+function _memStartPing() {
+  _memStopPing();
+  _memPingInterval = setInterval(() => {
+    if (memorySocket && memorySocket.readyState === WebSocket.OPEN) {
+      memorySocket.send(JSON.stringify({ type: 'ping' }));
+    }
+  }, 20000);
+}
+function _memStopPing() {
+  if (_memPingInterval) { clearInterval(_memPingInterval); _memPingInterval = null; }
+}
+function _memScheduleReconnect() {
+  if (_memReconnectTimer) return;
+  _memReconnectTimer = setTimeout(() => {
+    _memReconnectTimer = null;
+    memoryConnect().catch(() => {});
+  }, _memReconnectDelay);
+  _memReconnectDelay = Math.min(_memReconnectDelay * 2, 15000);
+}
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && (!memorySocket || memorySocket.readyState !== WebSocket.OPEN)) {
+    _memReconnectDelay = 1000;
+    memoryConnect().catch(() => {});
+  }
+});
+
 function memoryConnect() {
   return new Promise((resolve, reject) => {
     if (memorySocket && memorySocket.readyState === WebSocket.OPEN) {
@@ -65,25 +94,35 @@ function memoryConnect() {
     const url = memoryWsUrl();
     memorySocket = new WebSocket(url);
 
-    memorySocket.onopen = () => resolve(memorySocket);
+    memorySocket.onopen = () => {
+      _memReconnectDelay = 1000;
+      _memStartPing();
+      if (memoryRoomCode && memoryPlayerName) {
+        memorySend({ type: 'memory_join_room', roomCode: memoryRoomCode, playerName: memoryPlayerName, mode: memoryMode });
+      }
+      resolve(memorySocket);
+    };
 
     memorySocket.onerror = (err) => {
       console.error('WS error (memory)', err);
       const st =
         document.getElementById('memory-status-text') || document.getElementById('memory-lobby-status');
-      if (st) st.textContent = 'Nu m-am putut conecta la server. Incearca mai tarziu.';
+      if (st) st.textContent = 'Se reconectează la server...';
       reject(err);
     };
 
     memorySocket.onclose = () => {
+      _memStopPing();
       const st =
         document.getElementById('memory-status-text') || document.getElementById('memory-lobby-status');
-      if (st) st.textContent = 'Conexiune inchisa de server.';
+      if (st) st.textContent = 'Conexiune pierdută. Se reconectează...';
+      _memScheduleReconnect();
     };
 
     memorySocket.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
+        if (msg.type === 'pong') return;
         handleMemoryMessage(msg);
       } catch (e) {
         console.error('Mesaj JSON invalid (memory)', e);

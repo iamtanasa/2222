@@ -12,8 +12,8 @@
 
     <div class="main-container">
         <div class="back-button" onclick="goBack()">← Înapoi</div>
-        <div class="main-icon pulse">💖</div>
-        <h1 class="portal-page-title">Starea de zi cu zi</h1>
+        <div class="main-icon pulse">❓</div>
+        <h1 class="portal-page-title">Random</h1>
 
         <div class="glass-card">
             <!-- Secțiunea specială pentru 14 februarie -->
@@ -99,6 +99,21 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Buton către formulare – vizibil doar pentru Andrei -->
+            <div id="mesaj-andrei-section" class="portal-section" style="display:none;">
+                <div class="mesaj-andrei-divider"></div>
+                <a href="mesaje-andrei.html" class="mesaj-andrei-link-btn">✍️ Scrie mesaje</a>
+            </div>
+
+            <!-- Mesaj programat – preia toată pagina ca Valentine's Day -->
+            <div id="scheduled-msg-section" class="portal-section" style="display:none;">
+                <p id="scheduled-msg-title" class="portal-question"></p>
+                <p id="scheduled-msg-text" class="portal-love-message" style="display:block;"></p>
+                <div id="scheduled-msg-image" class="scheduled-msg-image-wrapper"></div>
+            </div>
+
+            <div id="effects-canvas" class="effects-canvas"></div>
 
         </div>
     </div>

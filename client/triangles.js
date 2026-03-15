@@ -7,6 +7,9 @@ let trianglesPlayerName = null;
 let trianglesPendingCreateName = null;
 let trianglesLastState = null;
 let trianglesPendingClicks = [];
+let _triReconnectTimer = null;
+let _triReconnectDelay = 1000;
+let _triPingInterval = null;
 
 function trianglesWsUrl() {
   const host = window.location.hostname;
@@ -20,6 +23,32 @@ function trianglesWsUrl() {
   return `${protocol}://${localHost}:${port}`;
 }
 
+function _triStartPing() {
+  _triStopPing();
+  _triPingInterval = setInterval(() => {
+    if (trianglesSocket && trianglesSocket.readyState === WebSocket.OPEN) {
+      trianglesSocket.send(JSON.stringify({ type: 'ping' }));
+    }
+  }, 20000);
+}
+function _triStopPing() {
+  if (_triPingInterval) { clearInterval(_triPingInterval); _triPingInterval = null; }
+}
+function _triScheduleReconnect() {
+  if (_triReconnectTimer) return;
+  _triReconnectTimer = setTimeout(() => {
+    _triReconnectTimer = null;
+    trianglesConnectWebSocket().catch(() => {});
+  }, _triReconnectDelay);
+  _triReconnectDelay = Math.min(_triReconnectDelay * 2, 15000);
+}
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && (!trianglesSocket || trianglesSocket.readyState !== WebSocket.OPEN)) {
+    _triReconnectDelay = 1000;
+    trianglesConnectWebSocket().catch(() => {});
+  }
+});
+
 function trianglesConnectWebSocket() {
   return new Promise((resolve, reject) => {
     if (trianglesSocket && trianglesSocket.readyState === WebSocket.OPEN) {
@@ -29,25 +58,35 @@ function trianglesConnectWebSocket() {
     const url = trianglesWsUrl();
     trianglesSocket = new WebSocket(url);
 
-    trianglesSocket.onopen = () => resolve(trianglesSocket);
+    trianglesSocket.onopen = () => {
+      _triReconnectDelay = 1000;
+      _triStartPing();
+      if (trianglesRoomCode && trianglesPlayerName) {
+        trianglesSend({ type: 'triangles_join_room', roomCode: trianglesRoomCode, playerName: trianglesPlayerName });
+      }
+      resolve(trianglesSocket);
+    };
 
     trianglesSocket.onerror = (err) => {
       console.error('WS error (triangles)', err);
       const statusEl =
         document.getElementById('triangles-status-text') || document.getElementById('triangles-lobby-status');
-      if (statusEl) statusEl.textContent = 'Nu m-am putut conecta la server. Ruleaza `node server/server.js`.';
+      if (statusEl) statusEl.textContent = 'Se reconectează la server...';
       reject(err);
     };
 
     trianglesSocket.onclose = () => {
+      _triStopPing();
       const statusEl =
         document.getElementById('triangles-status-text') || document.getElementById('triangles-lobby-status');
-      if (statusEl) statusEl.textContent = 'Conexiune inchisa de server.';
+      if (statusEl) statusEl.textContent = 'Conexiune pierdută. Se reconectează...';
+      _triScheduleReconnect();
     };
 
     trianglesSocket.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
+        if (message.type === 'pong') return;
         handleTrianglesServerMessage(message);
       } catch (e) {
         console.error('Mesaj JSON invalid de la server (triangles)', e);

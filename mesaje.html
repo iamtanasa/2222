@@ -22,9 +22,40 @@
             <button id="btn-random-message" onclick="showRandomMessage()" class="btn-add-memory">✨ Generează un mesaj ✨</button>
             <div id="next-message-info" style="margin-top: 10px; font-size: 0.85rem; color: rgba(255,255,255,0.9);">
             </div>
+
+            <div class="mesaj-andrei-divider"></div>
+
+            <button id="btn-adevaratul-mesaj" class="btn-adevaratul-mesaj" onclick="showAdevaratulMesaj()">
+                💝 Adevaratul mesaj al zilei 💝
+            </button>
+            <div id="adevaratul-mesaj-display" class="mesaj-andrei-display" style="display:none;">
+                <p id="adevaratul-mesaj-text" class="mesaj-andrei-text"></p>
+            </div>
+            <div id="adevaratul-next-info" style="margin-top: 10px; font-size: 0.85rem; color: rgba(255,255,255,0.9);"></div>
         </div>
 
-        
+        <button id="fab-expired" class="fab-expired-messages">📜</button>
+
+        <div id="expired-overlay" class="expired-overlay" style="display:none;">
+            <div class="expired-overlay-header">
+                <h2 class="mesaj-andrei-title">📜 Mesaje programate</h2>
+                <button class="expired-close-btn" onclick="closeExpiredOverlay()">✕</button>
+            </div>
+            <div id="expired-messages-list" class="expired-messages-list"></div>
+        </div>
+
+        <!-- Preview fullscreen al unui mesaj programat -->
+        <div id="msg-preview-overlay" class="msg-preview-overlay" style="display:none;">
+            <div class="msg-preview-back" onclick="closePreview()">← Înapoi</div>
+            <div class="glass-card">
+                <div class="portal-section">
+                    <p id="preview-title" class="portal-question"></p>
+                    <p id="preview-text" class="portal-love-message" style="display:block;"></p>
+                    <div id="preview-image" class="scheduled-msg-image-wrapper"></div>
+                </div>
+            </div>
+            <div id="preview-effects-canvas" class="effects-canvas"></div>
+        </div>
     </div>
 
     <script src="script.js"></script>
@@ -32,6 +63,8 @@
         let mesajeData = null;
         const STORAGE_KEY_DATE = 'berea_mesaj_data';
         const STORAGE_KEY_INDEX = 'berea_mesaj_index';
+        const ADEV_STORAGE_DATE = 'berea_adev_mesaj_data';
+        const ADEV_STORAGE_MSG = 'berea_adev_mesaj_text';
 
         function getTodayString() {
             return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
@@ -124,6 +157,7 @@
         }
 
         loadMesaje();
+        loadAdevaratulMesaj();
 
         function goBack() {
             document.body.classList.add('page-fade-out');
@@ -167,6 +201,433 @@
 
         // Actualizăm informația despre următorul mesaj la fiecare minut
         setInterval(updateNextMessageInfo, 60000);
+        setInterval(updateAdevNextInfo, 60000);
+
+        function setAdevButtonUsedState(used) {
+            var btn = document.getElementById('btn-adevaratul-mesaj');
+            if (!btn) return;
+            if (used) {
+                btn.disabled = true;
+                btn.textContent = 'Ai deja mesajul adevărat de azi 💝';
+                btn.style.opacity = '0.7';
+            } else {
+                btn.disabled = false;
+                btn.textContent = '💝 Adevaratul mesaj al zilei 💝';
+                btn.style.opacity = '1';
+            }
+        }
+
+        function updateAdevNextInfo() {
+            var info = document.getElementById('adevaratul-next-info');
+            if (!info) return;
+
+            var today = getTodayString();
+            var storedDate = localStorage.getItem(ADEV_STORAGE_DATE);
+
+            if (storedDate !== today) {
+                info.textContent = '';
+                return;
+            }
+
+            var now = new Date();
+            var nextMidnight = new Date();
+            nextMidnight.setHours(24, 0, 0, 0);
+            var diffMs = nextMidnight - now;
+            if (diffMs <= 0) { info.textContent = 'Poți genera un nou mesaj.'; return; }
+
+            var totalMinutes = Math.floor(diffMs / 60000);
+            var ore = Math.floor(totalMinutes / 60);
+            var minute = totalMinutes % 60;
+
+            if (ore <= 0 && minute <= 1) {
+                info.textContent = 'Mai puțin de un minut până la următorul mesaj adevărat.';
+            } else if (ore <= 0) {
+                info.textContent = 'Următorul mesaj adevărat va fi disponibil în ' + minute + ' minute.';
+            } else {
+                info.textContent = 'Următorul mesaj adevărat va fi disponibil în ' + ore + ' ore și ' + minute + ' minute.';
+            }
+        }
+
+        function loadAdevaratulMesaj() {
+            var today = getTodayString();
+            var storedDate = localStorage.getItem(ADEV_STORAGE_DATE);
+            var storedMsg = localStorage.getItem(ADEV_STORAGE_MSG);
+
+            if (storedDate === today && storedMsg) {
+                document.getElementById('adevaratul-mesaj-text').textContent = storedMsg;
+                document.getElementById('adevaratul-mesaj-display').style.display = 'block';
+                setAdevButtonUsedState(true);
+                updateAdevNextInfo();
+            }
+        }
+
+        async function showAdevaratulMesaj() {
+            var today = getTodayString();
+            var storedDate = localStorage.getItem(ADEV_STORAGE_DATE);
+            var storedMsg = localStorage.getItem(ADEV_STORAGE_MSG);
+
+            // Dacă deja există mesaj pentru azi, re-afișăm
+            if (storedDate === today && storedMsg) {
+                document.getElementById('adevaratul-mesaj-text').textContent = storedMsg;
+                document.getElementById('adevaratul-mesaj-display').style.display = 'block';
+                setAdevButtonUsedState(true);
+                updateAdevNextInfo();
+                return;
+            }
+
+            const textEl = document.getElementById('adevaratul-mesaj-text');
+            const displayEl = document.getElementById('adevaratul-mesaj-display');
+            const btn = document.getElementById('btn-adevaratul-mesaj');
+
+            btn.disabled = true;
+            btn.textContent = 'Se încarcă...';
+
+            try {
+                const { data, error } = await _supabase
+                    .from('andrei_messages')
+                    .select('message');
+
+                if (error || !data || data.length === 0) {
+                    textEl.textContent = 'Încă nu există mesaje... 💭';
+                    displayEl.style.display = 'block';
+                    btn.textContent = '💝 Adevaratul mesaj al zilei 💝';
+                    btn.disabled = false;
+                    return;
+                }
+
+                const randomMsg = data[Math.floor(Math.random() * data.length)];
+                textEl.textContent = randomMsg.message;
+                displayEl.style.display = 'block';
+
+                // Salvăm și blocăm
+                localStorage.setItem(ADEV_STORAGE_DATE, today);
+                localStorage.setItem(ADEV_STORAGE_MSG, randomMsg.message);
+                setAdevButtonUsedState(true);
+                updateAdevNextInfo();
+            } catch (e) {
+                textEl.textContent = 'Eroare la încărcare...';
+                displayEl.style.display = 'block';
+                btn.textContent = '💝 Adevaratul mesaj al zilei 💝';
+                btn.disabled = false;
+            }
+        }
+
+        async function toggleExpiredOverlay() {
+            const overlay = document.getElementById('expired-overlay');
+            if (overlay.style.display === 'flex') {
+                closeExpiredOverlay();
+                return;
+            }
+            overlay.style.display = 'flex';
+
+            const list = document.getElementById('expired-messages-list');
+            list.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.7)">Se încarcă...</p>';
+
+            // Mesaje speciale hardcoded
+            var specialMessages = [
+                {
+                    title: '💘 Valentine\'s Day',
+                    question: 'Vrei să fii My Valentine azi și pentru anii ce urmează?',
+                    message: 'Te iubesc din toată inima mea, ești tot ce mi-am dorit pe pământul acesta. Sunt și îți voi fi mereu alături. Sunt cel mai norocos iubit din lume! ❤️❤️❤️',
+                    label: '💘 Valentine\'s Day',
+                    effect: 'hearts',
+                    gifPostId: '7866746943736865719'
+                },
+                {
+                    title: '🇷🇴 Dragobete',
+                    question: 'Vrei să fii jumătatea mea de Dragobete?',
+                    message: 'La mulți ani de Dragobete, iubirea mea frumoasă! 💖💞💘 Te iubesc cel mai mult de pe planeta asta. Ești tot ce mi-am dorit. Te iubesc românește, te-am furat și nu vreau să te împărți cu nimeni! 💝💓💗',
+                    label: '🇷🇴 Dragobete',
+                    effect: 'hearts',
+                    gifPostId: '7866746943736865719'
+                }
+            ];
+
+            try {
+                const now = new Date();
+                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+
+                const { data, error } = await _supabase
+                    .from('scheduled_messages')
+                    .select('title, message, image_url, effect, scheduled_at')
+                    .lt('scheduled_at', todayStart)
+                    .order('scheduled_at', { ascending: false });
+
+                list.innerHTML = '';
+
+                // Afișăm mesajele speciale first
+                specialMessages.forEach(function(sm) {
+                    var item = document.createElement('div');
+                    item.className = 'expired-msg-item expired-msg-special expired-msg-clickable';
+                    item.addEventListener('click', function() {
+                        openPreview({
+                            title: sm.question,
+                            message: sm.message,
+                            image_url: null,
+                            effect: sm.effect,
+                            gifPostId: sm.gifPostId
+                        });
+                    });
+
+                    var badge = document.createElement('span');
+                    badge.className = 'expired-msg-badge';
+                    badge.textContent = sm.label;
+                    item.appendChild(badge);
+
+                    var text = document.createElement('p');
+                    text.className = 'mesaj-andrei-text';
+                    text.textContent = sm.message;
+                    item.appendChild(text);
+
+                    list.appendChild(item);
+                });
+
+                if (data && data.length > 0) {
+                    data.forEach(function(msg) {
+                        var item = document.createElement('div');
+                        item.className = 'expired-msg-item expired-msg-clickable';
+                        item.addEventListener('click', function() {
+                            openPreview(msg);
+                        });
+
+                        if (msg.title) {
+                            var titleEl = document.createElement('p');
+                            titleEl.className = 'expired-msg-title-label';
+                            titleEl.textContent = msg.title;
+                            item.appendChild(titleEl);
+                        }
+
+                        var text = document.createElement('p');
+                        text.className = 'mesaj-andrei-text';
+                        text.textContent = msg.message.length > 80 ? msg.message.substring(0, 80) + '...' : msg.message;
+                        item.appendChild(text);
+
+                        if (msg.image_url) {
+                            var img = document.createElement('img');
+                            img.src = msg.image_url;
+                            img.alt = 'Imagine';
+                            img.className = 'scheduled-msg-img';
+                            item.appendChild(img);
+                        }
+
+                        var meta = document.createElement('div');
+                        meta.className = 'expired-msg-meta';
+
+                        var dateSpan = document.createElement('span');
+                        dateSpan.className = 'expired-msg-date';
+                        var d = new Date(msg.scheduled_at);
+                        dateSpan.textContent = d.toLocaleDateString('ro-RO', {
+                            day: 'numeric', month: 'long', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                        });
+                        meta.appendChild(dateSpan);
+
+                        if (msg.effect) {
+                            var effBadge = document.createElement('span');
+                            effBadge.className = 'expired-msg-badge';
+                            var effNames = { fireworks:'🎆', hearts:'💕', sparkles:'✨', stars:'⭐', confetti:'🎉', snow:'❄️', petals:'🌸' };
+                            effBadge.textContent = effNames[msg.effect] || msg.effect;
+                            meta.appendChild(effBadge);
+                        }
+
+                        item.appendChild(meta);
+                        list.appendChild(item);
+                    });
+                }
+
+                // Dacă nu sunt nici mesaje speciale afișate, nici programate
+                if (list.children.length === 0) {
+                    list.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.7)">Nu există mesaje încă. 💭</p>';
+                }
+            } catch (e) {
+                // Chiar dacă supabase dă eroare, arătăm mesajele speciale
+                if (list.children.length === 0) {
+                    list.innerHTML = '';
+                    specialMessages.forEach(function(sm) {
+                        var item = document.createElement('div');
+                        item.className = 'expired-msg-item expired-msg-special';
+                        var badge = document.createElement('span');
+                        badge.className = 'expired-msg-badge';
+                        badge.textContent = sm.label;
+                        item.appendChild(badge);
+                        var text = document.createElement('p');
+                        text.className = 'mesaj-andrei-text';
+                        text.textContent = sm.message;
+                        item.appendChild(text);
+                        list.appendChild(item);
+                    });
+                }
+            }
+        }
+
+        function closeExpiredOverlay() {
+            document.getElementById('expired-overlay').style.display = 'none';
+        }
+
+        function openPreview(msg) {
+            document.getElementById('expired-overlay').style.display = 'none';
+            var overlay = document.getElementById('msg-preview-overlay');
+            document.getElementById('preview-title').textContent = msg.title || '💌 Un mesaj special pentru tine';
+            document.getElementById('preview-text').textContent = msg.message;
+
+            var imgWrapper = document.getElementById('preview-image');
+            imgWrapper.innerHTML = '';
+            if (msg.gifPostId) {
+                var gifDiv = document.createElement('div');
+                gifDiv.className = 'tenor-gif-embed';
+                gifDiv.setAttribute('data-postid', msg.gifPostId);
+                gifDiv.setAttribute('data-share-method', 'host');
+                gifDiv.setAttribute('data-aspect-ratio', '1');
+                gifDiv.setAttribute('data-width', '100%');
+                imgWrapper.appendChild(gifDiv);
+                // Trigger Tenor to process the new embed
+                if (typeof TENOR !== 'undefined' && TENOR.Process) {
+                    TENOR.Process();
+                }
+            } else if (msg.image_url) {
+                var img = document.createElement('img');
+                img.src = msg.image_url;
+                img.alt = 'Imagine specială';
+                img.className = 'scheduled-msg-img';
+                imgWrapper.appendChild(img);
+            }
+
+            var canvas = document.getElementById('preview-effects-canvas');
+            canvas.innerHTML = '';
+
+            overlay.style.display = 'flex';
+
+            if (msg.effect) {
+                playEffect(msg.effect, canvas);
+            }
+        }
+
+        function closePreview() {
+            document.getElementById('msg-preview-overlay').style.display = 'none';
+            document.getElementById('preview-effects-canvas').innerHTML = '';
+            document.getElementById('expired-overlay').style.display = 'flex';
+        }
+
+        function playEffect(type, canvas) {
+            if (!canvas) canvas = document.getElementById('preview-effects-canvas');
+            var effects = {
+                fireworks:  { chars: ['🎆','🎇','✨','💥','🌟'], count: 40, duration: 4000 },
+                hearts:     { chars: ['❤️','💕','💖','💗','💓','💝','💞','💘','🥰'], count: 35, duration: 5000 },
+                sparkles:   { chars: ['✨','💫','⭐','🌟','✧','★'], count: 45, duration: 4000 },
+                stars:      { chars: ['⭐','🌟','💫','✨','🌠'], count: 40, duration: 4500 },
+                confetti:   { chars: ['🎊','🎉','🟡','🔴','🔵','🟢','🟣','🟠'], count: 50, duration: 4000 },
+                snow:       { chars: ['❄️','🌨️','❅','❆','✻'], count: 40, duration: 6000 },
+                petals:     { chars: ['🌸','🌺','🌷','🌹','💮','🏵️'], count: 35, duration: 5000 }
+            };
+            var eff = effects[type];
+            if (!eff) return;
+            for (var i = 0; i < eff.count; i++) {
+                (function(idx) {
+                    setTimeout(function() {
+                        var el = document.createElement('span');
+                        el.className = 'effect-particle';
+                        el.textContent = eff.chars[Math.floor(Math.random() * eff.chars.length)];
+                        var startX = Math.random() * 100;
+                        var endX = startX + (Math.random() - 0.5) * 40;
+                        var dur = (eff.duration * 0.6) + Math.random() * (eff.duration * 0.4);
+                        var size = 14 + Math.random() * 18;
+                        el.style.left = startX + '%';
+                        el.style.fontSize = size + 'px';
+                        el.style.setProperty('--end-x', endX + '%');
+                        el.style.animationDuration = dur + 'ms';
+                        canvas.appendChild(el);
+                        setTimeout(function() { if (el.parentNode) el.remove(); }, dur + 100);
+                    }, idx * 80);
+                })(i);
+            }
+            setTimeout(function() { canvas.innerHTML = ''; }, eff.duration + 2000);
+        }
+
+        // ── FAB: plutitor + fuge la prima atingere, se deschide la a doua ──
+        (function() {
+            var fab = document.getElementById('fab-expired');
+            if (!fab) return;
+
+            var tapCount = 0;
+            var fabX = window.innerWidth - 80;
+            var fabY = window.innerHeight - 80;
+            var vx = (Math.random() - 0.5) * 1.2;
+            var vy = (Math.random() - 0.5) * 1.2;
+            var animId = null;
+
+            fab.style.position = 'fixed';
+            fab.style.left = fabX + 'px';
+            fab.style.top = fabY + 'px';
+            fab.style.right = 'auto';
+            fab.style.bottom = 'auto';
+
+            function bounceFab() {
+                fabX += vx;
+                fabY += vy;
+
+                var maxX = window.innerWidth - 56;
+                var maxY = window.innerHeight - 56;
+
+                if (fabX <= 0) { fabX = 0; vx = Math.abs(vx); }
+                if (fabX >= maxX) { fabX = maxX; vx = -Math.abs(vx); }
+                if (fabY <= 0) { fabY = 0; vy = Math.abs(vy); }
+                if (fabY >= maxY) { fabY = maxY; vy = -Math.abs(vy); }
+
+                fab.style.left = fabX + 'px';
+                fab.style.top = fabY + 'px';
+
+                animId = requestAnimationFrame(bounceFab);
+            }
+
+            animId = requestAnimationFrame(bounceFab);
+
+            function dodgeFab(e) {
+                // Calculează o direcție opusă punctului de atingere
+                var touch = e.touches ? e.touches[0] : e;
+                var tx = touch.clientX;
+                var ty = touch.clientY;
+                var cx = fabX + 28;
+                var cy = fabY + 28;
+                var dx = cx - tx;
+                var dy = cy - ty;
+                var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+                // Sare 120–200px în direcția opusă
+                var jump = 120 + Math.random() * 80;
+                var newX = fabX + (dx / dist) * jump;
+                var newY = fabY + (dy / dist) * jump;
+
+                // Clamp
+                var maxX = window.innerWidth - 56;
+                var maxY = window.innerHeight - 56;
+                fabX = Math.max(0, Math.min(maxX, newX));
+                fabY = Math.max(0, Math.min(maxY, newY));
+
+                // Schimbă și directia de bounce
+                vx = (Math.random() - 0.5) * 2;
+                vy = (Math.random() - 0.5) * 2;
+            }
+
+            fab.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                tapCount++;
+
+                if (tapCount === 1) {
+                    dodgeFab(e);
+                    // Reset dacă nu apasă din nou în 3 secunde
+                    setTimeout(function() { tapCount = 0; }, 3000);
+                } else {
+                    tapCount = 0;
+                    toggleExpiredOverlay();
+                }
+            });
+
+            fab.addEventListener('touchstart', function(e) {
+                // Prevenim dubla acționare cu click
+            }, { passive: true });
+        })();
     </script>
+    <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
 </body>
 </html>

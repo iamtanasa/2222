@@ -27,6 +27,9 @@ let pendingCreateName = null; // folosit în lobby când așteptăm room_created
 let mySecretValue = null; // salvează local numărul secret trimis de tine
 let lastGameState = null; // ultimul state primit, folosit la ecranul de final
 let guessActive = false; // controlează dacă keypad-ul pentru ghicit este activ
+let _bcReconnectTimer = null;
+let _bcReconnectDelay = 1000;
+let _bcPingInterval = null;
 
 function wsUrl() {
   const host = window.location.hostname;
@@ -44,6 +47,32 @@ function wsUrl() {
   return `${protocol}://${localHost}:${port}`;
 }
 
+function _bcStartPing() {
+  _bcStopPing();
+  _bcPingInterval = setInterval(() => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: 'ping' }));
+    }
+  }, 20000);
+}
+function _bcStopPing() {
+  if (_bcPingInterval) { clearInterval(_bcPingInterval); _bcPingInterval = null; }
+}
+function _bcScheduleReconnect() {
+  if (_bcReconnectTimer) return;
+  _bcReconnectTimer = setTimeout(() => {
+    _bcReconnectTimer = null;
+    connectWebSocket().catch(() => {});
+  }, _bcReconnectDelay);
+  _bcReconnectDelay = Math.min(_bcReconnectDelay * 2, 15000);
+}
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && (!socket || socket.readyState !== WebSocket.OPEN)) {
+    _bcReconnectDelay = 1000;
+    connectWebSocket().catch(() => {});
+  }
+});
+
 function connectWebSocket() {
   return new Promise((resolve, reject) => {
     if (socket && socket.readyState === WebSocket.OPEN) {
@@ -54,24 +83,33 @@ function connectWebSocket() {
     socket = new WebSocket(url);
 
     socket.onopen = () => {
+      _bcReconnectDelay = 1000;
+      _bcStartPing();
+      // Re-join room daca eram intr-una
+      if (currentRoomCode && currentPlayerName) {
+        sendMessage({ type: 'join_room', roomCode: currentRoomCode, playerName: currentPlayerName });
+      }
       resolve(socket);
     };
 
     socket.onerror = (err) => {
       console.error('WS error', err);
       const statusEl = document.getElementById('status-text') || document.getElementById('lobby-status');
-      if (statusEl) statusEl.textContent = 'Nu m-am putut conecta la server. Rulează `node server/server.js`.';
+      if (statusEl) statusEl.textContent = 'Se reconectează la server...';
       reject(err);
     };
 
     socket.onclose = () => {
+      _bcStopPing();
       const statusEl = document.getElementById('status-text') || document.getElementById('lobby-status');
-      if (statusEl) statusEl.textContent = 'Conexiune închisă de server.';
+      if (statusEl) statusEl.textContent = 'Conexiune pierdută. Se reconectează...';
+      _bcScheduleReconnect();
     };
 
     socket.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
+        if (message.type === 'pong') return;
         handleServerMessage(message);
       } catch (e) {
         console.error('Mesaj JSON invalid de la server', e);

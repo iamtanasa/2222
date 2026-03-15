@@ -6,6 +6,9 @@ let macaoRoomCode = null;
 let macaoPlayerName = null;
 let macaoPendingCreateName = null;
 let macaoLastState = null; // ultimul state primit, folosit pentru tap pe pachet
+let _macaoReconnectTimer = null;
+let _macaoReconnectDelay = 1000;
+let _macaoPingInterval = null;
 
 function macaoWsUrl() {
   const host = window.location.hostname;
@@ -19,6 +22,32 @@ function macaoWsUrl() {
   return `${protocol}://${localHost}:${port}`;
 }
 
+function _macaoStartPing() {
+  _macaoStopPing();
+  _macaoPingInterval = setInterval(() => {
+    if (macaoSocket && macaoSocket.readyState === WebSocket.OPEN) {
+      macaoSocket.send(JSON.stringify({ type: 'ping' }));
+    }
+  }, 20000);
+}
+function _macaoStopPing() {
+  if (_macaoPingInterval) { clearInterval(_macaoPingInterval); _macaoPingInterval = null; }
+}
+function _macaoScheduleReconnect() {
+  if (_macaoReconnectTimer) return;
+  _macaoReconnectTimer = setTimeout(() => {
+    _macaoReconnectTimer = null;
+    macaoConnectWebSocket().catch(() => {});
+  }, _macaoReconnectDelay);
+  _macaoReconnectDelay = Math.min(_macaoReconnectDelay * 2, 15000);
+}
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && (!macaoSocket || macaoSocket.readyState !== WebSocket.OPEN)) {
+    _macaoReconnectDelay = 1000;
+    macaoConnectWebSocket().catch(() => {});
+  }
+});
+
 function macaoConnectWebSocket() {
   return new Promise((resolve, reject) => {
     if (macaoSocket && macaoSocket.readyState === WebSocket.OPEN) {
@@ -29,6 +58,11 @@ function macaoConnectWebSocket() {
     macaoSocket = new WebSocket(url);
 
     macaoSocket.onopen = () => {
+      _macaoReconnectDelay = 1000;
+      _macaoStartPing();
+      if (macaoRoomCode && macaoPlayerName) {
+        macaoSend({ type: 'macao_join_room', roomCode: macaoRoomCode, playerName: macaoPlayerName });
+      }
       resolve(macaoSocket);
     };
 
@@ -36,19 +70,22 @@ function macaoConnectWebSocket() {
       console.error('WS error', err);
       const statusEl =
         document.getElementById('macao-status-text') || document.getElementById('macao-lobby-status');
-      if (statusEl) statusEl.textContent = 'Nu m-am putut conecta la server. Ruleaza `node server/server.js`.';
+      if (statusEl) statusEl.textContent = 'Se reconectează la server...';
       reject(err);
     };
 
     macaoSocket.onclose = () => {
+      _macaoStopPing();
       const statusEl =
         document.getElementById('macao-status-text') || document.getElementById('macao-lobby-status');
-      if (statusEl) statusEl.textContent = 'Conexiune inchisa de server.';
+      if (statusEl) statusEl.textContent = 'Conexiune pierdută. Se reconectează...';
+      _macaoScheduleReconnect();
     };
 
     macaoSocket.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
+        if (message.type === 'pong') return;
         handleMacaoServerMessage(message);
       } catch (e) {
         console.error('Mesaj JSON invalid de la server (macao)', e);
@@ -232,22 +269,28 @@ function initMacaoGame() {
   if (pairConfirm) {
     pairConfirm.addEventListener('click', () => {
       const state = macaoLastState;
-      if (!state || macaoSelectedForPairs.length < 2 || macaoSelectedForPairs.length % 2 !== 0) {
-        alert('Selectează perechi de carti de acelasi fel (numar par de carti).');
+      if (!state || macaoSelectedForPairs.length < 2) {
+        alert('Selectează cel puțin 2 cărți de același fel.');
         return;
       }
       const hand = state.yourHand || [];
       const cards = macaoSelectedForPairs.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
       if (cards.length !== macaoSelectedForPairs.length) return;
-      for (let i = 0; i < cards.length; i += 2) {
-        if (cards[i].rank !== cards[i + 1].rank) {
-          alert('Cartile trebuie sa formeze perechi de acelasi fel.');
+      // Verificam grupuri consecutive de acelasi rang
+      let gi = 0;
+      while (gi < cards.length) {
+        const groupRank = cards[gi].rank;
+        let ge = gi + 1;
+        while (ge < cards.length && cards[ge].rank === groupRank) ge++;
+        if (ge - gi < 2) {
+          alert('Fiecare grup trebuie să aibă cel puțin 2 cărți de același fel.');
           return;
         }
+        gi = ge;
       }
       const top = state.topDiscard;
       if (!macaoClientCanPlayOnTop(cards[0], top, state.attackActive, state.demandedSuit)) {
-        alert('Prima carte din selectie trebuie sa se potriveasca cu talonul.');
+        alert('Prima carte din selecție trebuie să se potrivească cu talonul.');
         return;
       }
       macaoSend({ type: 'macao_play_pairs', cardIds: macaoSelectedForPairs });
@@ -327,7 +370,7 @@ let macaoSelectedForPairs = [];
 function macaoClientCanPlayOnTop(card, topCard, attackActive, demandedSuit) {
   if (!topCard) return true;
   const effectiveSuit = (topCard.rank === '7' && demandedSuit) ? demandedSuit : topCard.suit;
-  if (card.rank === 'A' || card.rank === 'JOKER_BLACK' || card.rank === 'JOKER_RED') return true;
+  if (card.rank === 'A' || card.rank === '7' || card.rank === 'JOKER_BLACK' || card.rank === 'JOKER_RED') return true;
   if (attackActive) {
     return ['2', '3', '4', 'JOKER_BLACK', 'JOKER_RED'].includes(card.rank);
   }
@@ -371,9 +414,21 @@ function macaoUpdatePairSelectionUI() {
   const playerHandEl = document.getElementById('macao-player-hand');
   if (!playerHandEl) return;
   const cards = playerHandEl.querySelectorAll('.macao-card-face[data-card-id]');
+  const len = macaoSelectedForPairs.length;
   cards.forEach((el) => {
     const id = el.dataset.cardId;
-    el.classList.toggle('macao-card-selected', macaoSelectedForPairs.includes(id));
+    const idx = macaoSelectedForPairs.indexOf(id);
+    el.classList.remove('macao-card-selected', 'macao-card-sel-yellow', 'macao-card-sel-red');
+    if (idx !== -1) {
+      el.classList.add('macao-card-selected');
+      if (len === 1) {
+        el.classList.add('macao-card-sel-yellow');
+      } else if (idx === len - 1) {
+        el.classList.add('macao-card-sel-red');
+      } else {
+        el.classList.add('macao-card-sel-yellow');
+      }
+    }
   });
 }
 
@@ -497,6 +552,21 @@ function applyMacaoState(state) {
         topDiscardEl.appendChild(wrapper);
       }
       macaoPrevTopDiscardId = newDiscardId;
+    }
+  }
+
+  // Afiseaza culoarea ceruta dupa un 7
+  const demandedEl = document.getElementById('macao-demanded-suit');
+  if (demandedEl) {
+    if (state.demandedSuit && state.topDiscard && state.topDiscard.rank === '7') {
+      const suitSymbols = { heart: '\u2665', diamond: '\u2666', club: '\u2663', spade: '\u2660' };
+      const suitNames = { heart: 'Inim\u0103', diamond: 'Romb', club: 'Trefl\u0103', spade: 'Pic\u0103' };
+      const isRed = state.demandedSuit === 'heart' || state.demandedSuit === 'diamond';
+      demandedEl.innerHTML = `<span class="demanded-symbol ${isRed ? 'demanded-red' : 'demanded-black'}">${suitSymbols[state.demandedSuit]}</span>`;
+      demandedEl.title = suitNames[state.demandedSuit] || '';
+      demandedEl.style.display = 'flex';
+    } else {
+      demandedEl.style.display = 'none';
     }
   }
 

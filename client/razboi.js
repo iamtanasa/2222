@@ -9,6 +9,9 @@ let razboiLastState = null;
 let razboiCanPlay = true;
 let razboiCooldownTimer = null;
 let razboiHideCardsTimer = null;
+let _razReconnectTimer = null;
+let _razReconnectDelay = 1000;
+let _razPingInterval = null;
 
 function razboiWsUrl() {
   const host = window.location.hostname;
@@ -22,6 +25,32 @@ function razboiWsUrl() {
   return `${protocol}://${localHost}:${port}`;
 }
 
+function _razStartPing() {
+  _razStopPing();
+  _razPingInterval = setInterval(() => {
+    if (razboiSocket && razboiSocket.readyState === WebSocket.OPEN) {
+      razboiSocket.send(JSON.stringify({ type: 'ping' }));
+    }
+  }, 20000);
+}
+function _razStopPing() {
+  if (_razPingInterval) { clearInterval(_razPingInterval); _razPingInterval = null; }
+}
+function _razScheduleReconnect() {
+  if (_razReconnectTimer) return;
+  _razReconnectTimer = setTimeout(() => {
+    _razReconnectTimer = null;
+    razboiConnectWebSocket().catch(() => {});
+  }, _razReconnectDelay);
+  _razReconnectDelay = Math.min(_razReconnectDelay * 2, 15000);
+}
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && (!razboiSocket || razboiSocket.readyState !== WebSocket.OPEN)) {
+    _razReconnectDelay = 1000;
+    razboiConnectWebSocket().catch(() => {});
+  }
+});
+
 function razboiConnectWebSocket() {
   return new Promise((resolve, reject) => {
     if (razboiSocket && razboiSocket.readyState === WebSocket.OPEN) {
@@ -31,25 +60,35 @@ function razboiConnectWebSocket() {
     const url = razboiWsUrl();
     razboiSocket = new WebSocket(url);
 
-    razboiSocket.onopen = () => resolve(razboiSocket);
+    razboiSocket.onopen = () => {
+      _razReconnectDelay = 1000;
+      _razStartPing();
+      if (razboiRoomCode && razboiPlayerName) {
+        razboiSend({ type: 'razboi_join_room', roomCode: razboiRoomCode, playerName: razboiPlayerName });
+      }
+      resolve(razboiSocket);
+    };
 
     razboiSocket.onerror = (err) => {
       console.error('WS error (razboi)', err);
       const statusEl =
         document.getElementById('razboi-status-text') || document.getElementById('razboi-lobby-status');
-      if (statusEl) statusEl.textContent = 'Nu m-am putut conecta la server. Ruleaza `node server/server.js`.';
+      if (statusEl) statusEl.textContent = 'Se reconectează la server...';
       reject(err);
     };
 
     razboiSocket.onclose = () => {
+      _razStopPing();
       const statusEl =
         document.getElementById('razboi-status-text') || document.getElementById('razboi-lobby-status');
-      if (statusEl) statusEl.textContent = 'Conexiune inchisa de server.';
+      if (statusEl) statusEl.textContent = 'Conexiune pierdută. Se reconectează...';
+      _razScheduleReconnect();
     };
 
     razboiSocket.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
+        if (message.type === 'pong') return;
         handleRazboiServerMessage(message);
       } catch (e) {
         console.error('Mesaj JSON invalid de la server (razboi)', e);

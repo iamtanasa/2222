@@ -7,6 +7,9 @@ let hangmanRoomCode = null;
 let hangmanPlayerName = null;
 let hangmanRole = null; // 'setter' sau 'guesser'
 let hangmanLastState = null;
+let _hgReconnectTimer = null;
+let _hgReconnectDelay = 1000;
+let _hgPingInterval = null;
 
 // Helper: detalii utilizator logat (refolosim dacă există getLoggedInUser)
 function hgGetLoggedInUser() {
@@ -43,6 +46,32 @@ function hangmanWsUrl() {
   return `${protocol}://${localHost}:${port}`;
 }
 
+function _hgStartPing() {
+  _hgStopPing();
+  _hgPingInterval = setInterval(() => {
+    if (hangmanSocket && hangmanSocket.readyState === WebSocket.OPEN) {
+      hangmanSocket.send(JSON.stringify({ type: 'ping' }));
+    }
+  }, 20000);
+}
+function _hgStopPing() {
+  if (_hgPingInterval) { clearInterval(_hgPingInterval); _hgPingInterval = null; }
+}
+function _hgScheduleReconnect() {
+  if (_hgReconnectTimer) return;
+  _hgReconnectTimer = setTimeout(() => {
+    _hgReconnectTimer = null;
+    hangmanConnect().catch(() => {});
+  }, _hgReconnectDelay);
+  _hgReconnectDelay = Math.min(_hgReconnectDelay * 2, 15000);
+}
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && (!hangmanSocket || hangmanSocket.readyState !== WebSocket.OPEN)) {
+    _hgReconnectDelay = 1000;
+    hangmanConnect().catch(() => {});
+  }
+});
+
 function hangmanConnect() {
   return new Promise((resolve, reject) => {
     if (hangmanSocket && hangmanSocket.readyState === WebSocket.OPEN) {
@@ -52,7 +81,14 @@ function hangmanConnect() {
     const url = hangmanWsUrl();
     hangmanSocket = new WebSocket(url);
 
-    hangmanSocket.onopen = () => resolve(hangmanSocket);
+    hangmanSocket.onopen = () => {
+      _hgReconnectDelay = 1000;
+      _hgStartPing();
+      if (hangmanRoomCode && hangmanPlayerName) {
+        hangmanSend({ type: 'hangman_join_room', roomCode: hangmanRoomCode, playerName: hangmanPlayerName });
+      }
+      resolve(hangmanSocket);
+    };
 
     hangmanSocket.onerror = (err) => {
       console.error('WS error (hangman)', err);
@@ -60,20 +96,23 @@ function hangmanConnect() {
         document.getElementById('hangman-status-text') ||
         document.getElementById('hangman-lobby-status');
       if (statusEl)
-        statusEl.textContent = 'Nu m-am putut conecta la server. Ruleaza `node server/server.js`.';
+        statusEl.textContent = 'Se reconectează la server...';
       reject(err);
     };
 
     hangmanSocket.onclose = () => {
+      _hgStopPing();
       const statusEl =
         document.getElementById('hangman-status-text') ||
         document.getElementById('hangman-lobby-status');
-      if (statusEl) statusEl.textContent = 'Conexiune inchisa de server.';
+      if (statusEl) statusEl.textContent = 'Conexiune pierdută. Se reconectează...';
+      _hgScheduleReconnect();
     };
 
     hangmanSocket.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
+        if (msg.type === 'pong') return;
         handleHangmanMessage(msg);
       } catch (e) {
         console.error('Mesaj JSON invalid (hangman)', e);
