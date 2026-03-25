@@ -1,4 +1,4 @@
-const CACHE_NAME = 'univers-2222-v2';
+const CACHE_NAME = 'univers-2222-v3';
 
 // Adaugă aici paginile principale și resursele esențiale
 const ASSETS_TO_CACHE = [

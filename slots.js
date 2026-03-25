@@ -55,6 +55,7 @@ const PAYLINES = [
 ];
 
 // ── Game State ──
+const WIN_BET_CAP = 100; // winnings capped as if bet were 100/line max
 let slotsBalance = 0;
 let currentBet = 1;     // per line
 let currentLines = 1;
@@ -373,7 +374,7 @@ function evaluateWins(grid) {
       const symId = SYMBOLS[firstSym].id;
       if (symId !== 'star') { // star is scatter, handled separately
         const mult = PAYTABLE[symId][matchCount] || 0;
-        const lineWin = mult * currentBet;
+        const lineWin = mult * Math.min(currentBet, WIN_BET_CAP);
         totalWin += lineWin;
 
         // Mark winning cells
@@ -399,7 +400,7 @@ function evaluateWins(grid) {
 
   if (starCount >= 3) {
     const scatterMult = PAYTABLE.star[Math.min(starCount, 5)] || 0;
-    const scatterWin = scatterMult * currentBet * currentLines;
+    const scatterWin = scatterMult * Math.min(currentBet, WIN_BET_CAP) * currentLines;
     totalWin += scatterWin;
     starPositions.forEach(pos => winningCells.add(pos));
   }

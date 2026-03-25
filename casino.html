@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Casino 🎰</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
+</head>
+<body class="page-entry" data-page="casino">
+  <div class="main-container">
+    <div class="back-button" onclick="goBack()">← Înapoi</div>
+    <div class="main-icon pulse">🎰</div>
+    <h1 class="portal-page-title">Casino</h1>
+
+    <div class="portals-container">
+      <div class="portals-grid">
+
+        <div class="portal-card" onclick="navigateTo('slots.html')">
+          <div class="portal-icon">🎰</div>
+          <div class="portal-name">Păcănele</div>
+          <div class="portal-desc">Sizzling Hot</div>
+        </div>
+
+        <div class="portal-card" onclick="navigateTo('wheel.html')">
+          <div class="portal-icon">🎡</div>
+          <div class="portal-name">Roata</div>
+          <div class="portal-desc">Norocului</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    function goBack() {
+      document.body.classList.add('page-fade-out');
+      setTimeout(() => { window.location.href = '2222.html'; }, 600);
+    }
+  </script>
+</body>
+</html>

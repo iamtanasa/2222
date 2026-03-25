@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ghicitori</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="page-entry" data-page="love-portal">
+
+    <div class="main-container">
+        <div class="back-button" onclick="goBack()">← Înapoi</div>
+        <div class="main-icon pulse">🔮</div>
+        <h1 class="portal-page-title">De ziua ta</h1>
+
+        <!-- Propoziția care se construiește - sticky, mereu vizibilă -->
+        <div id="quiz-sentence-container" class="quiz-sentence-container">
+            <div class="quiz-sentence-label">Completează propoziția din ghicitori</div>
+            <div class="quiz-sentence-words">
+                <span id="quiz-part-0" class="quiz-sentence-part"></span>
+                <span id="quiz-part-1" class="quiz-sentence-part"></span>
+                <span id="quiz-part-2" class="quiz-sentence-part"></span>
+                <span id="quiz-part-3" class="quiz-sentence-part"></span>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="portal-section">
+                <div class="quiz-header">
+                    <h2 class="quiz-subtitle-text">Ghicește și descoperă surpriza 🎁</h2>
+                </div>
+
+                <!-- Ghicitoarea finală (propoziția e o ghicitoare) -->
+                <div id="quiz-final-riddle" class="quiz-riddle-card quiz-final-card" style="display:none;">
+                    <div class="quiz-riddle-badge">🎯 Ultima ghicitoare</div>
+                    <p class="quiz-riddle-text">Propoziția de mai sus este ea însăși o ghicitoare! Ce crezi că este?</p>
+                    <div class="quiz-answer-row">
+                        <input type="text" id="quiz-final-input" class="quiz-input" placeholder="Răspunsul tău...">
+                        <button class="quiz-btn" id="quiz-final-btn">✓</button>
+                    </div>
+                    <div class="quiz-success-badge" style="display:none;">✓ Corect!</div>
+                </div>
+
+                <!-- Mesajul final -->
+                <div id="quiz-final-message" class="quiz-final-message" style="display:none;">
+                    <div class="quiz-final-emoji">🎁</div>
+                    <p>Caută acolo ceva cu ce<br>n-aș fi putut venii eu aici.</p>
+                </div>
+
+                <!-- Ghicitorile -->
+                <div id="quiz-riddles-container">
+                    <div id="quiz-riddle-0" class="quiz-riddle-card quiz-card-visible">
+                        <div class="quiz-riddle-badge">Ghicitoarea 1</div>
+                        <p class="quiz-riddle-text">
+                            <span class="quiz-verse">Pe o bancă noi am stat</span>
+                            <span class="quiz-verse">Despre Dumnezeu am ascultat</span>
+                            <span class="quiz-verse">Alb curat, negru păcat,</span>
+                            <span class="quiz-verse">Un moment ce mult ne-a legat.</span>
+                        </p>
+                        <div class="quiz-answer-row">
+                            <input type="text" class="quiz-input" data-riddle="0" placeholder="Răspunsul tău...">
+                            <button class="quiz-btn" data-riddle="0">✓</button>
+                        </div>
+                        <div class="quiz-success-badge" style="display:none;">✓ Corect!</div>
+                    </div>
+
+                    <div id="quiz-riddle-1" class="quiz-riddle-card" style="display:none;">
+                        <div class="quiz-riddle-badge">Ghicitoarea 2</div>
+                        <p class="quiz-riddle-text">
+                            <span class="quiz-verse">Sub lumina lunii noi am stat,</span>
+                            <span class="quiz-verse">La o anumită oră ne-am apropiat,</span>
+                            <span class="quiz-verse">Tu berea, eu căpșuni, făcând un pact</span>
+                            <span class="quiz-verse">Lângă morții ce visau neîncetat.</span>
+                        </p>
+                        <div class="quiz-answer-row">
+                            <input type="text" class="quiz-input" data-riddle="1" placeholder="Răspunsul tău...">
+                            <button class="quiz-btn" data-riddle="1">✓</button>
+                        </div>
+                        <div class="quiz-success-badge" style="display:none;">✓ Corect!</div>
+                    </div>
+
+                    <div id="quiz-riddle-2" class="quiz-riddle-card" style="display:none;">
+                        <div class="quiz-riddle-badge">Ghicitoarea 3</div>
+                        <p class="quiz-riddle-text">
+                            <span class="quiz-verse">Soarele ne-a ars pe piele ușor,</span>
+                            <span class="quiz-verse">Am prins pește, crengi și-un fluturaș color.</span>
+                            <span class="quiz-verse">Prima noastră captură, un gust aparte,</span>
+                            <span class="quiz-verse">Peștele ce a rămas în carte.</span>
+                        </p>
+                        <div class="quiz-answer-row">
+                            <input type="text" class="quiz-input" data-riddle="2" placeholder="Răspunsul tău...">
+                            <button class="quiz-btn" data-riddle="2">✓</button>
+                        </div>
+                        <div class="quiz-success-badge" style="display:none;">✓ Corect!</div>
+                    </div>
+
+                    <div id="quiz-riddle-3" class="quiz-riddle-card" style="display:none;">
+                        <div class="quiz-riddle-badge">Ghicitoarea 4</div>
+                        <p class="quiz-riddle-text">
+                            <span class="quiz-verse">Noaptea târziu am stat la poartă</span>
+                            <span class="quiz-verse">În mașină, sub stele, fără nicio șoaptă</span>
+                            <span class="quiz-verse">Dintr-o dată nea Mitică a apărut</span>
+                            <span class="quiz-verse">Aproape gol pușcă, surprinzându-ne… mut.</span>
+                        </p>
+                        <div class="quiz-answer-row">
+                            <input type="text" class="quiz-input" data-riddle="3" placeholder="Răspunsul tău...">
+                            <button class="quiz-btn" data-riddle="3">✓</button>
+                        </div>
+                        <div class="quiz-success-badge" style="display:none;">✓ Corect!</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="effects-canvas" class="effects-canvas"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        function goBack() {
+            document.body.classList.add('page-fade-out');
+            setTimeout(() => { window.location.href = '2222.html'; }, 600);
+        }
+
+        var riddles = [
+            { acceptedAnswers: ['saptamana sperantei', 'sperantei', 'saptamana speranței', 'saptamanasperantei'], part: 'Locul pe care' },
+            { acceptedAnswers: ['cimitir', 'cimitirul'], part: 'ți-l doreai' },
+            { acceptedAnswers: ['bibanel'], part: 'foarte mult sa il' },
+            { acceptedAnswers: ['chilotii baggy', 'chiloti baggy', 'chilotii', 'chiloti', 'baggy'], part: 'aranjezi saptamana asta.' }
+        ];
+
+        var finalAccepted = ['dulap', 'dulapul'];
+        var solved = 0;
+        var STORAGE_KEY = 'quizProgress_2026';
+
+        function normalizeText(text) {
+            return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+        }
+
+        function checkAnswer(input, acceptedAnswers) {
+            var norm = normalizeText(input);
+            if (norm.length < 2) return false;
+            return acceptedAnswers.some(function(ans) {
+                var normAns = normalizeText(ans);
+                return norm.includes(normAns) || normAns.includes(norm);
+            });
+        }
+
+        function shakeCard(card) {
+            card.classList.add('shake-effect', 'quiz-wrong');
+            setTimeout(function() {
+                card.classList.remove('shake-effect', 'quiz-wrong');
+            }, 600);
+        }
+
+        function revealPart(index) {
+            var partEl = document.getElementById('quiz-part-' + index);
+            if (partEl) {
+                partEl.textContent = riddles[index].part + ' ';
+                partEl.classList.add('revealed');
+            }
+        }
+
+        function saveProgress() {
+            var solvedList = [];
+            riddles.forEach(function(_, i) {
+                var card = document.getElementById('quiz-riddle-' + i);
+                if (card && card.classList.contains('quiz-solved')) solvedList.push(i);
+            });
+            var finalSolved = !!(finalCard && finalCard.classList.contains('quiz-solved'));
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ solved: solvedList, finalSolved: finalSolved })); } catch(e) {}
+        }
+
+        function restoreProgress() {
+            var raw;
+            try { raw = localStorage.getItem(STORAGE_KEY); } catch(e) { return; }
+            if (!raw) return;
+            var data;
+            try { data = JSON.parse(raw); } catch(e) { return; }
+            if (!data) return;
+
+            (data.solved || []).forEach(function(index) {
+                var card = document.getElementById('quiz-riddle-' + index);
+                if (!card) return;
+                card.style.display = 'block';
+                card.classList.add('quiz-card-visible', 'quiz-solved');
+                var input = card.querySelector('.quiz-input');
+                var btn = card.querySelector('.quiz-btn');
+                var badge = card.querySelector('.quiz-success-badge');
+                if (input) input.disabled = true;
+                if (btn) btn.disabled = true;
+                if (badge) badge.style.display = 'block';
+                revealPart(index);
+                solved++;
+            });
+
+            // Arata urmatoarea ghicitoare nesolvata
+            if (data.solved && data.solved.length > 0 && data.solved.length < riddles.length) {
+                var nextIndex = data.solved.length;
+                var nextCard = document.getElementById('quiz-riddle-' + nextIndex);
+                if (nextCard) {
+                    nextCard.style.display = 'block';
+                    nextCard.classList.add('quiz-card-visible');
+                }
+            }
+
+            if (data.solved && data.solved.length === riddles.length) {
+                var finalSection = document.getElementById('quiz-final-riddle');
+                if (finalSection) {
+                    finalSection.style.display = 'block';
+                    finalSection.classList.add('quiz-card-visible');
+                }
+            }
+
+            if (data.finalSolved) {
+                if (finalCard) {
+                    finalCard.classList.add('quiz-solved');
+                    var fi = document.getElementById('quiz-final-input');
+                    var fb = document.getElementById('quiz-final-btn');
+                    var fsb = finalCard.querySelector('.quiz-success-badge');
+                    if (fi) fi.disabled = true;
+                    if (fb) fb.disabled = true;
+                    if (fsb) fsb.style.display = 'block';
+                }
+                if (finalMsg) finalMsg.style.display = 'block';
+            }
+        }
+
+        function showNextRiddle(currentIndex) {
+            var nextIndex = currentIndex + 1;
+            if (nextIndex < riddles.length) {
+                var nextCard = document.getElementById('quiz-riddle-' + nextIndex);
+                if (nextCard) {
+                    nextCard.style.display = 'block';
+                    setTimeout(function() {
+                        nextCard.classList.add('quiz-card-visible');
+                        nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 50);
+                }
+            }
+        }
+
+        function handleRiddleAnswer(index) {
+            var card = document.getElementById('quiz-riddle-' + index);
+            var input = card.querySelector('.quiz-input');
+            var successBadge = card.querySelector('.quiz-success-badge');
+
+            if (checkAnswer(input.value, riddles[index].acceptedAnswers)) {
+                input.disabled = true;
+                card.querySelector('.quiz-btn').disabled = true;
+                card.classList.add('quiz-solved');
+                if (successBadge) successBadge.style.display = 'block';
+
+                revealPart(index);
+                solved++;
+                saveProgress();
+
+                if (solved === riddles.length) {
+                    setTimeout(function() {
+                        var finalSection = document.getElementById('quiz-final-riddle');
+                        if (finalSection) {
+                            finalSection.style.display = 'block';
+                            setTimeout(function() {
+                                finalSection.classList.add('quiz-card-visible');
+                                finalSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }, 50);
+                        }
+                        playEffect('sparkles');
+                    }, 800);
+                } else {
+                    showNextRiddle(index);
+                }
+            } else {
+                shakeCard(card);
+            }
+        }
+
+        riddles.forEach(function(riddle, index) {
+            var card = document.getElementById('quiz-riddle-' + index);
+            if (!card) return;
+            var btn = card.querySelector('.quiz-btn');
+            var input = card.querySelector('.quiz-input');
+            if (btn) btn.addEventListener('click', function() { handleRiddleAnswer(index); });
+            if (input) input.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleRiddleAnswer(index); });
+        });
+
+        var finalBtn = document.getElementById('quiz-final-btn');
+        var finalInput = document.getElementById('quiz-final-input');
+        var finalMsg = document.getElementById('quiz-final-message');
+        var finalCard = document.getElementById('quiz-final-riddle');
+
+        function handleFinalAnswer() {
+            if (checkAnswer(finalInput.value, finalAccepted)) {
+                finalInput.disabled = true;
+                finalBtn.disabled = true;
+                finalCard.classList.add('quiz-solved');
+                var successBadge = finalCard.querySelector('.quiz-success-badge');
+                if (successBadge) successBadge.style.display = 'block';
+                saveProgress();
+                if (finalMsg) {
+                    finalMsg.style.display = 'block';
+                    setTimeout(function() { finalMsg.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+                }
+                playEffect('hearts');
+            } else {
+                shakeCard(finalCard);
+            }
+        }
+
+        if (finalBtn) finalBtn.addEventListener('click', handleFinalAnswer);
+        if (finalInput) finalInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleFinalAnswer(); });
+
+        // Restaureaza progresul salvat
+        restoreProgress();
+
+        function playEffect(type) {
+            var canvas = document.getElementById('effects-canvas');
+            if (!canvas) return;
+            var effects = {
+                hearts:   { chars: ['❤️','💕','💖','💗','💓','💝','💞','💘','🥰'], count: 35, duration: 5000 },
+                sparkles: { chars: ['✨','💫','⭐','🌟','✧','★'], count: 45, duration: 4000 }
+            };
+            var eff = effects[type];
+            if (!eff) return;
+            for (var i = 0; i < eff.count; i++) {
+                (function(idx) {
+                    setTimeout(function() {
+                        var el = document.createElement('span');
+                        el.className = 'effect-particle';
+                        el.textContent = eff.chars[Math.floor(Math.random() * eff.chars.length)];
+                        var startX = Math.random() * 100;
+                        var endX = startX + (Math.random() - 0.5) * 40;
+                        var dur = (eff.duration * 0.6) + Math.random() * (eff.duration * 0.4);
+                        var size = 14 + Math.random() * 18;
+                        el.style.left = startX + '%';
+                        el.style.fontSize = size + 'px';
+                        el.style.setProperty('--end-x', endX + '%');
+                        el.style.animationDuration = dur + 'ms';
+                        canvas.appendChild(el);
+                        setTimeout(function() { if (el.parentNode) el.remove(); }, dur + 100);
+                    }, idx * 80);
+                })(i);
+            }
+            setTimeout(function() { canvas.innerHTML = ''; }, eff.duration + 2000);
+        }
+    </script>
+</body>
+</html>

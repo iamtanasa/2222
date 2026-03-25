@@ -364,12 +364,12 @@ function findTrianglesPlayer(ws) {
   return null;
 }
 
-function createTrianglesPoints(count = 14) {
+function createTrianglesPoints(count = 14, minDist = 0.08) {
   const points = [];
-  const minDist2 = 0.08 * 0.08;
+  const minDist2 = minDist * minDist;
   let attempts = 0;
 
-  while (points.length < count && attempts < 2000) {
+  while (points.length < count && attempts < 5000) {
     attempts += 1;
     const x = 0.1 + 0.8 * Math.random();
     const y = 0.1 + 0.8 * Math.random();
@@ -500,6 +500,7 @@ function buildTrianglesState(room, seat) {
 
   return {
     roomCode: room.roomCode,
+    mode: room.mode || 'easy',
     status: room.status,
     youName: you ? you.name : null,
     opponentName: opponent ? opponent.name : null,
@@ -510,6 +511,8 @@ function buildTrianglesState(room, seat) {
     lines: room.lines || [],
     triangles,
     remainingMoves,
+    linesRemaining: room.linesRemaining || 0,
+    currentTurnName: room.currentTurn ? (room.players[room.currentTurn] ? room.players[room.currentTurn].name : null) : null,
   };
 }
 
@@ -526,13 +529,15 @@ function broadcastTrianglesState(room) {
 }
 
 function startTrianglesGame(room) {
-  room.points = createTrianglesPoints(14);
+  const modeConfig = { easy: { count: 14, minDist: 0.08 }, medium: { count: 20, minDist: 0.065 }, hard: { count: 28, minDist: 0.05 } };
+  const cfg = modeConfig[room.mode] || modeConfig.easy;
+  room.points = createTrianglesPoints(cfg.count, cfg.minDist);
   room.lines = [];
   room.triangles = [];
   room.scores = { p1: 0, p2: 0 };
   room.status = 'active';
   room.currentTurn = Math.random() < 0.5 ? 'p1' : 'p2';
-  room.linesRemaining = 1; // fiecare jucator incepe tura cu 1 linie disponibila (2 puncte)
+  room.linesRemaining = 1;
 }
 
 function countRemainingTriangleEdges(room) {
@@ -1748,12 +1753,14 @@ function handleRazboiPlayAgain(ws) {
 
 // ----------------------- TRIANGLES MESAJE -----------------------
 
-function handleTrianglesCreateRoom(ws) {
+function handleTrianglesCreateRoom(ws, mode) {
   const roomCode = generateRoomCode();
+  // Store pending mode so JoinRoom can pick it up
+  ws._trianglesPendingMode = mode || 'easy';
   send(ws, { type: 'triangles_room_created', roomCode });
 }
 
-function handleTrianglesJoinRoom(ws, roomCode, playerName) {
+function handleTrianglesJoinRoom(ws, roomCode, playerName, mode) {
   if (!roomCode || typeof roomCode !== 'string') {
     send(ws, { type: 'triangles_error', message: 'Cod de camera invalid.' });
     return;
@@ -1763,8 +1770,11 @@ function handleTrianglesJoinRoom(ws, roomCode, playerName) {
 
   let room = trianglesRooms.get(roomCode);
   if (!room) {
+    const validModes = ['easy', 'medium', 'hard'];
+    const roomMode = validModes.includes(mode) ? mode : (validModes.includes(ws._trianglesPendingMode) ? ws._trianglesPendingMode : 'easy');
     room = {
       roomCode,
+      mode: roomMode,
       players: { p1: null, p2: null },
       points: [],
       lines: [],
@@ -2632,10 +2642,10 @@ function handleMessage(ws, raw) {
       handleMacaoPlayAgain(ws);
       break;
     case 'triangles_create_room':
-      handleTrianglesCreateRoom(ws);
+      handleTrianglesCreateRoom(ws, msg.mode);
       break;
     case 'triangles_join_room':
-      handleTrianglesJoinRoom(ws, msg.roomCode, msg.playerName);
+      handleTrianglesJoinRoom(ws, msg.roomCode, msg.playerName, msg.mode);
       break;
     case 'triangles_play':
       handleTrianglesPlay(ws, msg.lines);

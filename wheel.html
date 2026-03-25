@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Roata Norocului 🎡</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="wheel-game.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet" />
+</head>
+<body class="page-entry" data-page="wheel-game">
+  <div class="main-container">
+    <div class="back-button" onclick="goBack()">← Înapoi</div>
+    <div class="main-icon pulse">🎡</div>
+    <h1 class="portal-page-title">Roata Norocului</h1>
+
+    <!-- Wheel + everything -->
+    <div class="glass-card wg-wheel-card">
+      <!-- Balance inline -->
+      <div class="wg-balance-row">
+        <span class="wg-balance-label">Puncte:</span>
+        <span class="wg-balance-value" id="wg-balance">0</span>
+      </div>
+
+      <!-- Result -->
+      <div class="wg-result-display hidden" id="wg-result-display">
+        <span id="wg-result-text"></span>
+      </div>
+
+      <!-- Wheel -->
+      <div class="wg-wheel-wrapper" id="wg-wheel-wrapper">
+        <div class="wg-wheel-pointer">▼</div>
+        <canvas id="wg-wheel-canvas" width="320" height="320"></canvas>
+      </div>
+
+      <!-- Bet section -->
+      <div class="wg-bet-section">
+        <div class="wg-bet-input-row">
+          <button class="wg-bet-quick" id="wg-bet-half">½</button>
+          <input type="number" id="wg-bet-input" min="1" value="10" autocomplete="off" />
+          <button class="wg-bet-quick" id="wg-bet-all">MAX</button>
+        </div>
+      </div>
+
+      <p class="wg-tap-hint">Apasă pe roată pentru a învârti</p>
+    </div>
+
+    <!-- Zoom overlay -->
+    <div id="wg-zoom-overlay" class="wg-zoom-overlay hidden">
+      <div class="wg-zoom-content">
+        <div class="wg-wheel-pointer">▼</div>
+        <canvas id="wg-wheel-canvas-zoom" width="600" height="600"></canvas>
+      </div>
+      <div id="wg-result-zoom" class="wg-result-box hidden"></div>
+      <div class="wg-zoom-hint">Apasă oriunde pentru a închide</div>
+    </div>
+
+    <!-- Prizes table -->
+    <div class="glass-card wg-prizes-card">
+      <h2 class="section-title" style="cursor:pointer; color:#fff;" onclick="toggleWgPrizes()">🏆 Ce poți câștiga <span id="wg-prizes-arrow">▼</span></h2>
+      <div id="wg-prizes-table" class="wg-prizes-table hidden"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="wheel-game.js"></script>
+  <script>
+    function goBack() {
+      document.body.classList.add('page-fade-out');
+      setTimeout(() => { window.location.href = 'casino.html'; }, 600);
+    }
+    function toggleWgPrizes() {
+      const pt = document.getElementById('wg-prizes-table');
+      const arrow = document.getElementById('wg-prizes-arrow');
+      pt.classList.toggle('hidden');
+      arrow.textContent = pt.classList.contains('hidden') ? '▼' : '▲';
+    }
+  </script>
+</body>
+</html>

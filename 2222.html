@@ -90,6 +90,13 @@
                     <div class="portal-desc">Ce te așteaptă azi?</div>
                 </div>
 
+                <!-- Portal Ghicitori - vizibil doar pe 28 martie 2026 de la 17:00 -->
+                <div class="portal-card" id="quiz-portal-card" onclick="navigateTo('quiz.html')" style="display:none;">
+                    <div class="portal-icon">🔮</div>
+                    <div class="portal-name">De ziua ta</div>
+                    <div class="portal-desc">O surpriză te așteaptă</div>
+                </div>
+
                 <!-- Pop the Balloon -->
                 <div class="portal-card" onclick="navigateTo('pop-balloon.html')">
                     <div class="portal-icon">🎈</div>
@@ -129,11 +136,11 @@
                     <div class="portal-desc">Formează triunghiuri</div>
                 </div>
 
-                <!-- 8. Păcănele -->
-                <div class="portal-card" onclick="navigateTo('slots.html')">
+                <!-- 8. Casino -->
+                <div class="portal-card" onclick="navigateTo('casino.html')">
                     <div class="portal-icon">🎰</div>
-                    <div class="portal-name">Păcănele</div>
-                    <div class="portal-desc">Sizzling Hot</div>
+                    <div class="portal-name">Casino</div>
+                    <div class="portal-desc">Păcănele & Roata</div>
                 </div>
 
                 <!-- 7. Shop -->
@@ -190,6 +197,16 @@
         // Inițializez countdown-ul pentru următoarea întâlnire când pagina se încarcă
         document.addEventListener('DOMContentLoaded', () => {
             loadAndDisplayNextMeeting();
+
+            // Arata cardul de ghicitori in intervalul prestabilit
+            var now = new Date();
+            var mins = now.getHours() * 60 + now.getMinutes();
+            var isRealWindow = now.getFullYear() === 2026 && now.getMonth() === 2 && now.getDate() === 28 &&
+                               mins >= 17 * 60 && mins < 24 * 60;
+            if (isRealWindow) {
+                var quizCard = document.getElementById('quiz-portal-card');
+                if (quizCard) quizCard.style.display = 'block';
+            }
         });
     </script>
 </body>

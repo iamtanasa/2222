@@ -96,7 +96,7 @@ function renderChallengesList(containerId, challenges, options = {}) {
 
       let buttonHtml = '';
       if (showBuyButton && !c.purchased) {
-        buttonHtml = `<button class="shop-buy-btn" data-id="${c.id}" data-price="${price}">Cumpără pentru ${price} puncte</button>`;
+        buttonHtml = `<button class="shop-buy-btn" data-id="${c.id}" data-price="${price}">Cumpără</button>`;
       }
 
       let deleteHtml = '';

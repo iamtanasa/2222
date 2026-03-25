@@ -7,6 +7,7 @@ let trianglesPlayerName = null;
 let trianglesPendingCreateName = null;
 let trianglesLastState = null;
 let trianglesPendingClicks = [];
+let trianglesMode = 'easy';
 let _triReconnectTimer = null;
 let _triReconnectDelay = 1000;
 let _triPingInterval = null;
@@ -62,7 +63,7 @@ function trianglesConnectWebSocket() {
       _triReconnectDelay = 1000;
       _triStartPing();
       if (trianglesRoomCode && trianglesPlayerName) {
-        trianglesSend({ type: 'triangles_join_room', roomCode: trianglesRoomCode, playerName: trianglesPlayerName });
+        trianglesSend({ type: 'triangles_join_room', roomCode: trianglesRoomCode, playerName: trianglesPlayerName, mode: trianglesMode });
       }
       resolve(trianglesSocket);
     };
@@ -113,7 +114,7 @@ function handleTrianglesServerMessage(message) {
       const roomCode = message.roomCode;
       window.location.href = `triangles-game.html?room=${roomCode}&player=${encodeURIComponent(
         trianglesPendingCreateName
-      )}`;
+      )}&mode=${encodeURIComponent(trianglesMode)}`;
     }
     return;
   }
@@ -159,6 +160,19 @@ function initTrianglesLobby() {
     nameInput.value = rawName.charAt(0).toUpperCase() + rawName.slice(1);
   }
 
+  const modeCards = document.querySelectorAll('.triangles-mode-card');
+  modeCards.forEach((card) => {
+    const mode = card.dataset.mode || 'easy';
+    if (mode === trianglesMode) {
+      card.classList.add('btn-selected');
+    }
+    card.addEventListener('click', () => {
+      modeCards.forEach((c) => c.classList.remove('btn-selected'));
+      card.classList.add('btn-selected');
+      trianglesMode = mode;
+    });
+  });
+
   createBtn.addEventListener('click', async () => {
     const name = (nameInput.value || '').trim();
     if (!name) {
@@ -169,7 +183,7 @@ function initTrianglesLobby() {
     trianglesPendingCreateName = name;
     try {
       await trianglesConnectWebSocket();
-      trianglesSend({ type: 'triangles_create_room' });
+      trianglesSend({ type: 'triangles_create_room', mode: trianglesMode });
       const lobbyStatus = document.getElementById('triangles-lobby-status');
       if (lobbyStatus) lobbyStatus.textContent = 'Se genereaza camera...';
     } catch (_) {}
@@ -188,7 +202,7 @@ function initTrianglesLobby() {
       return;
     }
 
-    window.location.href = `triangles-game.html?room=${code}&player=${encodeURIComponent(name)}`;
+    window.location.href = `triangles-game.html?room=${code}&player=${encodeURIComponent(name)}&mode=${encodeURIComponent(trianglesMode)}`;
   });
 }
 
@@ -200,11 +214,18 @@ function initTrianglesGame() {
   const params = new URLSearchParams(window.location.search);
   trianglesRoomCode = (params.get('room') || '').toUpperCase();
   trianglesPlayerName = params.get('player') || 'Anonim';
+  trianglesMode = params.get('mode') || 'easy';
 
   const roomDisplay = document.getElementById('triangles-room-code-display');
   const youNameEl = document.getElementById('triangles-you-name');
   if (roomDisplay) roomDisplay.textContent = trianglesRoomCode || '-';
   if (youNameEl) youNameEl.textContent = trianglesPlayerName;
+
+  const modeLabel = document.getElementById('triangles-mode-label');
+  if (modeLabel) {
+    const modeNames = { easy: 'Ușor', medium: 'Mediu', hard: 'Greu' };
+    modeLabel.textContent = modeNames[trianglesMode] || 'Ușor';
+  }
 
   const backTop = document.getElementById('triangles-back-top');
   if (backTop) {
@@ -245,6 +266,7 @@ function initTrianglesGame() {
         type: 'triangles_join_room',
         roomCode: trianglesRoomCode,
         playerName: trianglesPlayerName,
+        mode: trianglesMode,
       });
     })
     .catch(() => {});
@@ -447,8 +469,29 @@ function applyTrianglesState(state) {
     }
   }
 
+  const linesRemainingEl = document.getElementById('triangles-lines-remaining');
+  if (linesRemainingEl) {
+    if (state.status === 'active' && typeof state.linesRemaining === 'number' && state.linesRemaining > 1) {
+      const who = state.yourTurn ? 'Tu' : (state.currentTurnName || 'Adversarul');
+      linesRemainingEl.textContent = `${who} mai ${state.yourTurn ? 'ai' : 'are'} ${state.linesRemaining} linii bonus.`;
+      linesRemainingEl.style.display = 'block';
+    } else {
+      linesRemainingEl.style.display = 'none';
+    }
+  }
+
   if (yourScoreEl) yourScoreEl.textContent = String(state.yourScore || 0);
   if (oppScoreEl) oppScoreEl.textContent = String(state.opponentScore || 0);
+
+  // Actualizăm modul din starea serverului (sursa de adevăr)
+  if (state.mode) {
+    trianglesMode = state.mode;
+    const modeLabelEl = document.getElementById('triangles-mode-label');
+    if (modeLabelEl) {
+      const modeNames = { easy: 'Ușor', medium: 'Mediu', hard: 'Greu' };
+      modeLabelEl.textContent = modeNames[state.mode] || 'Ușor';
+    }
+  }
 
   if (remainingMovesEl && typeof state.remainingMoves === 'number') {
     remainingMovesEl.textContent = String(state.remainingMoves);

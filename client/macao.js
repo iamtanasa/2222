@@ -410,6 +410,35 @@ function macaoOnCardClick(card) {
   macaoSend({ type: 'macao_play', cardId: card.id });
 }
 
+function macaoAttachCardTap(el, card) {
+  // Use pointerup for instant response on mobile (no 300ms click delay)
+  let pointerId = null;
+  let startX = 0;
+  let startY = 0;
+  let handledByPointer = false;
+  el.addEventListener('pointerdown', (e) => {
+    pointerId = e.pointerId;
+    startX = e.clientX;
+    startY = e.clientY;
+    handledByPointer = false;
+  }, { passive: true });
+  el.addEventListener('pointerup', (e) => {
+    if (e.pointerId !== pointerId) return;
+    const dx = Math.abs(e.clientX - startX);
+    const dy = Math.abs(e.clientY - startY);
+    if (dx > 15 || dy > 15) return;
+    handledByPointer = true;
+    e.preventDefault();
+    macaoOnCardClick(card);
+  });
+  // Fallback click — only fires if pointerup didn't handle it
+  el.addEventListener('click', (e) => {
+    if (handledByPointer) { handledByPointer = false; return; }
+    e.preventDefault();
+    macaoOnCardClick(card);
+  });
+}
+
 function macaoUpdatePairSelectionUI() {
   const playerHandEl = document.getElementById('macao-player-hand');
   if (!playerHandEl) return;
@@ -530,10 +559,15 @@ function applyMacaoState(state) {
         }
         div.innerHTML = renderMacaoCardFace(card);
         div.dataset.cardId = card.id;
-        div.addEventListener('click', () => macaoOnCardClick(card));
+        macaoAttachCardTap(div, card);
         playerHandEl.appendChild(div);
       });
       macaoPrevHandIds = currentIds;
+
+      // Restore pair selection visuals after rebuild
+      if (macaoPairMode && macaoSelectedForPairs.length > 0) {
+        macaoUpdatePairSelectionUI();
+      }
     }
   }
 

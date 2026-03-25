@@ -1,0 +1,323 @@
+/* ═══════════════════════════════════════
+   ROATA NOROCULUI — Wheel Game Styles
+   ═══════════════════════════════════════ */
+
+/* Wheel card — single container */
+.wg-wheel-card {
+  padding: 18px 16px 22px;
+  text-align: center;
+}
+
+/* Balance row */
+.wg-balance-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.wg-balance-label {
+  color: rgba(255,255,255,0.8);
+  font-size: 0.9rem;
+}
+
+.wg-balance-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #FFC75F;
+  text-shadow: 0 0 10px rgba(255,199,95,0.5);
+}
+
+/* Result display */
+.wg-result-display {
+  margin-bottom: 12px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  animation: wgResultPop 0.4s ease;
+}
+
+.wg-result-display.hidden { display: none; }
+
+.wg-result-display.wg-win {
+  background: linear-gradient(135deg, rgba(0,201,167,0.25), rgba(255,199,95,0.2));
+  border: 1px solid rgba(0,201,167,0.5);
+}
+
+.wg-result-display.wg-lose {
+  background: linear-gradient(135deg, rgba(255,107,138,0.2), rgba(85,85,85,0.2));
+  border: 1px solid rgba(255,107,138,0.4);
+}
+
+.wg-result-text {
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: block;
+}
+
+.wg-result-total {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+  margin-top: 2px;
+}
+
+.wg-win .wg-result-text {
+  color: #FFC75F;
+  text-shadow: 0 0 8px rgba(255,199,95,0.5);
+}
+
+@keyframes wgResultPop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Wheel wrapper */
+.wg-wheel-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 8px auto 14px;
+  width: 300px;
+  height: 300px;
+}
+
+.wg-wheel-wrapper canvas {
+  border-radius: 50%;
+  box-shadow:
+    0 0 20px rgba(255,255,255,0.1),
+    0 0 50px rgba(255,199,95,0.08);
+  border: 3px solid rgba(255,255,255,0.25);
+  cursor: pointer;
+}
+
+.wg-wheel-pointer {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.8rem;
+  color: #FFC75F;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+  z-index: 10;
+  line-height: 1;
+  text-shadow: 0 0 12px rgba(255,199,95,0.6);
+}
+
+/* Bet section */
+.wg-bet-section {
+  margin: 14px 0 6px;
+}
+
+.wg-bet-input-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.wg-bet-input-row input[type="number"] {
+  width: 100px;
+  text-align: center;
+  padding: 9px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: 'Quicksand', sans-serif;
+  -moz-appearance: textfield;
+}
+
+.wg-bet-input-row input[type="number"]::-webkit-inner-spin-button,
+.wg-bet-input-row input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.wg-bet-quick {
+  padding: 9px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: 'Quicksand', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.wg-bet-quick:hover {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,199,95,0.5);
+}
+
+/* Tap hint */
+.wg-tap-hint {
+  color: rgba(255,255,255,0.5);
+  font-size: 0.8rem;
+  margin-top: 8px;
+}
+
+/* Result actions */
+.wg-result-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.wg-result-actions button {
+  padding: 7px 18px;
+  font-size: 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: 'Quicksand', sans-serif;
+}
+
+.wg-result-actions button:hover {
+  background: rgba(255,255,255,0.22);
+}
+
+/* Zoom overlay */
+.wg-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.9);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  animation: wgZoomIn 0.3s ease;
+}
+
+.wg-zoom-overlay.hidden { display: none; }
+
+@keyframes wgZoomIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.wg-zoom-content {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.wg-zoom-content canvas {
+  border-radius: 50%;
+  box-shadow: 0 0 40px rgba(255,255,255,0.1), 0 0 70px rgba(255,199,95,0.1);
+  border: 3px solid rgba(255,255,255,0.25);
+  max-width: 88vw;
+  max-height: 88vw;
+  cursor: pointer;
+}
+
+.wg-zoom-content .wg-wheel-pointer { top: -10px; }
+
+.wg-zoom-hint {
+  color: rgba(255,255,255,0.4);
+  font-size: 0.78rem;
+}
+
+.wg-result-box {
+  padding: 14px 22px;
+  border-radius: 18px;
+  text-align: center;
+  color: #fff;
+  font-weight: 600;
+  max-width: 340px;
+  animation: wgResultPop 0.4s ease;
+}
+
+.wg-result-box.hidden { display: none; }
+
+.wg-result-box.wg-win {
+  background: rgba(0,201,167,0.2);
+  border: 1px solid rgba(0,201,167,0.4);
+}
+
+.wg-result-box.wg-lose {
+  background: rgba(255,107,138,0.15);
+  border: 1px solid rgba(255,107,138,0.3);
+}
+
+/* Prizes table */
+.wg-prizes-card { text-align: left; }
+.wg-prizes-table { margin-top: 10px; }
+.wg-prizes-table.hidden { display: none; }
+
+.wg-prize-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.wg-prize-row:last-child { border-bottom: none; }
+
+.wg-prize-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.wg-prize-label {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  min-width: 55px;
+}
+
+.wg-prize-desc {
+  color: rgba(255,255,255,0.75);
+  font-size: 0.82rem;
+  flex: 1;
+}
+
+.wg-prize-chance {
+  color: rgba(255,255,255,0.5);
+  font-size: 0.72rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 400px) {
+  .wg-wheel-wrapper {
+    width: 260px;
+    height: 260px;
+  }
+  .wg-wheel-wrapper canvas {
+    width: 260px;
+    height: 260px;
+  }
+  .wg-spin-btn {
+    padding: 12px 30px;
+    font-size: 0.95rem;
+  }
+  .wg-bet-input-row input[type="number"] {
+    width: 85px;
+  }
+}

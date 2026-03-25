@@ -60,7 +60,6 @@
 
     <script src="script.js"></script>
     <script>
-        let mesajeData = null;
         const STORAGE_KEY_DATE = 'berea_mesaj_data';
         const STORAGE_KEY_INDEX = 'berea_mesaj_index';
         const ADEV_STORAGE_DATE = 'berea_adev_mesaj_data';
@@ -323,6 +322,19 @@
             const list = document.getElementById('expired-messages-list');
             list.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.7)">Se încarcă...</p>';
 
+            // Verifică dacă fereastra quiz a expirat (se afișează ca mesaj expirat)
+            var now2 = new Date();
+            var quizWindows = [
+                { date: [2026, 2, 28], start: 17 * 60, end: 24 * 60, label: '28 martie 2026, 17:00' }
+            ];
+            var quizExpired = false;
+            var quizLabel = '';
+            for (var qi = 0; qi < quizWindows.length; qi++) {
+                var qw = quizWindows[qi];
+                var qwStart = new Date(qw.date[0], qw.date[1], qw.date[2], Math.floor(qw.end / 60), qw.end % 60);
+                if (now2 >= qwStart) { quizExpired = true; quizLabel = qw.label; }
+            }
+
             // Mesaje speciale hardcoded
             var specialMessages = [
                 {
@@ -354,6 +366,33 @@
                     .order('scheduled_at', { ascending: false });
 
                 list.innerHTML = '';
+
+                // Afișăm cardul quiz ca mesaj expirat dacă fereastra a trecut
+                if (quizExpired) {
+                    var quizItem = document.createElement('div');
+                    quizItem.className = 'expired-msg-item expired-msg-special expired-msg-clickable';
+                    quizItem.style.cssText = 'border-left: 3px solid rgba(255,183,3,0.8); background: linear-gradient(135deg, rgba(255,77,109,0.18), rgba(255,183,3,0.12));';
+                    quizItem.addEventListener('click', function() {
+                        closeExpiredOverlay();
+                        navigateTo('quiz.html');
+                    });
+                    var quizBadge = document.createElement('span');
+                    quizBadge.className = 'expired-msg-badge';
+                    quizBadge.textContent = '🔮 Ghicitori';
+                    quizItem.appendChild(quizBadge);
+                    var quizText = document.createElement('p');
+                    quizText.className = 'mesaj-andrei-text';
+                    quizText.textContent = 'O surpriză te așteaptă... Atinge ca să descoperi! 🎁';
+                    quizItem.appendChild(quizText);
+                    var quizMeta = document.createElement('div');
+                    quizMeta.className = 'expired-msg-meta';
+                    var quizDate = document.createElement('span');
+                    quizDate.className = 'expired-msg-date';
+                    quizDate.textContent = quizLabel;
+                    quizMeta.appendChild(quizDate);
+                    quizItem.appendChild(quizMeta);
+                    list.appendChild(quizItem);
+                }
 
                 // Afișăm mesajele speciale first
                 specialMessages.forEach(function(sm) {
