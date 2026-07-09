@@ -1,6 +1,8 @@
-const CACHE_NAME = 'univers-2222-v3';
+// Versiunea. O schimbi doar dacă vrei să golești forțat cache-ul vechi;
+// actualizarea automată nu depinde de ea.
+const CACHE_NAME = 'univers-2222-v6';
 
-// Adaugă aici paginile principale și resursele esențiale
+// Ce ținem offline, ca plasă de siguranță
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -10,26 +12,60 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
-  );
-});
+  // Versiunea nouă preia imediat, fără să aștepte închiderea tuturor filelor.
+  self.skipWaiting();
 
-self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
+    caches.open(CACHE_NAME).then((cache) =>
+      // Fiecare fișier separat: dacă unul lipsește, instalarea nu cade toată.
       Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
+        ASSETS_TO_CACHE.map((url) =>
+          cache.add(new Request(url, { cache: 'reload' })).catch(() => {})
+        )
       )
     )
   );
 });
 
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+      ))
+      // Preluăm controlul filelor deja deschise, ca să nu mai fie nevoie de refresh manual.
+      .then(() => self.clients.claim())
+  );
+});
+
+// REȚEA ÎNTÂI pentru tot ce e al nostru. Cache-ul se folosește doar când
+// telefonul e offline. Varianta veche (cache întâi) servea fișiere vechi
+// la nesfârșit, de asta trebuia ștearsă manual memoria site-ului.
 self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+
+  // Supabase, fonturi, CDN-uri: le lăsăm în seama browserului.
+  if (url.origin !== self.location.origin) return;
+
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(request)
+      .then((response) => {
+        if (response && response.ok && response.type === 'basic') {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      })
+      .catch(() =>
+        caches.match(request).then((cached) => {
+          if (cached) return cached;
+          if (request.mode === 'navigate') return caches.match('/index.html');
+          return Response.error();
+        })
+      )
   );
 });
 

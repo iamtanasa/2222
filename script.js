@@ -21,6 +21,74 @@ window.addEventListener('pageshow', (event) => {
 });
 
 // ==========================================
+// 0.1 SERVICE WORKER – ACTUALIZARE AUTOMATĂ
+// ==========================================
+// Fiecare pagină încarcă script.js, deci fiecare pagină verifică dacă
+// pe Netlify a apărut o versiune nouă. Când apare, service worker-ul nou
+// preia controlul imediat și pagina se reîncarcă o singură dată.
+// Nu mai e nevoie să ștergi datele site-ului.
+
+(function () {
+    if (!('serviceWorker' in navigator)) return;
+
+    // Dacă exista deja un service worker la încărcarea paginii, ce vezi acum
+    // poate veni din cache. Când versiunea nouă preia controlul, reîncărcăm.
+    const aveaControler = !!navigator.serviceWorker.controller;
+    let seReincarca = false;
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!aveaControler || seReincarca) return;
+        seReincarca = true;
+        window.location.reload();
+    });
+
+    // Amprenta paginii de pe server. Se schimbă la fiecare publicare.
+    // Verificăm pagina în sine, nu service worker-ul: dacă schimbi doar CSS-ul
+    // sau HTML-ul, fișierul service worker-ului rămâne identic și browserul
+    // nu ar observa nimic.
+    let amprentaCurenta = null;
+
+    function citesteAmprenta() {
+        return fetch(window.location.pathname, { method: 'HEAD', cache: 'no-store' })
+            .then((r) => r.headers.get('etag') || r.headers.get('last-modified'))
+            .catch(() => null);
+    }
+
+    function verificaVersiuneNoua() {
+        if (seReincarca || !amprentaCurenta) return;
+        citesteAmprenta().then((amprenta) => {
+            if (!amprenta || amprenta === amprentaCurenta || seReincarca) return;
+            seReincarca = true;
+            window.location.reload();
+        });
+    }
+
+    window.addEventListener('load', () => {
+        citesteAmprenta().then((amprenta) => { amprentaCurenta = amprenta; });
+
+        navigator.serviceWorker
+            // updateViaCache: 'none' => scriptul service worker-ului nu e luat
+            // niciodată din cache-ul HTTP, deci versiunea nouă e văzută imediat.
+            .register('/service-worker.js', { scope: '/', updateViaCache: 'none' })
+            .then((reg) => {
+                reg.update();
+                navigator.serviceWorker.ready.then((r) => {
+                    if (r.active) r.active.postMessage('start-keep-alive');
+                });
+            })
+            .catch((err) => console.warn('Service worker:', err));
+    });
+
+    // Când revii în aplicație după ce a stat în fundal, verificăm dacă între timp
+    // ai publicat ceva. Dacă da, pagina se reîncarcă singură.
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'visible') return;
+        navigator.serviceWorker.getRegistration().then((reg) => { if (reg) reg.update(); }).catch(() => {});
+        verificaVersiuneNoua();
+    });
+})();
+
+// ==========================================
 // 1. LOGICA PENTRU LOGIN & LOGOUT
 // ==========================================
 
@@ -117,6 +185,50 @@ function getLoggedInUser() {
     const id = parseInt(idStr, 10);
     if (!id || Number.isNaN(id)) return null;
     return { id, name };
+}
+
+// ==========================================
+// 1.1 ANIVERSAREA – „Un an împreună"
+// ==========================================
+
+const DATA_RELATIEI = new Date(2025, 6, 11); // 11 iulie 2025, ora 00:00 local
+
+// Câți ani împliniți avem la momentul dat
+function aniImpreuna(acum) {
+    acum = acum || new Date();
+    let ani = acum.getFullYear() - DATA_RELATIEI.getFullYear();
+    const aniversareaAnului = new Date(acum.getFullYear(), DATA_RELATIEI.getMonth(), DATA_RELATIEI.getDate());
+    if (acum < aniversareaAnului) ani--;
+    return Math.max(0, ani);
+}
+
+// „Un an împreună”, „Doi ani împreună”, ..., „20 de ani împreună”
+function numeAniversare(acum) {
+    const ani = Math.max(1, aniImpreuna(acum));
+
+    const cuvinte = ['', 'Un', 'Doi', 'Trei', 'Patru', 'Cinci', 'Șase', 'Șapte', 'Opt', 'Nouă', 'Zece',
+                     'Unsprezece', 'Doisprezece', 'Treisprezece', 'Paisprezece', 'Cincisprezece',
+                     'Șaisprezece', 'Șaptesprezece', 'Optsprezece', 'Nouăsprezece'];
+
+    if (ani < cuvinte.length) {
+        return cuvinte[ani] + (ani === 1 ? ' an' : ' ani') + ' împreună';
+    }
+    // De la 20 în sus, româna cere „de”: 20 de ani, 21 de ani...
+    return ani + ' de ani împreună';
+}
+
+// Georgiana vede drumul abia de la prima aniversare, la prânz. După aceea, permanent.
+const DEZVALUIRE_DRUM = new Date(
+    DATA_RELATIEI.getFullYear() + 1,
+    DATA_RELATIEI.getMonth(),
+    DATA_RELATIEI.getDate(),
+    12, 0, 0
+);
+
+function poateVedeaDrumul() {
+    const user = getLoggedInUser();
+    if (user && user.name === 'andrei') return true;
+    return new Date() >= DEZVALUIRE_DRUM;
 }
 
 // Helper: înregistrează o victorie în LoginUsers (bulls / hangman / memory / macao / razboi / triangles / balloon / puzzle)

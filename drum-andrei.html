@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Drumul nostru – editare</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="page-entry">
+
+    <div class="main-container drum-container">
+        <div class="back-button" onclick="goBack()">← Înapoi</div>
+        <div class="main-icon">✍️</div>
+        <h1>Drumul nostru</h1>
+
+        <div class="glass-card">
+            <p class="portal-question" style="margin-bottom:16px;">
+                Alege poze din galerie și scrie câte un mesaj pentru fiecare.
+                Ordinea de aici e ordinea de pe drum.
+            </p>
+            <button type="button" class="mesaj-andrei-btn drum-admin-add" onclick="openPicker()">
+                ➕ Adaugă o poză din galerie
+            </button>
+        </div>
+
+        <p id="admin-status" class="mesaj-andrei-status drum-admin-status"></p>
+
+        <div id="admin-list" class="drum-admin-list">
+            <p class="drum-empty">Se încarcă...</p>
+        </div>
+    </div>
+
+    <!-- Alegerea pozei din galerie -->
+    <div id="picker-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closePicker()">&times;</span>
+            <h2 class="drum-picker-title">Alege o amintire</h2>
+            <p class="drum-picker-hint">Apasă pe o poză ca să o adaugi la finalul drumului.</p>
+            <div id="picker-grid" class="gallery-month-grid"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        var stops = [];
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var user = getLoggedInUser();
+            if (!user || user.name !== 'andrei') {
+                window.location.href = '2222.html';
+                return;
+            }
+            loadStops();
+        });
+
+        // ---------- Status ----------
+
+        var statusTimer = null;
+        function say(text, isError) {
+            var el = document.getElementById('admin-status');
+            el.textContent = text;
+            el.classList.toggle('is-error', !!isError);
+            clearTimeout(statusTimer);
+            if (text) statusTimer = setTimeout(function () { say(''); }, 2800);
+        }
+
+        // ---------- Încărcare ----------
+
+        // Tabelul lipsește => mesaj cu ce ai de făcut, nu eroarea brută din API
+        function isMissingTable(error) {
+            return error.code === 'PGRST205' || /schema cache/i.test(error.message || '');
+        }
+
+        function setupNeededHtml() {
+            return '<div class="glass-card drum-setup-hint">' +
+                   '<h2>Mai e un pas</h2>' +
+                   '<p>Tabelul <code>drum_amintiri</code> nu există încă în Supabase.</p>' +
+                   '<p>Deschide Supabase → <strong>SQL Editor</strong> → <strong>New query</strong>, ' +
+                   'lipește tot fișierul <code>drum-setup.sql</code> din proiect și apasă <strong>Run</strong>. ' +
+                   'Creează un tabel nou și gol — nu atinge pozele sau conturile.</p>' +
+                   '<p>Apoi reîncarcă pagina asta.</p>' +
+                   '</div>';
+        }
+
+        async function loadStops() {
+            var res = await _supabase
+                .from('drum_amintiri')
+                .select('id, poza_id, photo_url, title, message, photo_date, ordine')
+                .order('ordine', { ascending: true })
+                .order('id', { ascending: true });
+
+            if (res.error) {
+                document.getElementById('admin-list').innerHTML = isMissingTable(res.error)
+                    ? setupNeededHtml()
+                    : '<p class="drum-empty">Nu am putut încărca drumul: ' + res.error.message + '</p>';
+                return;
+            }
+
+            stops = res.data || [];
+            renderList();
+        }
+
+        function renderList() {
+            var list = document.getElementById('admin-list');
+            list.innerHTML = '';
+
+            if (!stops.length) {
+                list.innerHTML = '<p class="drum-empty">Niciun pas pe drum încă. Adaugă prima poză. ❤️</p>';
+                return;
+            }
+
+            stops.forEach(function (row, i) {
+                list.appendChild(buildRow(row, i));
+            });
+        }
+
+        function buildRow(row, i) {
+            var wrap = document.createElement('div');
+            wrap.className = 'glass-card drum-admin-row';
+
+            var head = document.createElement('div');
+            head.className = 'drum-admin-head';
+
+            var thumb = document.createElement('img');
+            thumb.className = 'drum-admin-thumb';
+            thumb.src = row.photo_url;
+            thumb.alt = 'Pasul ' + (i + 1);
+
+            var meta = document.createElement('div');
+            meta.className = 'drum-admin-meta';
+            meta.innerHTML = '<span class="drum-admin-step">Pasul ' + (i + 1) + '</span>' +
+                             '<span class="drum-admin-side">' + (i % 2 === 0 ? 'stânga drumului' : 'dreapta drumului') + '</span>';
+
+            var moves = document.createElement('div');
+            moves.className = 'drum-admin-moves';
+
+            var up = iconBtn('↑', 'Mută mai sus');
+            up.disabled = (i === 0);
+            up.onclick = function () { swap(i, i - 1); };
+
+            var down = iconBtn('↓', 'Mută mai jos');
+            down.disabled = (i === stops.length - 1);
+            down.onclick = function () { swap(i, i + 1); };
+
+            var del = iconBtn('🗑️', 'Scoate de pe drum');
+            del.classList.add('is-danger');
+            del.onclick = function () { removeStop(row, i); };
+
+            moves.appendChild(up);
+            moves.appendChild(down);
+            moves.appendChild(del);
+
+            head.appendChild(thumb);
+            head.appendChild(meta);
+            head.appendChild(moves);
+
+            var titleInput = document.createElement('input');
+            titleInput.type = 'text';
+            titleInput.className = 'mesaj-andrei-input';
+            titleInput.placeholder = 'Titlu scurt (ex. Prima noastră vacanță)';
+            titleInput.maxLength = 80;
+            titleInput.value = row.title || '';
+
+            var dateRow = document.createElement('div');
+            dateRow.className = 'drum-admin-daterow';
+            var dateLabel = document.createElement('label');
+            dateLabel.className = 'sched-label';
+            dateLabel.textContent = 'Data amintirii:';
+            var dateInput = document.createElement('input');
+            dateInput.type = 'date';
+            dateInput.className = 'sched-datetime-input';
+            dateInput.value = row.photo_date ? String(row.photo_date).slice(0, 10) : '';
+            dateRow.appendChild(dateLabel);
+            dateRow.appendChild(dateInput);
+
+            var msgInput = document.createElement('textarea');
+            msgInput.className = 'mesaj-andrei-input';
+            msgInput.rows = 4;
+            msgInput.maxLength = 800;
+            msgInput.placeholder = 'Mesajul care apare sub poză...';
+            msgInput.value = row.message || '';
+
+            var save = document.createElement('button');
+            save.type = 'button';
+            save.className = 'mesaj-andrei-btn';
+            save.textContent = 'Salvează 💾';
+            save.onclick = function () {
+                saveStop(row, save, {
+                    title: titleInput.value.trim() || null,
+                    message: msgInput.value.trim() || null,
+                    photo_date: dateInput.value || null
+                });
+            };
+
+            wrap.appendChild(head);
+            wrap.appendChild(titleInput);
+            wrap.appendChild(dateRow);
+            wrap.appendChild(msgInput);
+            wrap.appendChild(save);
+            return wrap;
+        }
+
+        function iconBtn(label, title) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'drum-admin-icon';
+            b.textContent = label;
+            b.title = title;
+            return b;
+        }
+
+        // ---------- Acțiuni ----------
+
+        async function saveStop(row, btn, fields) {
+            btn.disabled = true;
+            btn.textContent = 'Se salvează...';
+
+            var res = await _supabase
+                .from('drum_amintiri')
+                .update(fields)
+                .eq('id', row.id);
+
+            btn.disabled = false;
+
+            if (res.error) {
+                btn.textContent = 'Eroare ❌';
+                say('Nu am putut salva: ' + res.error.message, true);
+                setTimeout(function () { btn.textContent = 'Salvează 💾'; }, 2000);
+                return;
+            }
+
+            Object.assign(row, fields);
+            btn.textContent = 'Salvat! ✅';
+            say('Mesajul a fost salvat. 💌');
+            setTimeout(function () { btn.textContent = 'Salvează 💾'; }, 2000);
+        }
+
+        async function swap(i, j) {
+            var a = stops[i];
+            var b = stops[j];
+            if (!a || !b) return;
+
+            // Ordinea din baza de date poate avea duplicate sau goluri,
+            // așa că rescriem pozițiile după indexul din listă.
+            stops[i] = b;
+            stops[j] = a;
+            renderList();
+
+            var updates = stops.map(function (row, idx) {
+                row.ordine = idx;
+                return _supabase.from('drum_amintiri').update({ ordine: idx }).eq('id', row.id);
+            });
+
+            var results = await Promise.all(updates);
+            var failed = results.find(function (r) { return r.error; });
+            if (failed) {
+                say('Nu am putut salva ordinea: ' + failed.error.message, true);
+                loadStops();
+            } else {
+                say('Ordinea a fost salvată. ✅');
+            }
+        }
+
+        async function removeStop(row, i) {
+            if (!confirm('Scoți această amintire de pe drum?\n(Poza rămâne în galerie.)')) return;
+
+            var res = await _supabase.from('drum_amintiri').delete().eq('id', row.id);
+            if (res.error) {
+                say('Nu am putut șterge: ' + res.error.message, true);
+                return;
+            }
+
+            stops.splice(i, 1);
+            renderList();
+            say('Amintirea a fost scoasă de pe drum.');
+        }
+
+        // ---------- Alegerea pozei ----------
+
+        window.openPicker = async function () {
+            var modal = document.getElementById('picker-modal');
+            var grid = document.getElementById('picker-grid');
+
+            grid.innerHTML = '<p class="drum-empty">Se încarcă galeria...</p>';
+            modal.style.display = 'block';
+
+            var res = await _supabase
+                .from('Poze')
+                .select('id, url, created_at, photo_date')
+                .order('created_at', { ascending: false });
+
+            if (res.error || !res.data || !res.data.length) {
+                grid.innerHTML = '<p class="drum-empty">Nicio poză în galerie încă.</p>';
+                return;
+            }
+
+            var used = {};
+            stops.forEach(function (s) { if (s.poza_id) used[s.poza_id] = true; });
+
+            grid.innerHTML = '';
+            res.data.forEach(function (photo) {
+                var item = document.createElement('div');
+                item.className = 'gallery-item drum-picker-item';
+                if (used[photo.id]) item.classList.add('is-used');
+
+                var img = document.createElement('img');
+                img.src = photo.url;
+                img.loading = 'lazy';
+                img.onclick = function () { addStop(photo); };
+                item.appendChild(img);
+
+                if (used[photo.id]) {
+                    var tick = document.createElement('span');
+                    tick.className = 'drum-picker-tick';
+                    tick.textContent = '✓';
+                    item.appendChild(tick);
+                }
+
+                grid.appendChild(item);
+            });
+        };
+
+        window.closePicker = function () {
+            document.getElementById('picker-modal').style.display = 'none';
+        };
+
+        async function addStop(photo) {
+            var nextOrder = stops.length
+                ? Math.max.apply(null, stops.map(function (s) { return s.ordine || 0; })) + 1
+                : 0;
+
+            var rawDate = photo.photo_date || photo.created_at;
+            var photoDate = rawDate ? String(rawDate).slice(0, 10) : null;
+
+            var res = await _supabase
+                .from('drum_amintiri')
+                .insert({
+                    poza_id: photo.id,
+                    photo_url: photo.url,
+                    photo_date: photoDate,
+                    ordine: nextOrder
+                })
+                .select('id, poza_id, photo_url, title, message, photo_date, ordine')
+                .single();
+
+            if (res.error) {
+                say(isMissingTable(res.error)
+                    ? 'Rulează întâi drum-setup.sql în Supabase.'
+                    : 'Nu am putut adăuga poza: ' + res.error.message, true);
+                return;
+            }
+
+            stops.push(res.data);
+            closePicker();
+            renderList();
+            say('Poza a fost adăugată. Scrie-i un mesaj! ✍️');
+
+            var rows = document.querySelectorAll('.drum-admin-row');
+            var last = rows[rows.length - 1];
+            if (last) last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        window.goBack = function () {
+            document.body.classList.add('page-fade-out');
+            setTimeout(function () { window.location.href = 'drum.html'; }, 600);
+        };
+    })();
+    </script>
+</body>
+</html>

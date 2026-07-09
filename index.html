@@ -31,18 +31,7 @@
         <p id="error-message"></p>
     </div>
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('service-worker.js').then(function(reg) {
-                    if (reg.active) reg.active.postMessage('start-keep-alive');
-                    navigator.serviceWorker.ready.then(function(r) {
-                        if (r.active) r.active.postMessage('start-keep-alive');
-                    });
-                });
-            });
-        }
-    </script>
+    <!-- Service worker-ul se înregistrează din script.js, pe toate paginile -->
     <script src="script.js"></script>
 </body>
 </html>

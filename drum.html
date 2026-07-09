@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Un an împreună</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="page-entry">
+
+    <div class="main-container drum-container">
+        <div class="back-button" onclick="goBack()">← Înapoi</div>
+
+        <header class="drum-hero">
+            <div class="drum-icon">♾️</div>
+            <h1 class="drum-title">Un an împreună</h1>
+            <p class="drum-subtitle">Fiecare pas de pe drumul nostru, cu tine ❤️</p>
+            <div id="drum-counter" class="drum-counter">Calculăm...</div>
+        </header>
+
+        <p id="drum-empty" class="drum-empty" style="display:none;"></p>
+
+        <!-- Drumul serpuit: SVG-ul și nodurile stau peste, opririle se adaugă din JS -->
+        <div id="drum-road" class="drum-road">
+            <svg id="drum-svg" class="drum-road-svg" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                    <linearGradient id="drumGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%"   stop-color="#ffd166"/>
+                        <stop offset="50%"  stop-color="#ff7a9c"/>
+                        <stop offset="100%" stop-color="#ff4d6d"/>
+                    </linearGradient>
+                </defs>
+                <path id="drum-edge"     class="drum-road-edge"></path>
+                <path id="drum-base"     class="drum-road-base"></path>
+                <path id="drum-progress" class="drum-road-progress"></path>
+                <path id="drum-dash"     class="drum-road-dash"></path>
+                <path id="drum-links"    class="drum-road-links"></path>
+            </svg>
+            <div id="drum-scenery" class="drum-scenery"></div>
+            <div id="drum-nodes" class="drum-nodes"></div>
+        </div>
+
+        <section id="drum-finale" class="drum-finale">
+            <div class="drum-infinity">♾️</div>
+            <div class="glass-card drum-finale-card">
+                <h2 class="drum-finale-title">Și de aici, mai departe</h2>
+                <p class="drum-finale-text">
+                    Când am pornit pe drumul ăsta, nu știam cât de frumos avea să fie.
+                    Acum știu: oriunde ar duce, vreau să-l merg cu tine.
+                    La mulți ani, iubirea mea. ❤️
+                </p>
+            </div>
+        </section>
+
+        <a href="drum-andrei.html" id="drum-edit-link" class="mesaj-andrei-link-btn" style="display:none;">
+            ✍️ Alege poze și scrie mesaje
+        </a>
+    </div>
+
+    <!-- Poza pe tot ecranul, la atingere -->
+    <div id="drum-lightbox" class="drum-lightbox">
+        <span class="drum-lightbox-close">&times;</span>
+        <img id="drum-lightbox-img" src="" alt="Amintirea noastră">
+        <div id="drum-lightbox-cap" class="drum-lightbox-cap"></div>
+    </div>
+
+    <div id="effects-canvas" class="effects-canvas"></div>
+
+    <script src="script.js"></script>
+    <script src="drum.js"></script>
+    <script>
+        function goBack() {
+            document.body.classList.add('page-fade-out');
+            setTimeout(function () { window.location.href = '2222.html'; }, 600);
+        }
+    </script>
+</body>
+</html>

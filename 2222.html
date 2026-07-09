@@ -158,6 +158,13 @@
                     <div class="portal-name">Clasament</div>
                     <div class="portal-desc">Andrei &amp; Georgiana</div>
                 </div>
+
+                <!-- 10. Aniversarea – ascuns până pe 11 iulie la prânz (Andrei îl vede mereu) -->
+                <div class="portal-card" id="drum-portal-card" onclick="navigateTo('drum.html')" style="display:none;">
+                    <div class="portal-icon">♾️</div>
+                    <div class="portal-name" id="drum-portal-name">Un an împreună</div>
+                    <div class="portal-desc">Drumul nostru</div>
+                </div>
             </div>
         </div>
 
@@ -197,6 +204,14 @@
         // Inițializez countdown-ul pentru următoarea întâlnire când pagina se încarcă
         document.addEventListener('DOMContentLoaded', () => {
             loadAndDisplayNextMeeting();
+
+            // Cardul aniversar: numele crește cu anii, iar Georgiana îl vede
+            // abia din 11 iulie, ora 12:00. Andrei îl are vizibil mereu.
+            var drumCard = document.getElementById('drum-portal-card');
+            if (drumCard && poateVedeaDrumul()) {
+                document.getElementById('drum-portal-name').textContent = numeAniversare();
+                drumCard.style.display = 'block';
+            }
 
             // Arata cardul de ghicitori in intervalul prestabilit
             var now = new Date();
