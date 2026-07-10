@@ -10,7 +10,7 @@
     'use strict';
 
     // Aceeași dată ca în script.js, ca să nu existe două surse de adevăr
-    var START_DATE = (typeof DATA_RELATIEI !== 'undefined') ? DATA_RELATIEI : new Date(2025, 6, 11);
+    var START_DATE = (typeof DATA_RELATIEI !== 'undefined') ? DATA_RELATIEI : new Date(2025, 6, 11, 0, 44, 0);
     var MONTHS = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie',
                   'iulie', 'august', 'septembrie', 'octombrie', 'noiembrie', 'decembrie'];
     var NODE_ICONS = ['❤️', '💖', '💕', '🌸', '💗', '✨', '💘', '🌼'];

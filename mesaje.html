@@ -311,6 +311,40 @@
             }
         }
 
+        // După 11 iulie, mesajul aniversar special trăiește aici, în arhivă.
+        // La atingere se redeschide chenarul frumos (funcția din script.js).
+        function adaugaCardAniversarArhiva(list) {
+            if (typeof mesajAniversarDisponibilInArhiva !== 'function' || !mesajAniversarDisponibilInArhiva()) return;
+
+            var item = document.createElement('div');
+            item.className = 'expired-msg-item expired-msg-special expired-msg-clickable';
+            item.style.cssText = 'border-left: 3px solid rgba(255,183,3,0.9); background: linear-gradient(135deg, rgba(255,126,95,0.20), rgba(255,77,109,0.16));';
+            item.addEventListener('click', function () {
+                closeExpiredOverlay();
+                afiseazaMesajAniversar();
+            });
+
+            var badge = document.createElement('span');
+            badge.className = 'expired-msg-badge';
+            badge.textContent = '💖 Un an împreună';
+            item.appendChild(badge);
+
+            var text = document.createElement('p');
+            text.className = 'mesaj-andrei-text';
+            text.textContent = 'Mesajul nostru special de 11 iulie. Atinge ca să-l recitești ❤️';
+            item.appendChild(text);
+
+            var meta = document.createElement('div');
+            meta.className = 'expired-msg-meta';
+            var date = document.createElement('span');
+            date.className = 'expired-msg-date';
+            date.textContent = '11 iulie 2026, 00:44';
+            meta.appendChild(date);
+            item.appendChild(meta);
+
+            list.appendChild(item);
+        }
+
         async function toggleExpiredOverlay() {
             const overlay = document.getElementById('expired-overlay');
             if (overlay.style.display === 'flex') {
@@ -366,6 +400,9 @@
                     .order('scheduled_at', { ascending: false });
 
                 list.innerHTML = '';
+
+                // Mesajul aniversar special apare primul în arhivă (după 11 iulie)
+                adaugaCardAniversarArhiva(list);
 
                 // Afișăm cardul quiz ca mesaj expirat dacă fereastra a trecut
                 if (quizExpired) {
@@ -482,6 +519,7 @@
                 // Chiar dacă supabase dă eroare, arătăm mesajele speciale
                 if (list.children.length === 0) {
                     list.innerHTML = '';
+                    adaugaCardAniversarArhiva(list);
                     specialMessages.forEach(function(sm) {
                         var item = document.createElement('div');
                         item.className = 'expired-msg-item expired-msg-special';

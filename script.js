@@ -191,13 +191,19 @@ function getLoggedInUser() {
 // 1.1 ANIVERSAREA – „Un an împreună"
 // ==========================================
 
-const DATA_RELATIEI = new Date(2025, 6, 11); // 11 iulie 2025, ora 00:00 local
+// Momentul exact de la care numărăm: 11 iulie 2025, 00:44, ora locală.
+// Atenție: new Date("2025-07-11") ar însemna miezul nopții UTC, adică 03:00 la noi.
+// Forma cu argumente separate e singura care spune ce vrem.
+const DATA_RELATIEI = new Date(2025, 6, 11, 0, 44, 0);
 
 // Câți ani împliniți avem la momentul dat
 function aniImpreuna(acum) {
     acum = acum || new Date();
     let ani = acum.getFullYear() - DATA_RELATIEI.getFullYear();
-    const aniversareaAnului = new Date(acum.getFullYear(), DATA_RELATIEI.getMonth(), DATA_RELATIEI.getDate());
+    const aniversareaAnului = new Date(
+        acum.getFullYear(), DATA_RELATIEI.getMonth(), DATA_RELATIEI.getDate(),
+        DATA_RELATIEI.getHours(), DATA_RELATIEI.getMinutes(), 0
+    );
     if (acum < aniversareaAnului) ani--;
     return Math.max(0, ani);
 }
@@ -229,6 +235,262 @@ function poateVedeaDrumul() {
     const user = getLoggedInUser();
     if (user && user.name === 'andrei') return true;
     return new Date() >= DEZVALUIRE_DRUM;
+}
+
+// ==========================================
+// 1.2 MESAJ ANIVERSAR SPECIAL – „Un an împreună" (11 iulie 2026)
+// ==========================================
+// Reguli (toate calculate după ORA ROMÂNIEI – Europe/Bucharest):
+//  • Georgiana: mesajul apare pe ecranul principal DOAR pe 11 iulie 2026,
+//    începând cu ora 00:44, la FIECARE logare din acea zi.
+//  • Andrei: apare la fiecare logare pe 10 iulie (test) și 11 iulie, la orice oră.
+//  • După 11 iulie, mesajul nu mai apare automat, ci se mută în arhiva de
+//    mesaje (📜), de unde poate fi accesat oricând.
+
+// Citește data/ora curentă în fusul orar al României, indiferent de setarea telefonului.
+function getRomaniaParts(date) {
+    date = date || new Date();
+    try {
+        const fmt = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Europe/Bucharest',
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+        });
+        const o = {};
+        fmt.formatToParts(date).forEach((p) => { if (p.type !== 'literal') o[p.type] = p.value; });
+        let h = parseInt(o.hour, 10);
+        if (h === 24) h = 0; // unele motoare dau „24" la miezul nopții
+        return {
+            year: parseInt(o.year, 10), month: parseInt(o.month, 10), day: parseInt(o.day, 10),
+            hour: h, minute: parseInt(o.minute, 10), second: parseInt(o.second, 10)
+        };
+    } catch (e) {
+        // Dacă Intl/timezone nu e disponibil, cădem pe ora locală (telefonul e pe ora României).
+        return {
+            year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate(),
+            hour: date.getHours(), minute: date.getMinutes(), second: date.getSeconds()
+        };
+    }
+}
+
+const ANIV_YMD_TEST = 20260710; // 10 iulie 2026 – test (doar Andrei)
+const ANIV_YMD_ZI   = 20260711; // 11 iulie 2026 – ziua cea mare
+const ANIV_MIN_START = 44;      // 00:44, ora României
+
+function _anivChei() {
+    const p = getRomaniaParts();
+    return { ymd: p.year * 10000 + p.month * 100 + p.day, minute: p.hour * 60 + p.minute };
+}
+
+// Trebuie afișat popup-ul acum, pentru utilizatorul logat?
+function trebuieMesajAniversarPopup() {
+    const user = getLoggedInUser();
+    if (!user) return false;
+    const { ymd, minute } = _anivChei();
+
+    if (user.name === 'andrei') {
+        // Andrei îl vede la fiecare logare pe 10 (test) și pe 11 iulie, la orice oră.
+        return ymd === ANIV_YMD_TEST || ymd === ANIV_YMD_ZI;
+    }
+    if (user.name === 'georgiana') {
+        // Georgiana îl vede doar pe 11 iulie, de la 00:44, la fiecare logare din acea zi.
+        return ymd === ANIV_YMD_ZI && minute >= ANIV_MIN_START;
+    }
+    return false;
+}
+
+// După 11 iulie mesajul e accesibil permanent din arhiva de mesaje.
+function mesajAniversarDisponibilInArhiva() {
+    return _anivChei().ymd > ANIV_YMD_ZI;
+}
+
+// Construiește „zidul de te iubesc" cu mesajul ascuns: EȘTI CEA MAI FRUMOASĂ.
+function _anivZidIubire() {
+    const runs = [19, 34, 28, 20, 16];
+    const markeri = ['EȘTI', 'CEA', 'MAI', 'FRUMOASĂ'];
+    const bucati = [];
+    let primul = true;
+    for (let r = 0; r < runs.length; r++) {
+        for (let i = 0; i < runs[r]; i++) {
+            bucati.push('<span class="aniversar-love-word">' + (primul ? 'Te iubesc' : 'te iubesc') + '</span>');
+            primul = false;
+        }
+        if (r < markeri.length) {
+            bucati.push('<span class="aniversar-highlight">' + markeri[r] + '</span>');
+        }
+    }
+    return bucati.join(', ') + '.';
+}
+
+// Conținutul complet al mesajului (din „mesaj special.docx").
+function construitMesajAniversarInner() {
+    return `
+        <div class="aniversar-emoji">🍺🍓</div>
+        <span class="aniversar-badge">Un an împreună · 11 iulie</span>
+        <h1 class="aniversar-title">La mulți ani nouă</h1>
+        <p class="aniversar-sub">💖 pentru Georgiana, de la Andrei 💖</p>
+        <div class="aniversar-divider"></div>
+
+        <p class="aniversar-p aniversar-lead">Uite, iubirea mea, că am ajuns la data mult așteptată de noi: 11 iulie. Astăzi, la această oră minunată (00:44, dacă o împărțim la 2, rezultatul este 00:22, ora perfectă), am făcut un an de când suntem împreună.</p>
+
+        <p class="aniversar-p">Un an de când nu știai dacă suntem împreună sau nu, un an de când am mâncat cele mai bune paste posibile, un an de când cimitirul era locul care ne aducea mai aproape, un an de când am creat cele mai frumoase amintiri împreună, un an de când îți văd ochii albaștri mereu și mă pierd de fiecare dată în ei, un an de când diminețile și serile mele au un alt sens, un an de când fiecare îmbrățișare mă face să mă simt alt om, un an de când îți țin mâna și nu vreau să-i mai dau drumul, un an de când fiecare sărut mă face să mă îndrăgostesc din nou, un an de când mă faci să mă simt iubit, un an de când fiecare clipă petrecută cu tine este neprețuită, un an de când mă simt cel mai norocos om din lume. Un an de când mă faci să mă simt iubit în fiecare zi.</p>
+
+        <p class="aniversar-p">Lista asta ar putea să continue, dar o să ne apuce celălalt 11 iulie și nici nu mă deranjează asta, pentru că aș putea să vorbesc despre noi ore întregi și tot aș simți că nu le-am spus pe toate. Fiecare moment petrecut alături de tine a devenit o amintire pe care o prețuiesc enorm.</p>
+
+        <p class="aniversar-p">Îți mulțumesc că ai fost alături de mine mereu. Îți mulțumesc pentru fiecare amintire creată împreună, îți mulțumesc pentru fiecare plimbare, îți mulțumesc pentru fiecare ținut de mână, îți mulțumesc pentru fiecare îmbrățișare, îți mulțumesc pentru fiecare sărut și îți mulțumesc pentru fiecare „te iubesc". 😊 Îți mulțumesc și pentru fiecare întrebare-capcană. 😊</p>
+
+        <p class="aniversar-nick">La mulți ani nouă, iubirea mea, dragostea mea, frumoasa mea, puișorul meu, gălușca mea, iubirica mea, mâncătoarea, anihilatoarea și distrugătoarea mea de sushi.</p>
+
+        <p class="aniversar-p">Să continuăm amândoi acest drum până la adânci bătrâneți și copiii noștri să fie fericiți și la fel ca noi: mâncători de ovăz și anihilatori de sushi. Acest an este abia începutul acestei vieți lungi pe care o vom avea împreună (lungă fiindcă o să mâncăm foarte mult ovăz și, bineînțeles, pentru că ne iubim foarte mult).</p>
+
+        <div class="aniversar-divider"></div>
+        <div class="aniversar-love-wall">${_anivZidIubire()}</div>
+
+        <button type="button" class="aniversar-close">Închide💛</button>
+    `;
+}
+
+let _anivParticleTimer = null;
+
+function _anivPornesteParticule() {
+    const strat = document.getElementById('aniversar-particles');
+    if (!strat) return;
+    const simboluri = ['❤️', '💖', '💗', '✨', '🍓', '💛', '🌸', '⭐'];
+    function creeaza(n) {
+        for (let i = 0; i < n; i++) {
+            const el = document.createElement('span');
+            el.className = 'aniversar-particle';
+            el.textContent = simboluri[Math.floor(Math.random() * simboluri.length)];
+            el.style.left = (Math.random() * 100) + 'vw';
+            el.style.fontSize = (16 + Math.random() * 20) + 'px';
+            const dur = 5 + Math.random() * 5;
+            el.style.animationDuration = dur + 's';
+            strat.appendChild(el);
+            setTimeout(() => { if (el.parentNode) el.remove(); }, dur * 1000 + 300);
+        }
+    }
+    creeaza(14); // salvă inițială de inimioare
+    _anivParticleTimer = setInterval(() => creeaza(2), 650);
+}
+
+function afiseazaMesajAniversar() {
+    if (document.getElementById('aniversar-overlay')) return; // deja deschis
+
+    const overlay = document.createElement('div');
+    overlay.id = 'aniversar-overlay';
+    overlay.className = 'aniversar-overlay';
+    overlay.innerHTML =
+        '<div class="aniversar-particles" id="aniversar-particles"></div>' +
+        construitPlicHTML();
+
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+
+    _anivPornesteParticule();
+    _anivConfigPlic(overlay);
+}
+
+// Marea scrisoare care apare întâi. Se deschide după 3 apăsări.
+function construitPlicHTML() {
+    return `
+        <div class="letter-stage" id="letter-stage">
+            <div class="letter-envelope" id="letter-envelope" role="button" tabindex="0" aria-label="Deschide scrisoarea">
+                <div class="env-glow"></div>
+                <div class="env-letter">
+                    <span class="env-letter-heart">💌</span>
+                    <span class="env-letter-date">11 iulie</span>
+                </div>
+                <div class="env-front"></div>
+                <div class="env-flap"></div>
+                <div class="env-seal">🍺🍓</div>
+            </div>
+            <div class="letter-dots"><span></span><span></span><span></span></div>
+        </div>
+    `;
+}
+
+function _anivConfigPlic(overlay) {
+    const env = overlay.querySelector('#letter-envelope');
+    const dots = overlay.querySelectorAll('.letter-dots span');
+    if (!env) return;
+
+    let taps = 0;
+    let deschis = false;
+
+    function laApasare() {
+        if (deschis) return;
+        taps++;
+
+        // feedback vizual: tremur + inimioare care sar din plic
+        env.classList.remove('env-wiggle');
+        void env.offsetWidth; // reporneste animatia
+        env.classList.add('env-wiggle');
+        _anivBurstInimi(7);
+
+        if (dots[taps - 1]) dots[taps - 1].classList.add('on');
+
+        if (taps >= 3) {
+            deschis = true;
+            deschidePlic(overlay);
+        }
+    }
+
+    env.addEventListener('click', laApasare);
+    env.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); laApasare(); }
+    });
+}
+
+function deschidePlic(overlay) {
+    const stage = overlay.querySelector('#letter-stage');
+    const env = overlay.querySelector('#letter-envelope');
+
+    // Deschiderea propriu-zisă (sigiliul se rupe, clapa se ridică, scrisoarea iese)
+    env.classList.add('env-open');
+    _anivBurstInimi(30);
+    setTimeout(() => _anivBurstInimi(24), 450);
+
+    // Scrisoarea a ieșit -> topim plicul și construim mesajul (element nou = animație sigură)
+    setTimeout(() => { if (stage) stage.classList.add('letter-stage-out'); }, 1350);
+    setTimeout(() => {
+        if (stage) stage.style.display = 'none';
+        const card = document.createElement('div');
+        card.className = 'aniversar-card';
+        card.innerHTML = '<div class="aniversar-inner">' + construitMesajAniversarInner() + '</div>';
+        overlay.appendChild(card);
+        const btn = card.querySelector('.aniversar-close');
+        if (btn) btn.addEventListener('click', inchideMesajAniversar);
+        _anivBurstInimi(18);
+    }, 1800);
+}
+
+// Explozie de inimioare/confetti din centrul ecranului (spectaculos).
+function _anivBurstInimi(n) {
+    const overlay = document.getElementById('aniversar-overlay');
+    if (!overlay) return;
+    const simboluri = ['❤️', '💖', '💗', '✨', '🎉', '💛', '🌸', '⭐', '🍓', '💞'];
+    for (let i = 0; i < n; i++) {
+        const el = document.createElement('span');
+        el.className = 'aniv-burst';
+        el.textContent = simboluri[Math.floor(Math.random() * simboluri.length)];
+        const unghi = Math.random() * Math.PI * 2;
+        const dist = 70 + Math.random() * 200;
+        el.style.setProperty('--dx', (Math.cos(unghi) * dist) + 'px');
+        el.style.setProperty('--dy', (Math.sin(unghi) * dist) + 'px');
+        el.style.fontSize = (16 + Math.random() * 20) + 'px';
+        el.style.animationDuration = (0.8 + Math.random() * 0.7) + 's';
+        overlay.appendChild(el);
+        setTimeout(() => { if (el.parentNode) el.remove(); }, 1600);
+    }
+}
+
+function inchideMesajAniversar() {
+    const overlay = document.getElementById('aniversar-overlay');
+    if (!overlay) return;
+    if (_anivParticleTimer) { clearInterval(_anivParticleTimer); _anivParticleTimer = null; }
+    document.body.style.overflow = '';
+    overlay.classList.add('aniversar-closing');
+    setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 500);
 }
 
 // Helper: înregistrează o victorie în LoginUsers (bulls / hangman / memory / macao / razboi / triangles / balloon / puzzle)
@@ -335,6 +597,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         // Countdown-ul pentru următoarea întâlnire se inițiază din next-meeting.js
+
+        // Mesajul aniversar special (11 iulie) – apare peste ecranul principal
+        // după login, conform regulilor din secțiunea 1.2. Un mic delay ca
+        // animația de intrare a paginii să se așeze întâi.
+        if (trebuieMesajAniversarPopup()) {
+            setTimeout(afiseazaMesajAniversar, 600);
+        }
     }
 
     // "Soft back" pentru paginile secundare (puzzle, timeline, jocuri, etc.)
@@ -396,11 +665,9 @@ setInterval(createFallingElement, isMobileDevice ? 600 : 350);
 // ==========================================
 
 if (document.getElementById('counter')) {
-    const dataNoastra = new Date("2025-07-11"); 
-    
     function updateCounter() {
         const acum = new Date();
-        const diff = acum - dataNoastra;
+        const diff = acum - DATA_RELATIEI;
         const zile = Math.floor(diff / (1000 * 60 * 60 * 24));
         const ore = Math.floor((diff / (1000 * 60 * 60)) % 24);
         const min = Math.floor((diff / 1000 / 60) % 60);
